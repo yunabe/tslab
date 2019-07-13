@@ -1,0 +1,16 @@
+{
+  "name": "tslab",
+  "version": "1.0.0",
+  "description": "Jupyter for JavaScript and TypeScript",
+  "main": "dist/index.js",
+  "repository": "https://github.com/yunabe/tslab",
+  "author": "Yu Watanabe",
+  "license": "MIT",
+  "dependencies": {
+    "typescript": "^3.5.3",
+    "zeromq": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^12.6.2"
+  }
+}
