@@ -12,37 +12,56 @@ except:
     print('jupyter is not installed in this Python.', file=sys.stderr)
     sys.exit(1)
 
-kernel_json = {
-    "argv": [sys.executable, "-m", "echo_kernel", "-f", "{connection_file}"],
-    "display_name": "Echo",
-    "language": "text",
-}
 
-def install_my_kernel_spec(user=True, prefix=None):
+def create_kernel_jaon(is_ts):
+    bin = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), '../bin',
+                     'tslab' if is_ts else 'jslab'))
+    return {
+        "argv": [bin, "{connection_file}"],
+        "display_name": "TypeScript" if is_ts else "JavaScript",
+        "language": "typescript" if is_ts else "javascript",
+    }
+
+
+def install_kernel_spec(is_ts, user, prefix):
+    create_kernel_jaon(True)
     with TemporaryDirectory() as td:
-        os.chmod(td, 0o755) # Starts off as 700, not user readable
+        os.chmod(td, 0o755)  # Starts off as 700, not user readable
         with open(os.path.join(td, 'kernel.json'), 'w') as f:
-            json.dump(kernel_json, f, sort_keys=True)
+            json.dump(create_kernel_jaon(is_ts), f, sort_keys=True)
         # TODO: Copy any resources
 
-        print('Installing Jupyter kernel spec')
-        KernelSpecManager().install_kernel_spec(td, 'echo', user=user, replace=True, prefix=prefix)
+        print('Installing {} kernel spec'.format(
+            'TypeScript' if is_ts else 'JavaScript'))
+        KernelSpecManager().install_kernel_spec(td,
+                                                'tslab' if is_ts else 'jslab',
+                                                user=user,
+                                                replace=True,
+                                                prefix=prefix)
+
 
 def _is_root():
     try:
         return os.geteuid() == 0
     except AttributeError:
-        return False # assume not an admin on non-Unix platforms
+        return False  # assume not an admin on non-Unix platforms
+
 
 def main(argv=None):
     ap = argparse.ArgumentParser()
-    ap.add_argument('--user', action='store_true',
+    ap.add_argument(
+        '--user',
+        action='store_true',
         help="Install to the per-user kernels registry. Default if not root.")
-    ap.add_argument('--sys-prefix', action='store_true',
+    ap.add_argument(
+        '--sys-prefix',
+        action='store_true',
         help="Install to sys.prefix (e.g. a virtualenv or conda env)")
-    ap.add_argument('--prefix',
+    ap.add_argument(
+        '--prefix',
         help="Install to the given prefix. "
-             "Kernelspec will be installed in {PREFIX}/share/jupyter/kernels/")
+        "Kernelspec will be installed in {PREFIX}/share/jupyter/kernels/")
     args = ap.parse_args(argv)
 
     if args.sys_prefix:
@@ -50,7 +69,9 @@ def main(argv=None):
     if not args.prefix and not _is_root():
         args.user = True
 
-    install_my_kernel_spec(user=args.user, prefix=args.prefix)
+    for is_ts in [False, True]:
+        install_kernel_spec(is_ts, args.user, args.prefix)
+
 
 if __name__ == '__main__':
     main()
