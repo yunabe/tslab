@@ -1,0 +1,3 @@
+[submodule "packages/tslabtypescript"]
+	path = packages/tslabtypescript
+	url = git@github.com:yunabe/tslabtypescript.git
