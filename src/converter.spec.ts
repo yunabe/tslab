@@ -1,10 +1,10 @@
 import * as converter from "./converter";
-
-export declare let hoge: string;
+import { numberLiteralTypeAnnotation } from "@babel/types";
 
 describe("converter diagnostics", () => {
+  const conv = converter.createConverter();
+
   it("syntax error", () => {
-    const conv = converter.createConverter();
     const out = conv.convert("", `let x + 10;`);
     expect(out.diagnostics).toEqual([
       {
@@ -16,29 +16,49 @@ describe("converter diagnostics", () => {
       }
     ]);
   });
-  /*
-  it("a", () => {
-    const conv = converter.createConverter();
-    conv.convert(
-      "",
-      `
-    export let zz = "***";
-    export module __tslab__ {
-      let zz = 10;
-      let zx = "...";
-      type x = number | string;
-      declare let hoge: string;
-      class Xyz {
-        mymethod(x: number): string {
-          return String(x);
-        }
+
+  it("type error", () => {
+    const out = conv.convert("", `let x: string = 10;`);
+    expect(out.diagnostics).toEqual([
+      {
+        category: 1,
+        code: 2322,
+        length: 1,
+        messageText: "Type '10' is not assignable to type 'string'.",
+        start: 4
       }
-      interface IXyz {
-        imethod(): void;
+    ]);
+  });
+
+  it("redeclare variable", () => {
+    const out = conv.convert("", `let x = 3; let x = 4;`);
+    expect(out.diagnostics).toEqual([
+      {
+        category: 1,
+        code: 2451,
+        length: 1,
+        messageText: "Cannot redeclare block-scoped variable 'x'.",
+        start: 4
+      },
+      {
+        category: 1,
+        code: 2451,
+        length: 1,
+        messageText: "Cannot redeclare block-scoped variable 'x'.",
+        start: 15
       }
-      type Combined = number | Xyz | IXyz;
-    }`
+    ]);
+  });
+});
+
+describe("converter convert", () => {
+  const conv = converter.createConverter();
+
+  it("let", () => {
+    const out = conv.convert("", `let x = 3; const y = 4.5; var z = "zz";`);
+    expect(out.diagnostics).toEqual([]);
+    expect(out.declOutput).toBe(
+      "let x: number;\nconst y = 4.5;\nvar z: string;\n"
     );
   });
-  */
 });

@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as glob from "glob";
 import * as path from "path";
 import * as ts from "typescript";
+import { nodeInternals } from "stack-utils";
 
 const tsLabNs = "__tslab__";
 
@@ -143,55 +144,35 @@ export namespace __tslab__ {
 `;
     this.setContent(`${srcPrefix}${src}
 }`);
+    console.log("this.scriptContent.length:", this.scriptContent.length);
     const program = this.service.getProgram();
     const diagnostics: Diagnostic[] = [];
     ConverterImpl.convertDiagnostics(
       srcPrefix.length,
-      program.getSyntacticDiagnostics(),
+      ts.getPreEmitDiagnostics(program),
       diagnostics
     );
+    if (diagnostics.length > 0) {
+      return {
+        diagnostics
+      };
+    }
+    let emit = this.service.getEmitOutput(this.scriptName);
+    if (emit.emitSkipped) {
+      return {
+        diagnostics
+      };
+    }
+    let declOutput: string = null;
+    for (const out of emit.outputFiles) {
+      if (out.name === "__tslab__.d.ts") {
+        declOutput = out.text;
+      }
+    }
     return {
+      declOutput,
       diagnostics
     };
-
-    /*
-    let emit = this.service.getEmitOutput(this.scriptName);
-    console.log("emit.emitSkipped", emit.emitSkipped);
-    if (emit.emitSkipped) {
-      return;
-    }
-    for (const out of emit.outputFiles) {
-      console.log(out.name, "=====\n", out.text);
-    }
-    return {};
-
-    const program = this.service.getProgram();
-    const sf = program.getSourceFile(this.scriptName);
-    let checker = program.getTypeChecker();
-    function visit(node: ts.Node) {
-      const symb = checker.getSymbolAtLocation(node);
-      if (symb) {
-        // console.log("sym", symb, "--------------\n", node.getText());
-        const typ = checker.getTypeAtLocation(node);
-        console.log("----node---:\n", node.getText());
-        console.log("---type---:\n", checker.typeToString(typ));
-        const typ2 = checker.getDeclaredTypeOfSymbol(symb);
-        console.log("---typ2---:\n", checker.typeToString(typ2));
-        for (let decl of symb.getDeclarations()) {
-          console.log("decl:", decl.getText());
-        }
-      }
-      ts.forEachChild(node, visit);
-    }
-    visit(sf);
-    let symbols = checker.getSymbolsInScope(
-      sf,
-      ts.SymbolFlags.BlockScopedVariable
-    );
-    const symb = checker.getSymbolAtLocation(sf);
-    symb.
-    console.log("symbols", symbols);
-    */
   }
 }
 
@@ -269,8 +250,29 @@ function createLanguageServiceHost(
   }
   function getCustomTransformers(): ts.CustomTransformers {
     return {
-      before: [before]
+      before: [before],
+      afterDeclarations: [afterDeclarations]
     };
+    function afterDeclarations(
+      context: ts.TransformationContext
+    ): (node: ts.SourceFile) => ts.SourceFile {
+      return (node: ts.SourceFile) => {
+        let body: ts.ModuleBlock = null;
+        ts.forEachChild(node, (mod: ts.Node) => {
+          if (!ts.isModuleDeclaration(mod)) {
+            return;
+          }
+          if (mod.name.text !== "__tslab__" || !ts.isModuleBlock(mod.body)) {
+            return;
+          }
+          body = mod.body;
+        });
+        if (body) {
+          node.statements = body.statements;
+        }
+        return node;
+      };
+    }
     function before(
       context: ts.TransformationContext
     ): (node: ts.SourceFile) => ts.SourceFile {
