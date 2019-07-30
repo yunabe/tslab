@@ -4,6 +4,9 @@ import { numberLiteralTypeAnnotation } from "@babel/types";
 describe("converter diagnostics", () => {
   const conv = converter.createConverter();
 
+  // Though ASTs are cached, incremental build is slow.
+  // TODO: Fix the slow incremental build.
+
   it("syntax error", () => {
     const out = conv.convert("", `let x + 10;`);
     expect(out.diagnostics).toEqual([
@@ -54,7 +57,7 @@ describe("converter diagnostics", () => {
 describe("converter convert", () => {
   const conv = converter.createConverter();
 
-  it("let", () => {
+  it("variables", () => {
     const out = conv.convert("", `let x = 3; const y = 4.5; var z = "zz";`);
     expect(out.diagnostics).toEqual([]);
     expect(out.declOutput).toBe(

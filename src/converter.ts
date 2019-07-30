@@ -124,7 +124,7 @@ class ConverterImpl implements Converter {
     out: Diagnostic[]
   ) {
     for (const d of input) {
-      if (d.file.fileName !== "__tslab__.ts") {
+      if (!d.file || d.file.fileName !== "__tslab__.ts") {
         continue;
       }
       out.push({
@@ -144,7 +144,6 @@ export namespace __tslab__ {
 `;
     this.setContent(`${srcPrefix}${src}
 }`);
-    console.log("this.scriptContent.length:", this.scriptContent.length);
     const program = this.service.getProgram();
     const diagnostics: Diagnostic[] = [];
     ConverterImpl.convertDiagnostics(
@@ -199,35 +198,42 @@ function createLanguageServiceHost(
     if (fileName == conv.scriptName) {
       return String(conv.scriptVersion);
     }
-    return "0";
+    return "1.0.0";
   }
+
+  // Cache snapshots like filenameToScriptInfo in
+  // https://github.com/microsoft/TypeScript/blob/master/src/server/editorServices.ts
+  const nameToSnap = new Map<string, ts.IScriptSnapshot>();
   function getScriptSnapshot(fileName: string) {
-    console.log("getScriptSnapshot:", fileName);
     if (fileName == conv.scriptName) {
       return ts.ScriptSnapshot.fromString(conv.scriptContent);
     }
-    return ts.ScriptSnapshot.fromString(fs.readFileSync(fileName).toString());
+    let snapshot = nameToSnap.get(fileName);
+    if (snapshot) {
+      return snapshot;
+    }
+    snapshot = ts.ScriptSnapshot.fromString(
+      fs.readFileSync(fileName).toString()
+    );
+    nameToSnap.set(fileName, snapshot);
+    return snapshot;
   }
   function getCurrentDirectory() {
-    const cwd = process.cwd();
-    console.log("getCurrentDirectory", cwd);
-    return cwd;
+    return process.cwd();
   }
   function getCompilationSettings(): ts.CompilerOptions {
-    console.log("getCompilationSettings...");
     return {
       declaration: true,
       sourceMap: true,
       newLine: ts.NewLineKind.LineFeed,
       module: ts.ModuleKind.CommonJS,
-      target: ts.ScriptTarget.ES2017
+      target: ts.ScriptTarget.ES2017,
+      incremental: true
       // TODO: Set lib to disable DOM API. ["es2017"] does not work for some reason.
     };
   }
   function getDefaultLibFileName(options: ts.CompilerOptions): string {
-    const lib = ts.getDefaultLibFilePath(options);
-    console.log("getDefaultLibFileName:", lib);
-    return lib;
+    return ts.getDefaultLibFilePath(options);
   }
   function fileExists(path: string) {
     let exist = ts.sys.fileExists(path);
@@ -250,7 +256,6 @@ function createLanguageServiceHost(
   }
   function getCustomTransformers(): ts.CustomTransformers {
     return {
-      before: [before],
       afterDeclarations: [afterDeclarations]
     };
     function afterDeclarations(
@@ -270,34 +275,6 @@ function createLanguageServiceHost(
         if (body) {
           node.statements = body.statements;
         }
-        return node;
-      };
-    }
-    function before(
-      context: ts.TransformationContext
-    ): (node: ts.SourceFile) => ts.SourceFile {
-      console.log("======= before ========");
-      return (node: ts.SourceFile) => {
-        ts.forEachChild(node, chld => {
-          console.log("chld.kind", chld.kind);
-          if (chld.kind == ts.SyntaxKind.ModuleDeclaration) {
-            console.log("*** module 1 ***");
-          }
-          if (ts.isModuleDeclaration(chld)) {
-            console.log("*** module ***");
-            ts.forEachChild(chld.body, n => {
-              console.log("n ==", n.getText(), ts.SyntaxKind[n.kind], n.flags);
-              if (ts.isVariableStatement(n)) {
-                if (!n.modifiers) {
-                  n.modifiers = ts.createNodeArray([
-                    ts.createModifier(ts.SyntaxKind.ExportKeyword)
-                  ]);
-                  console.log("n2 ==", n.getText());
-                }
-              }
-            });
-          }
-        });
         return node;
       };
     }
