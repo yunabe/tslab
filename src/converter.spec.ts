@@ -4,7 +4,8 @@ import { numberLiteralTypeAnnotation } from "@babel/types";
 describe("converter diagnostics", () => {
   const conv = converter.createConverter();
 
-  // Though ASTs are cached, incremental build is slow.
+  // Though ASTs are cached, incremental build is slow
+  // compared to stats from `tsc --watch --diagnostics`.
   // TODO: Fix the slow incremental build.
 
   it("syntax error", () => {

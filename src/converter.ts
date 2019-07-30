@@ -227,8 +227,7 @@ function createLanguageServiceHost(
       sourceMap: true,
       newLine: ts.NewLineKind.LineFeed,
       module: ts.ModuleKind.CommonJS,
-      target: ts.ScriptTarget.ES2017,
-      incremental: true
+      target: ts.ScriptTarget.ES2017
       // TODO: Set lib to disable DOM API. ["es2017"] does not work for some reason.
     };
   }
