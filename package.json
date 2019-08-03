@@ -8,7 +8,7 @@
   "license": "MIT",
   "dependencies": {
     "glob": "^7.1.4",
-    "typescript": "^3.5.3",
+    "typescript": "^3.6.0-dev.20190802",
     "zeromq": "^5.1.0"
   },
   "scripts": {

@@ -1,12 +1,13 @@
 import * as converter from "./converter";
-import { numberLiteralTypeAnnotation } from "@babel/types";
 
 describe("converter diagnostics", () => {
-  const conv = converter.createConverter();
-
-  // Though ASTs are cached, incremental build is slow
-  // compared to stats from `tsc --watch --diagnostics`.
-  // TODO: Fix the slow incremental build.
+  let conv: converter.Converter;
+  beforeAll(() => {
+    conv = converter.createConverter();
+  });
+  afterAll(() => {
+    conv.close();
+  });
 
   it("syntax error", () => {
     const out = conv.convert("", `let x + 10;`);
@@ -52,17 +53,5 @@ describe("converter diagnostics", () => {
         start: 15
       }
     ]);
-  });
-});
-
-describe("converter convert", () => {
-  const conv = converter.createConverter();
-
-  it("variables", () => {
-    const out = conv.convert("", `let x = 3; const y = 4.5; var z = "zz";`);
-    expect(out.diagnostics).toEqual([]);
-    expect(out.declOutput).toBe(
-      "let x: number;\nconst y = 4.5;\nvar z: string;\n"
-    );
   });
 });
