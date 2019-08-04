@@ -85,6 +85,7 @@ export interface Converter {
 }
 
 const srcName = "__tslab__.ts";
+const dstName = "__tslab__.js";
 
 export function createConverter(): Converter {
   let content: string = "";
@@ -116,7 +117,9 @@ export function createConverter(): Converter {
     [srcName],
     {
       module: ts.ModuleKind.CommonJS,
-      target: ts.ScriptTarget.ES2017
+      target: ts.ScriptTarget.ES2017,
+      // Remove 'use strict' from outputs.
+      noImplicitUseStrict: true
     },
     sys,
     null,
@@ -148,7 +151,14 @@ export function createConverter(): Converter {
     updateContent(prefix + src);
     const program = builder.getProgram();
     const srcFile = builder.getSourceFile(srcName);
+    let output: string;
+    builder.emit(srcFile, (fileName: string, data: string) => {
+      if (fileName === dstName) {
+        output = data;
+      }
+    });
     return {
+      output,
       diagnostics: convertDiagnostics(
         prefix.length,
         ts.getPreEmitDiagnostics(program, srcFile)
