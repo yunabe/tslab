@@ -86,6 +86,7 @@ export interface Converter {
 
 const srcName = "__tslab__.ts";
 const dstName = "__tslab__.js";
+const dstDeclName = "__tslab__.d.ts";
 
 export function createConverter(): Converter {
   let content: string = "";
@@ -118,6 +119,7 @@ export function createConverter(): Converter {
     {
       module: ts.ModuleKind.CommonJS,
       target: ts.ScriptTarget.ES2017,
+      declaration: true,
       // Remove 'use strict' from outputs.
       noImplicitUseStrict: true
     },
@@ -149,16 +151,43 @@ export function createConverter(): Converter {
   function convert(prevDecl: string, src: string): ConvertResult {
     const prefix = "export {}" + sys.newLine;
     updateContent(prefix + src);
-    const program = builder.getProgram();
-    const srcFile = builder.getSourceFile(srcName);
+    let program = builder.getProgram();
+    let srcFile = builder.getSourceFile(srcName);
+
+    const locals = (srcFile as any).locals;
+    const keys: string[] = [];
+    if (locals) {
+      locals.forEach((_: any, key: any) => {
+        keys.push(key);
+      });
+    }
+    if (keys.length > 0) {
+      // Export all local variables.
+      // TODO: Disallow "export" in the input.
+      const suffix = "\nexport {" + keys.join(", ") + "}";
+      updateContent(prefix + src + suffix);
+      program = builder.getProgram();
+      srcFile = builder.getSourceFile(srcName);
+    }
+
     let output: string;
-    builder.emit(srcFile, (fileName: string, data: string) => {
-      if (fileName === dstName) {
-        output = data;
-      }
-    });
+    let declOutput: string;
+    builder.emit(
+      srcFile,
+      (fileName: string, data: string) => {
+        if (fileName === dstName) {
+          output = data;
+        } else if (fileName === dstDeclName) {
+          declOutput = data;
+        }
+      },
+      undefined,
+      undefined,
+      getCustomTransformers()
+    );
     return {
       output,
+      declOutput,
       diagnostics: convertDiagnostics(
         prefix.length,
         ts.getPreEmitDiagnostics(program, srcFile)
@@ -193,5 +222,51 @@ export function createConverter(): Converter {
       });
     }
     return ret;
+  }
+
+  function getCustomTransformers(): ts.CustomTransformers {
+    return {
+      after: [after],
+      afterDeclarations: [afterDeclarations]
+    };
+    function after(
+      context: ts.TransformationContext
+    ): (node: ts.SourceFile) => ts.SourceFile {
+      // Delete all exports.x = ...
+      return (node: ts.SourceFile) => {
+        node.statements = ts.createNodeArray(
+          node.statements.filter(stmt => !isExportsAssign(stmt))
+        );
+        return node;
+      };
+    }
+    function afterDeclarations(
+      context: ts.TransformationContext
+    ): (node: ts.SourceFile) => ts.SourceFile {
+      // Delete all exports { ... }
+      return (node: ts.SourceFile) => {
+        const statements = [];
+        for (const stmt of node.statements) {
+          if (ts.isExportDeclaration(stmt)) {
+            continue;
+          }
+          statements.push(stmt);
+        }
+        node.statements = ts.createNodeArray(statements);
+        return node;
+      };
+    }
+    function isExportsAssign(stmt: ts.Statement): boolean {
+      if (
+        !ts.isExpressionStatement(stmt) ||
+        !ts.isBinaryExpression(stmt.expression) ||
+        stmt.expression.operatorToken.kind !== ts.SyntaxKind.FirstAssignment ||
+        !ts.isPropertyAccessExpression(stmt.expression.left)
+      ) {
+        return false;
+      }
+      const expr = stmt.expression.left.expression;
+      return ts.isIdentifier(expr) && expr.escapedText === "exports";
+    }
   }
 }

@@ -24,6 +24,12 @@ const y = 'foo';
 var z = true;
 `
     );
+    expect(out.declOutput).toEqual(
+      `declare let x: number;
+declare const y = "foo";
+declare var z: boolean;
+`
+    );
   });
 
   it("functions", () => {
@@ -61,6 +67,12 @@ async function sleep(ms) {
         setTimeout(resolve, ms);
     });
 }
+`
+    );
+    expect(out.declOutput).toEqual(
+      `declare function sum(x: number, y: number): number;
+declare function xrange(n: number): IterableIterator<number>;
+declare function sleep(ms: number): Promise<never>;
 `
     );
   });
