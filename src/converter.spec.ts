@@ -15,14 +15,18 @@ describe("converter valid", () => {
       `let x = 123;
 const y = 'foo';
 var z = true;
+x *= 2;
 `
     );
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
-      `Object.defineProperty(exports, \"__esModule\", { value: true });
-let x = 123;
+      `let x = 123;
+exports.x = x;
 const y = 'foo';
+exports.y = y;
 var z = true;
+exports.z = z;
+exports.x = x *= 2;
 `
     );
     expect(out.declOutput).toEqual(
@@ -54,20 +58,22 @@ declare var z: boolean;
     );
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
-      `Object.defineProperty(exports, \"__esModule\", { value: true });
-function sum(x, y) {
+      `function sum(x, y) {
     return x + y;
 }
+exports.sum = sum;
 function* xrange(n) {
     for (let i = 0; i < n; i++) {
         yield i;
     }
 }
+exports.xrange = xrange;
 async function sleep(ms) {
     return new Promise(resolve => {
         setTimeout(resolve, ms);
     });
 }
+exports.sleep = sleep;
 `
     );
     expect(out.declOutput).toEqual(
@@ -90,11 +96,12 @@ function increment() {
     );
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
-      `Object.defineProperty(exports, \"__esModule\", { value: true });
-let counter = 0;
+      `let counter = 0;
+exports.counter = counter;
 function increment() {
     exports.counter = counter += 1;
 }
+exports.increment = increment;
 `
     );
     expect(out.declOutput).toEqual(`declare let counter: number;
@@ -125,14 +132,13 @@ class SquareImpl implements Square {
 `
     );
     expect(out.diagnostics).toEqual([]);
-    expect(out.output)
-      .toEqual(`Object.defineProperty(exports, \"__esModule\", { value: true });
-class SquareImpl {
+    expect(out.output).toEqual(`class SquareImpl {
     constructor(color, sideLength) {
         this.color = color;
         this.sideLength = sideLength;
     }
 }
+exports.SquareImpl = SquareImpl;
 `);
     expect(out.declOutput).toEqual(`interface Shape {
     color: string;
@@ -158,11 +164,10 @@ function identity<T>(arg: T): T {
 `
     );
     expect(out.diagnostics).toEqual([]);
-    expect(out.output)
-      .toEqual(`Object.defineProperty(exports, "__esModule", { value: true });
-function identity(arg) {
+    expect(out.output).toEqual(`function identity(arg) {
     return arg;
 }
+exports.identity = identity;
 `);
     expect(out.declOutput).toEqual(
       "declare function identity<T>(arg: T): T;\n"
@@ -181,15 +186,14 @@ enum Direction {
 }`
     );
     expect(out.diagnostics).toEqual([]);
-    expect(out.output)
-      .toEqual(`Object.defineProperty(exports, "__esModule", { value: true });
-var Direction;
+    expect(out.output).toEqual(`var Direction;
 (function (Direction) {
     Direction[Direction["Up"] = 1] = "Up";
     Direction[Direction["Down"] = 2] = "Down";
     Direction[Direction["Left"] = 3] = "Left";
     Direction[Direction["Right"] = 4] = "Right";
 })(Direction || (Direction = {}));
+exports.Direction = Direction;
 `);
     expect(out.declOutput).toEqual(`declare enum Direction {
     Up = 1,

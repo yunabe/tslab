@@ -232,11 +232,9 @@ export function createConverter(): Converter {
     function after(
       context: ts.TransformationContext
     ): (node: ts.SourceFile) => ts.SourceFile {
-      // Delete all exports.x = ...
       return (node: ts.SourceFile) => {
-        node.statements = ts.createNodeArray(
-          node.statements.filter(stmt => !isExportsAssign(stmt))
-        );
+        // Delete Object.defineProperty(exports, \"__esModule\", { value: true });
+        node.statements = ts.createNodeArray(node.statements.slice(1));
         return node;
       };
     }
@@ -255,18 +253,6 @@ export function createConverter(): Converter {
         node.statements = ts.createNodeArray(statements);
         return node;
       };
-    }
-    function isExportsAssign(stmt: ts.Statement): boolean {
-      if (
-        !ts.isExpressionStatement(stmt) ||
-        !ts.isBinaryExpression(stmt.expression) ||
-        stmt.expression.operatorToken.kind !== ts.SyntaxKind.FirstAssignment ||
-        !ts.isPropertyAccessExpression(stmt.expression.left)
-      ) {
-        return false;
-      }
-      const expr = stmt.expression.left.expression;
-      return ts.isIdentifier(expr) && expr.escapedText === "exports";
     }
   }
 }
