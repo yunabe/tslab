@@ -203,6 +203,30 @@ exports.Direction = Direction;
 }
 `);
   });
+
+  it("imported", () => {
+    const out = conv.convert(
+      "",
+      `
+import * as os from "os";
+import { CpuInfo } from "os";
+let info: CpuInfo;
+`
+    );
+    expect(out.diagnostics).toEqual([]);
+    expect(out.output).toEqual(`const os = require(\"os\");
+exports.os = os;
+let info;
+exports.info = info;
+`);
+    // let info: CpuInfo; in src causes /// reference for some reason.
+    // TODO: Understand why /// reference is in the output.
+    expect(out.declOutput).toEqual(`/// <reference types="node" />
+import * as os from "os";
+import { CpuInfo } from "os";
+declare let info: CpuInfo;
+`);
+  });
 });
 
 describe("converter diagnostics", () => {
