@@ -16,6 +16,8 @@ describe("converter valid", () => {
 const y = 'foo';
 var z = true;
 x *= 2;
+let obj = {a: 10, b: 'hello'};
+let {a, b: c} = obj;
 `
     );
     expect(out.diagnostics).toEqual([]);
@@ -27,12 +29,22 @@ exports.y = y;
 var z = true;
 exports.z = z;
 exports.x = x *= 2;
+let obj = { a: 10, b: 'hello' };
+exports.obj = obj;
+let { a, b: c } = obj;
+exports.a = a;
+exports.c = c;
 `
     );
     expect(out.declOutput).toEqual(
       `declare let x: number;
 declare const y = "foo";
 declare var z: boolean;
+declare let obj: {
+    a: number;
+    b: string;
+};
+declare let a: number, c: string;
 `
     );
   });
@@ -209,7 +221,7 @@ exports.Direction = Direction;
       "",
       `
 import * as os from "os";
-import { CpuInfo } from "os";
+import { CpuInfo, UserInfo } from "os";
 let info: CpuInfo;
 `
     );
@@ -223,7 +235,7 @@ exports.info = info;
     // TODO: Understand why /// reference is in the output.
     expect(out.declOutput).toEqual(`/// <reference types="node" />
 import * as os from "os";
-import { CpuInfo } from "os";
+import { CpuInfo, UserInfo } from "os";
 declare let info: CpuInfo;
 `);
   });

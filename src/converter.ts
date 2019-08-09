@@ -6,65 +6,6 @@ const tsLabNs = "__tslab__";
 
 const createSourceFileOrig = ts.createSourceFile;
 
-(ts as any).createSourceFile = function createSourceFile(
-  fileName: string,
-  sourceText: string,
-  languageVersion: ts.ScriptTarget,
-  setParentNodes?: boolean,
-  scriptKind?: ts.ScriptKind
-): ts.SourceFile {
-  const file = createSourceFileOrig(
-    fileName,
-    sourceText,
-    languageVersion,
-    setParentNodes,
-    scriptKind
-  );
-  ts.forEachChild(file, mod => {
-    if (!ts.isModuleDeclaration(mod)) {
-      return;
-    }
-    if (mod.name.text !== tsLabNs) {
-      return;
-    }
-    ts.forEachChild(mod.body, stmt => {
-      if (
-        ts.isVariableStatement(stmt) ||
-        ts.isClassDeclaration(stmt) ||
-        ts.isInterfaceDeclaration(stmt) ||
-        ts.isTypeAliasDeclaration(stmt)
-      ) {
-        addExportToNode(stmt);
-      }
-    });
-  });
-  return file;
-};
-
-function addExportToNode(node: ts.Node): void {
-  if (!node.modifiers) {
-    node.modifiers = ts.createNodeArray([
-      ts.createModifier(ts.SyntaxKind.ExportKeyword)
-    ]);
-    return;
-  }
-  for (const modifier of node.modifiers) {
-    if (modifier.kind == ts.SyntaxKind.ExportKeyword) {
-      return;
-    }
-  }
-  const modifiers: ts.Modifier[] = [
-    ts.createModifier(ts.SyntaxKind.ExportKeyword)
-  ];
-  for (const modifier of node.modifiers) {
-    modifiers.push(modifier);
-  }
-  node.modifiers = ts.createNodeArray(
-    modifiers,
-    node.modifiers.hasTrailingComma
-  );
-}
-
 export interface ConvertResult {
   output?: string;
   declOutput?: string;
