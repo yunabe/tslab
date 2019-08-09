@@ -8,6 +8,14 @@ afterAll(() => {
   conv.close();
 });
 
+interface Shape {
+  color: string;
+}
+
+interface Square extends Shape {
+  sideLength: number;
+}
+
 describe("converter valid", () => {
   it("variables", () => {
     const out = conv.convert(
@@ -76,6 +84,52 @@ declare function sleep(ms: number): Promise<never>;
 `
     );
   });
+
+  it("interfaces and classes", () => {
+    const out = conv.convert(
+      "",
+      `interface Shape {
+  color: string;
+}
+
+interface Square extends Shape {
+  sideLength: number;
+}
+
+class SquareImpl implements Square {  
+  color: string;
+  sideLength: number;
+
+  constructor(color: string, sideLength: number) {
+    this.color = color;
+    this.sideLength = sideLength;
+  }
+}
+`
+    );
+    expect(out.diagnostics).toEqual([]);
+    expect(out.output)
+      .toEqual(`Object.defineProperty(exports, \"__esModule\", { value: true });
+class SquareImpl {
+    constructor(color, sideLength) {
+        this.color = color;
+        this.sideLength = sideLength;
+    }
+}
+`);
+    expect(out.declOutput).toEqual(`interface Shape {
+    color: string;
+}
+interface Square extends Shape {
+    sideLength: number;
+}
+declare class SquareImpl implements Square {
+    color: string;
+    sideLength: number;
+    constructor(color: string, sideLength: number);
+}
+`);
+  });
 });
 
 describe("converter diagnostics", () => {
@@ -121,6 +175,28 @@ describe("converter diagnostics", () => {
         length: 1,
         messageText: "Cannot redeclare block-scoped variable 'x'.",
         start: 15
+      }
+    ]);
+  });
+
+  it("wrong implementation", () => {
+    const out = conv.convert(
+      "",
+      `interface Shape {
+  color: string;
+}  
+
+class ShapeImpl implements Shape {}
+`
+    );
+    expect(out.diagnostics).toEqual([
+      {
+        category: 1,
+        code: 2420,
+        length: 9,
+        // TODO: Fix this error message.
+        messageText: "[object Object]",
+        start: 46
       }
     ]);
   });
