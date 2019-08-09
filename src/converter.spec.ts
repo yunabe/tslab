@@ -8,21 +8,14 @@ afterAll(() => {
   conv.close();
 });
 
-interface Shape {
-  color: string;
-}
-
-interface Square extends Shape {
-  sideLength: number;
-}
-
 describe("converter valid", () => {
   it("variables", () => {
     const out = conv.convert(
       "",
       `let x = 123;
 const y = 'foo';
-var z = true;`
+var z = true;
+`
     );
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
@@ -85,6 +78,30 @@ declare function sleep(ms: number): Promise<never>;
     );
   });
 
+  it("side-effect to var", () => {
+    const out = conv.convert(
+      "",
+      `
+let counter = 0;
+function increment() {
+  counter++;
+}
+`
+    );
+    expect(out.diagnostics).toEqual([]);
+    expect(out.output).toEqual(
+      `Object.defineProperty(exports, \"__esModule\", { value: true });
+let counter = 0;
+function increment() {
+    exports.counter = counter += 1;
+}
+`
+    );
+    expect(out.declOutput).toEqual(`declare let counter: number;
+declare function increment(): void;
+`);
+  });
+
   it("interfaces and classes", () => {
     const out = conv.convert(
       "",
@@ -127,6 +144,58 @@ declare class SquareImpl implements Square {
     color: string;
     sideLength: number;
     constructor(color: string, sideLength: number);
+}
+`);
+  });
+
+  it("generics", () => {
+    const out = conv.convert(
+      "",
+      `
+function identity<T>(arg: T): T {
+  return arg;
+}
+`
+    );
+    expect(out.diagnostics).toEqual([]);
+    expect(out.output)
+      .toEqual(`Object.defineProperty(exports, "__esModule", { value: true });
+function identity(arg) {
+    return arg;
+}
+`);
+    expect(out.declOutput).toEqual(
+      "declare function identity<T>(arg: T): T;\n"
+    );
+  });
+
+  it("enum", () => {
+    const out = conv.convert(
+      "",
+      `
+enum Direction {
+  Up = 1,
+  Down,
+  Left,
+  Right,
+}`
+    );
+    expect(out.diagnostics).toEqual([]);
+    expect(out.output)
+      .toEqual(`Object.defineProperty(exports, "__esModule", { value: true });
+var Direction;
+(function (Direction) {
+    Direction[Direction["Up"] = 1] = "Up";
+    Direction[Direction["Down"] = 2] = "Down";
+    Direction[Direction["Left"] = 3] = "Left";
+    Direction[Direction["Right"] = 4] = "Right";
+})(Direction || (Direction = {}));
+`);
+    expect(out.declOutput).toEqual(`declare enum Direction {
+    Up = 1,
+    Down = 2,
+    Left = 3,
+    Right = 4
 }
 `);
   });
