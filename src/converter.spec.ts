@@ -305,8 +305,16 @@ class ShapeImpl implements Shape {}
         category: 1,
         code: 2420,
         length: 9,
-        // TODO: Fix this error message.
-        messageText: "[object Object]",
+        messageText:
+          "Class 'ShapeImpl' incorrectly implements interface 'Shape'.",
+        start: 46
+      },
+      {
+        category: 1,
+        code: 2741,
+        length: 9,
+        messageText:
+          "Property 'color' is missing in type 'ShapeImpl' but required in type 'Shape'.",
         start: 46
       }
     ]);

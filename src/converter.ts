@@ -191,15 +191,45 @@ export function createConverter(): Converter {
       if (!d.file || d.file.fileName !== "__tslab__.ts") {
         continue;
       }
-      ret.push({
-        start: d.start - offset,
-        length: d.length,
-        messageText: d.messageText.toString(),
-        category: d.category,
-        code: d.code
-      });
+      if (typeof d.messageText === "string") {
+        ret.push({
+          start: d.start - offset,
+          length: d.length,
+          messageText: d.messageText.toString(),
+          category: d.category,
+          code: d.code
+        });
+        continue;
+      }
+      traverseDiagnosticMessageChain(
+        d.start - offset,
+        d.length,
+        d.messageText,
+        ret
+      );
     }
     return ret;
+  }
+
+  function traverseDiagnosticMessageChain(
+    start: number,
+    length: number,
+    msg: ts.DiagnosticMessageChain,
+    out: Diagnostic[]
+  ) {
+    out.push({
+      start,
+      length,
+      messageText: msg.messageText,
+      category: msg.category,
+      code: msg.code
+    });
+    if (!msg.next) {
+      return;
+    }
+    for (const child of msg.next) {
+      traverseDiagnosticMessageChain(start, length, child, out);
+    }
   }
 
   function getCustomTransformers(): ts.CustomTransformers {
