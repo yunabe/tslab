@@ -5,7 +5,9 @@ beforeAll(() => {
   conv = converter.createConverter();
 });
 afterAll(() => {
-  conv.close();
+  if (conv) {
+    conv.close();
+  }
 });
 
 describe("converter valid", () => {
@@ -308,5 +310,18 @@ class ShapeImpl implements Shape {}
         start: 46
       }
     ]);
+  });
+});
+
+describe("with prev", () => {
+  it("basics", () => {
+    const out0 = conv.convert("", "let x = 123;");
+    expect(out0.diagnostics).toEqual([]);
+    expect(out0.declOutput).toEqual("declare let x: number;\n");
+    const out1 = conv.convert(out0.declOutput, "let y = x * x;");
+    expect(out1.diagnostics).toEqual([]);
+    expect(out1.output).toEqual("let y = x * x;\nexports.y = y;\n");
+    // TODO: Include let x; into out1.declOutput.
+    expect(out1.declOutput).toEqual("declare let y: number;\n");
   });
 });

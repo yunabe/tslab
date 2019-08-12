@@ -28,35 +28,60 @@ export interface Converter {
 const srcName = "__tslab__.ts";
 const dstName = "__tslab__.js";
 const dstDeclName = "__tslab__.d.ts";
+const prevName = "__prev__.d.ts";
+
+interface RebuildTimer {
+  callback: (...args: any[]) => void;
+  rand: number;
+}
 
 export function createConverter(): Converter {
   let content: string = "";
+  let prevContent: string = "";
   let builder: ts.BuilderProgram = null;
 
   const sys = Object.create(ts.sys) as ts.System;
-  sys.setTimeout = callback => {
-    callback();
+  let rebuildTimer: RebuildTimer = null;
+  sys.setTimeout = (callback: (...args: any[]) => void): any => {
+    if (rebuildTimer) {
+      throw new Error("Unexpected pending rebuildTimer");
+    }
+    rebuildTimer = { callback, rand: Math.floor(Math.random() * 1000) };
+    return rebuildTimer;
+  };
+  sys.clearTimeout = (timeoutId: any) => {
+    if (rebuildTimer === timeoutId) {
+      rebuildTimer = null;
+      return;
+    }
+    throw new Error("clearing unexpected tiemr");
   };
   sys.readFile = function(path, encoding) {
     if (path === srcName) {
       return content;
+    }
+    if (path === prevName) {
+      return prevContent;
     }
     return ts.sys.readFile(path, encoding);
   };
   sys.writeFile = function(path, data) {
     throw new Error("writeFile should not be called");
   };
-  let notifyUpdate: ts.FileWatcherCallback = null;
+  let notifyUpdateSrc: ts.FileWatcherCallback = null;
+  let notifyUpdatePrev: ts.FileWatcherCallback = null;
   sys.watchFile = (path, callback) => {
     if (path === srcName) {
-      notifyUpdate = callback;
+      notifyUpdateSrc = callback;
+    } else if (path === prevName) {
+      notifyUpdatePrev = callback;
     }
     return {
       close: () => {}
     };
   };
   const host = ts.createWatchCompilerHost(
-    [srcName],
+    [prevName, srcName],
     {
       module: ts.ModuleKind.CommonJS,
       target: ts.ScriptTarget.ES2017,
@@ -90,9 +115,10 @@ export function createConverter(): Converter {
   }
 
   function convert(prevDecl: string, src: string): ConvertResult {
-    const prefix = "export {}" + sys.newLine;
-    updateContent(prefix + src);
+    const srcPrefix = "export {}" + sys.newLine;
+    updateContent(prevDecl, srcPrefix + src);
     let program = builder.getProgram();
+    let prevFile = builder.getSourceFile(prevName);
     let srcFile = builder.getSourceFile(srcName);
 
     const locals = (srcFile as any).locals;
@@ -106,10 +132,12 @@ export function createConverter(): Converter {
       // Export all local variables.
       // TODO: Disallow "export" in the input.
       const suffix = "\nexport {" + keys.join(", ") + "}";
-      updateContent(prefix + src + suffix);
+      updateContent(prevDecl, srcPrefix + src + suffix);
       program = builder.getProgram();
+      prevFile = builder.getSourceFile(prevName);
       srcFile = builder.getSourceFile(srcName);
     }
+    srcFile.parent = prevFile;
 
     let output: string;
     let declOutput: string;
@@ -130,16 +158,25 @@ export function createConverter(): Converter {
       output,
       declOutput,
       diagnostics: convertDiagnostics(
-        prefix.length,
+        srcPrefix.length,
         ts.getPreEmitDiagnostics(program, srcFile)
       )
     };
   }
 
-  function updateContent(c: string) {
+  function updateContent(p: string, c: string) {
     content = c;
+    prevContent = p;
     builder = null;
-    notifyUpdate(srcName, ts.FileWatcherEventKind.Changed);
+    // TODO: Notify updates only when src is really updated,
+    // unless there is another cache layer in watcher API.
+    notifyUpdateSrc(srcName, ts.FileWatcherEventKind.Changed);
+    notifyUpdatePrev(prevName, ts.FileWatcherEventKind.Changed);
+    if (!rebuildTimer) {
+      throw new Error("rebuildTimer is not set properly");
+    }
+    rebuildTimer.callback();
+    rebuildTimer = null;
     if (!builder) {
       throw new Error("builder is not recreated");
     }
