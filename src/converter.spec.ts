@@ -332,4 +332,15 @@ describe("with prev", () => {
     // TODO: Include let x; into out1.declOutput.
     expect(out1.declOutput).toEqual("declare let y: number;\n");
   });
+
+  it("overwrite-global", () => {
+    let out = conv.convert("", "let x = process;");
+    expect(out.diagnostics).toEqual([]);
+    expect(out.declOutput).toEqual(`/// <reference types="node" />
+declare let x: NodeJS.Process;
+`);
+    out = conv.convert("declare let process: number", "let x = process;");
+    expect(out.diagnostics).toEqual([]);
+    expect(out.declOutput).toEqual("declare let x: number;\n");
+  });
 });
