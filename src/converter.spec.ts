@@ -98,6 +98,27 @@ declare function sleep(ms: number): Promise<never>;
     );
   });
 
+  it("destructuring", () => {
+    const out = conv.convert(
+      "",
+      `
+      let [x, y] = [123, 'hello'];
+      let { a, b: c } = { a: 123, b: "hello" };
+      `
+    );
+    expect(out.diagnostics).toEqual([]);
+    expect(out.output).toEqual(`let [x, y] = [123, 'hello'];
+exports.x = x;
+exports.y = y;
+let { a, b: c } = { a: 123, b: \"hello\" };
+exports.a = a;
+exports.c = c;
+`);
+    expect(out.declOutput).toEqual(`declare let x: number, y: string;
+declare let a: number, c: string;
+`);
+  });
+
   it("side-effect to var", () => {
     const out = conv.convert(
       "",
@@ -223,6 +244,7 @@ exports.Direction = Direction;
       "",
       `
 import * as os from "os";
+const os2 = os;
 import { CpuInfo, UserInfo } from "os";
 let info: CpuInfo;
 `
@@ -230,6 +252,8 @@ let info: CpuInfo;
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(`const os = require(\"os\");
 exports.os = os;
+const os2 = os;
+exports.os2 = os2;
 let info;
 exports.info = info;
 `);
@@ -237,6 +261,7 @@ exports.info = info;
     // TODO: Understand why /// reference is in the output.
     expect(out.declOutput).toEqual(`/// <reference types="node" />
 import * as os from "os";
+declare const os2: typeof os;
 import { CpuInfo, UserInfo } from "os";
 declare let info: CpuInfo;
 `);
