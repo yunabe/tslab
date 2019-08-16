@@ -241,6 +241,40 @@ import { CpuInfo, UserInfo } from "os";
 declare let info: CpuInfo;
 `);
   });
+
+  it("interface merge", () => {
+    // Interfaces are not merged in declOutput.
+    const out = conv.convert(
+      "",
+      `
+      interface MyInterface {
+        abc: number;
+      }
+      interface MyInterface {
+        xyz: string;
+      }
+      let obj: MyInterface = {
+        abc: 123,
+        xyz: "hello"
+      };
+      `
+    );
+    expect(out.diagnostics).toEqual([]);
+    expect(out.output).toEqual(`let obj = {
+    abc: 123,
+    xyz: \"hello\"
+};
+exports.obj = obj;
+`);
+    expect(out.declOutput).toEqual(`interface MyInterface {
+    abc: number;
+}
+interface MyInterface {
+    xyz: string;
+}
+declare let obj: MyInterface;
+`);
+  });
 });
 
 describe("converter diagnostics", () => {
@@ -319,6 +353,28 @@ class ShapeImpl implements Shape {}
       }
     ]);
   });
+
+  it("overwrite-implicit-types", () => {
+    const out = conv.convert(
+      "",
+      `
+      async function fn() {
+        return 0;
+      }
+      class Promise {}
+      `
+    );
+    expect(out.diagnostics).toEqual([
+      {
+        category: 1,
+        code: 4060,
+        length: 2,
+        messageText:
+          "Return type of exported function has or is using private name 'Promise'.",
+        start: 22
+      }
+    ]);
+  });
 });
 
 describe("with prev", () => {
@@ -342,5 +398,33 @@ declare let x: NodeJS.Process;
     out = conv.convert("declare let process: number", "let x = process;");
     expect(out.diagnostics).toEqual([]);
     expect(out.declOutput).toEqual("declare let x: number;\n");
+  });
+
+  it("overwrite-global-interface", () => {
+    let out = conv.convert(
+      "",
+      `
+interface Map {
+  mymethod(): number;
+}
+function createMap(): Map {
+  return null;
+}
+let m = createMap();
+`
+    );
+    expect(out.diagnostics).toEqual([]);
+    expect(out.declOutput).toEqual(
+      `interface Map {
+    mymethod(): number;
+}
+declare function createMap(): Map;
+declare let m: Map;
+`
+    );
+    out = conv.convert(out.declOutput, "let n = createMap();");
+    expect(out.diagnostics).toEqual([]);
+    // TODO(yunabe): The type of n must be Map.
+    expect(out.declOutput).toEqual("declare let n: any;\n");
   });
 });
