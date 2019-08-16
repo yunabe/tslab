@@ -56,10 +56,10 @@ export function createConverter(): Converter {
   };
   sys.readFile = function(path, encoding) {
     if (path === srcFilename) {
-      return srcContent;
+      return srcPrefix + srcContent;
     }
     if (path === declFilename) {
-      return declContent;
+      return srcPrefix + declContent;
     }
     return ts.sys.readFile(path, encoding);
   };
@@ -113,7 +113,7 @@ export function createConverter(): Converter {
   }
 
   function convert(prevDecl: string, src: string): ConvertResult {
-    updateContent(prevDecl, srcPrefix + src);
+    updateContent(prevDecl, src);
     let program = builder.getProgram();
     let declsFile = builder.getSourceFile(declFilename);
     let srcFile = builder.getSourceFile(srcFilename);
@@ -129,7 +129,7 @@ export function createConverter(): Converter {
       // Export all local variables.
       // TODO: Disallow "export" in the input.
       const suffix = "\nexport {" + keys.join(", ") + "}";
-      updateContent(prevDecl, srcPrefix + src + suffix);
+      updateContent(prevDecl, src + suffix);
       program = builder.getProgram();
       declsFile = builder.getSourceFile(declFilename);
       srcFile = builder.getSourceFile(srcFilename);

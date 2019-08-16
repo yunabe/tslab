@@ -424,7 +424,6 @@ declare let m: Map;
     );
     out = conv.convert(out.declOutput, "let n = createMap();");
     expect(out.diagnostics).toEqual([]);
-    // TODO(yunabe): The type of n must be Map.
-    expect(out.declOutput).toEqual("declare let n: any;\n");
+    expect(out.declOutput).toEqual("declare let n: Map;\n");
   });
 });
