@@ -373,7 +373,7 @@ class ShapeImpl implements Shape {}
         length: 9,
         messageText:
           "Class 'ShapeImpl' incorrectly implements interface 'Shape'.",
-        start: 46
+        start: 44
       },
       {
         category: 1,
@@ -381,7 +381,7 @@ class ShapeImpl implements Shape {}
         length: 9,
         messageText:
           "Property 'color' is missing in type 'ShapeImpl' but required in type 'Shape'.",
-        start: 46
+        start: 44
       }
     ]);
   });
