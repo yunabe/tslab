@@ -155,7 +155,7 @@ interface Square extends Shape {
   sideLength: number;
 }
 
-class SquareImpl implements Square {  
+class SquareImpl implements Square {
   color: string;
   sideLength: number;
 
@@ -187,6 +187,13 @@ declare class SquareImpl implements Square {
     constructor(color: string, sideLength: number);
 }
 `);
+  });
+
+  it("types", () => {
+    const out = conv.convert("", `type mytype = number | string;`);
+    expect(out.diagnostics).toEqual([]);
+    expect(out.output).toEqual("");
+    expect(out.declOutput).toEqual("declare type mytype = number | string;\n");
   });
 
   it("generics", () => {
@@ -354,7 +361,7 @@ describe("converter diagnostics", () => {
       "",
       `interface Shape {
   color: string;
-}  
+}
 
 class ShapeImpl implements Shape {}
 `
