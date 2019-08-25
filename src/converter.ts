@@ -118,7 +118,7 @@ export function createConverter(): Converter {
     let declsFile = builder.getSourceFile(declFilename);
     let srcFile = builder.getSourceFile(srcFilename);
 
-    const locals = (srcFile as any).locals;
+    const locals = (srcFile as any).locals as ts.SymbolTable;
     const keys: string[] = [];
     if (locals) {
       locals.forEach((_: any, key: any) => {
