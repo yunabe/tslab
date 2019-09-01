@@ -274,6 +274,23 @@ declare let info: CpuInfo;
 `);
   });
 
+  it("indirect import", () => {
+    const out = conv.convert(
+      "",
+      `
+import { userInfo } from "os";
+let info = userInfo();
+`
+    );
+    expect(out.diagnostics).toEqual([]);
+    expect(out.declOutput).toEqual(
+      `/// <reference types="node" />
+import { userInfo } from \"os\";
+declare let info: import(\"os\").UserInfo<string>;
+`
+    );
+  });
+
   it("interface merge", () => {
     // Interfaces are not merged in declOutput.
     const out = conv.convert(
