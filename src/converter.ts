@@ -151,6 +151,7 @@ export function createConverter(): Converter {
       undefined,
       getCustomTransformers()
     );
+    declOutput += remainingDecls(program.getTypeChecker(), srcFile, declsFile);
     return {
       output,
       declOutput,
@@ -159,6 +160,88 @@ export function createConverter(): Converter {
         ts.getPreEmitDiagnostics(program, srcFile)
       )
     };
+  }
+
+  function remainingDecls(
+    checker: ts.TypeChecker,
+    srcSF: ts.SourceFile,
+    declsSF: ts.SourceFile
+  ): string {
+    const declLocals = (declsSF as any).locals as ts.SymbolTable;
+    const locals = (srcSF as any).locals as ts.SymbolTable;
+    let keepMap = new Map<ts.Node, Set<string>>();
+    function addName(node: ts.Node, name: string) {
+      let set = keepMap.get(node);
+      if (!set) {
+        set = new Set();
+        keepMap.set(node, set);
+      }
+      set.add(name);
+    }
+    declLocals.forEach((sym, key) => {
+      let keep = checkKeepDeclType(checker, locals.get(key));
+      if (!keep.type && !keep.value) {
+        return;
+      }
+      sym.declarations.forEach(decl => {
+        let node = decl as ts.Node;
+        while (node.parent !== declsSF) {
+          node = node.parent;
+        }
+        if (node.kind == ts.SyntaxKind.VariableStatement) {
+          if (keep.value) {
+            addName(node, key.toString());
+          }
+          return;
+        }
+        // TODO: Support more kinds.
+      });
+    });
+    let statements = [];
+    declsSF.statements.forEach(stmt => {
+      let names = keepMap.get(stmt);
+      if (!names) {
+        return;
+      }
+      statements.push(stmt);
+      if (ts.isVariableStatement(stmt)) {
+        const decls: ts.VariableDeclaration[] = [];
+        stmt.declarationList.declarations.forEach(decl => {
+          if (!ts.isIdentifier(decl.name)) {
+            // This must not happen.
+            return;
+          }
+          if (!names.has(decl.name.escapedText.toString())) {
+            return;
+          }
+          decls.push(decl);
+        });
+        stmt.declarationList.declarations = ts.createNodeArray(decls);
+      }
+    });
+    declsSF.statements = ts.createNodeArray(statements);
+    let printer = ts.createPrinter();
+    return printer.printFile(declsSF);
+  }
+
+  function checkKeepDeclType(
+    checker: ts.TypeChecker,
+    symb: ts.Symbol
+  ): { value: boolean; type: boolean } {
+    const ret = { value: true, type: true };
+    if (!symb) {
+      return ret;
+    }
+    if (symb.flags & ts.SymbolFlags.Alias) {
+      symb = checker.getAliasedSymbol(symb);
+    }
+    if (symb.flags & ts.SymbolFlags.Value) {
+      ret.value = false;
+    }
+    if (symb.flags & ts.SymbolFlags.Type) {
+      ret.type = false;
+    }
+    return ret;
   }
 
   function updateContent(decls: string, src: string) {

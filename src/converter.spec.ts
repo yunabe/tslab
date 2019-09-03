@@ -435,7 +435,20 @@ describe("with prev", () => {
     expect(out1.diagnostics).toEqual([]);
     expect(out1.output).toEqual("let y = x * x;\nexports.y = y;\n");
     // TODO: Include let x; into out1.declOutput.
-    expect(out1.declOutput).toEqual("declare let y: number;\n");
+    expect(out1.declOutput).toEqual(
+      "declare let y: number;\ndeclare let x: number;\n"
+    );
+  });
+
+  it("overwrite-old-variable", () => {
+    const out = conv.convert(
+      "declare let x: number, y: string;",
+      "let x = true;"
+    );
+    expect(out.diagnostics).toEqual([]);
+    expect(out.declOutput).toEqual(
+      "declare let x: boolean;\ndeclare let y: string;\n"
+    );
   });
 
   it("overwrite-global", () => {
@@ -446,7 +459,9 @@ declare let x: NodeJS.Process;
 `);
     out = conv.convert("declare let process: number", "let x = process;");
     expect(out.diagnostics).toEqual([]);
-    expect(out.declOutput).toEqual("declare let x: number;\n");
+    expect(out.declOutput).toEqual(
+      "declare let x: number;\ndeclare let process: number;\n"
+    );
   });
 
   it("overwrite-global-interface", () => {
@@ -473,6 +488,8 @@ declare let m: Map;
     );
     out = conv.convert(out.declOutput, "let n = createMap();");
     expect(out.diagnostics).toEqual([]);
-    expect(out.declOutput).toEqual("declare let n: Map;\n");
+    expect(out.declOutput).toEqual(
+      "declare let n: Map;\ndeclare let m: Map;\n"
+    );
   });
 });
