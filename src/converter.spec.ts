@@ -440,15 +440,82 @@ describe("with prev", () => {
     );
   });
 
+  it("assign to prev", () => {
+    const out = conv.convert("declare let x: number\n", "x = x * x;\n");
+    expect(out.diagnostics).toEqual([]);
+    expect(out.output).toEqual("x = x * x;\n");
+    expect(out.declOutput).toEqual("declare let x: number;\n");
+  });
+
+  it("assign to prev const", () => {
+    const out = conv.convert("declare const x: number\n", "x = x * x;\n");
+    expect(out.diagnostics).toEqual([
+      {
+        category: 1,
+        code: 2588,
+        length: 1,
+        messageText: "Cannot assign to 'x' because it is a constant.",
+        start: 0
+      }
+    ]);
+  });
+
   it("overwrite-old-variable", () => {
     const out = conv.convert(
-      "declare let x: number, y: string;",
-      "let x = true;"
+      "declare let x: number, y: string;\ndeclare let z: boolean;\ndeclare const a: number\n",
+      "let x = true;\nlet z = 'z';"
     );
     expect(out.diagnostics).toEqual([]);
     expect(out.declOutput).toEqual(
-      "declare let x: boolean;\ndeclare let y: string;\n"
+      [
+        "declare let x: boolean;",
+        "declare let z: string;",
+        "declare let y: string;",
+        "declare const a: number;"
+      ].join("\n") + "\n"
     );
+  });
+
+  it("overwrite prev type alias", () => {
+    const out = conv.convert(
+      "interface itype {x: number;}\ntype atype = itype | number;",
+      "class itype { y: string; }\nlet atype = 123;"
+    );
+    expect(out.diagnostics).toEqual([]);
+    expect(out.output).toEqual(`class itype {
+}
+exports.itype = itype;
+let atype = 123;
+exports.atype = atype;
+`);
+    expect(out.declOutput).toEqual(`declare class itype {
+    y: string;
+}
+declare let atype: number;
+type atype = itype | number;
+`);
+  });
+
+  it("overwrite prev class with value", () => {
+    const out = conv.convert("class A {}\nclass B {}\n", "let A = 10;");
+    expect(out.diagnostics).toEqual([]);
+    expect(out.output).toEqual("let A = 10;\nexports.A = A;\n");
+    expect(out.declOutput).toEqual("declare let A: number;\nclass B {\n}\n");
+  });
+
+  it("overwrite prev class with type", () => {
+    const out = conv.convert(
+      "class A {}\nclass B {}\n",
+      "interface A {x: number}"
+    );
+    expect(out.diagnostics).toEqual([]);
+    expect(out.output).toEqual("");
+    expect(out.declOutput).toEqual(`interface A {
+    x: number;
+}
+class B {
+}
+`);
   });
 
   it("overwrite-global", () => {

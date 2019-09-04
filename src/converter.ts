@@ -188,13 +188,35 @@ export function createConverter(): Converter {
         while (node.parent !== declsSF) {
           node = node.parent;
         }
-        if (node.kind == ts.SyntaxKind.VariableStatement) {
+        if (node.kind === ts.SyntaxKind.VariableStatement) {
           if (keep.value) {
             addName(node, key.toString());
           }
           return;
         }
+        if (ts.isTypeAliasDeclaration(node)) {
+          if (keep.type) {
+            addName(node, key.toString());
+          }
+          return;
+        }
+        if (ts.isClassDeclaration(node)) {
+          if (keep.type) {
+            if (keep.value) {
+              addName(node, key.toString());
+            }
+            // If !keep.value, forget this class.
+            return;
+          }
+          // keep.value === true
+          // TODO: Special handling.
+          return;
+        }
         // TODO: Support more kinds.
+        // console.log(
+        //   ts.SyntaxKind[node.kind],
+        //   ts.createPrinter().printNode(ts.EmitHint.Unspecified, node, declsSF)
+        // );
       });
     });
     let statements = [];
@@ -218,6 +240,8 @@ export function createConverter(): Converter {
         });
         stmt.declarationList.declarations = ts.createNodeArray(decls);
       }
+      // Do nothing for
+      // - TypeAliasDeclaration (No multiple specs)
     });
     declsSF.statements = ts.createNodeArray(statements);
     let printer = ts.createPrinter();
