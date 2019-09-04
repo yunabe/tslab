@@ -169,8 +169,8 @@ export function createConverter(): Converter {
   ): string {
     const declLocals = (declsSF as any).locals as ts.SymbolTable;
     const locals = (srcSF as any).locals as ts.SymbolTable;
-    let keepMap = new Map<ts.Node, Set<string>>();
-    function addName(node: ts.Node, name: string) {
+    let keepMap = new Map<ts.Node, Set<ts.__String>>();
+    function addName(node: ts.Node, name: ts.__String) {
       let set = keepMap.get(node);
       if (!set) {
         set = new Set();
@@ -178,6 +178,8 @@ export function createConverter(): Converter {
       }
       set.add(name);
     }
+    let valueNames = new Set<ts.__String>();
+    let anyVars = new Set<ts.__String>();
     declLocals.forEach((sym, key) => {
       let keep = checkKeepDeclType(checker, locals.get(key));
       if (!keep.type && !keep.value) {
@@ -190,26 +192,32 @@ export function createConverter(): Converter {
         }
         if (node.kind === ts.SyntaxKind.VariableStatement) {
           if (keep.value) {
-            addName(node, key.toString());
+            addName(node, key);
+            if (anyVars.has(key)) {
+              anyVars.delete(key);
+            }
+            valueNames.add(key);
           }
           return;
         }
         if (ts.isTypeAliasDeclaration(node)) {
           if (keep.type) {
-            addName(node, key.toString());
+            addName(node, key);
           }
           return;
         }
         if (ts.isClassDeclaration(node)) {
           if (keep.type) {
             if (keep.value) {
-              addName(node, key.toString());
+              addName(node, key);
             }
             // If !keep.value, forget this class.
             return;
           }
           // keep.value === true
-          // TODO: Special handling.
+          if (!valueNames.has(node.name.escapedText)) {
+            anyVars.add(node.name.escapedText);
+          }
           return;
         }
         // TODO: Support more kinds.
@@ -233,7 +241,7 @@ export function createConverter(): Converter {
             // This must not happen.
             return;
           }
-          if (!names.has(decl.name.escapedText.toString())) {
+          if (!names.has(decl.name.escapedText)) {
             return;
           }
           decls.push(decl);
@@ -245,7 +253,11 @@ export function createConverter(): Converter {
     });
     declsSF.statements = ts.createNodeArray(statements);
     let printer = ts.createPrinter();
-    return printer.printFile(declsSF);
+    let anyVarsDecls: string[] = [];
+    anyVars.forEach(name => {
+      anyVarsDecls.push(`let ${name}: any;\n`);
+    });
+    return printer.printFile(declsSF) + anyVarsDecls.join("");
   }
 
   function checkKeepDeclType(

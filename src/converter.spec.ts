@@ -515,6 +515,7 @@ type atype = itype | number;
 }
 class B {
 }
+let A: any;
 `);
   });
 
