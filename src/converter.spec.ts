@@ -1,4 +1,5 @@
 import * as converter from "./converter";
+import * as ts from "typescript";
 
 let conv: converter.Converter;
 beforeAll(() => {
@@ -519,6 +520,64 @@ let A: any;
 `);
   });
 
+  it("overwrite imported type", () => {
+    const out = conv.convert(
+      'import { CpuInfo, UserInfo } from "os";',
+      "interface CpuInfo {x: number}"
+    );
+    expect(out.diagnostics).toEqual([]);
+    expect(out.output).toEqual("");
+    expect(out.declOutput).toEqual(`interface CpuInfo {
+    x: number;
+}
+import { UserInfo } from "os";
+`);
+  });
+
+  it("merge imported type and new value", () => {
+    const out = conv.convert(
+      'import { CpuInfo } from "os";',
+      "let CpuInfo = 10;"
+    );
+    expect(out.diagnostics).toEqual([]);
+    expect(out.declOutput).toEqual(`declare let CpuInfo: number;
+import { CpuInfo } from "os";
+`);
+  });
+
+  it("overwrite imported value", () => {
+    const out = conv.convert('import { cpus } from "os";', "let cpus = 10");
+    expect(out.diagnostics).toEqual([]);
+    expect(out.declOutput).toEqual("declare let cpus: number;\n");
+  });
+
+  it("merge imported value and new type", () => {
+    const out = conv.convert(
+      'import { cpus } from "os";',
+      "type cpus = number;"
+    );
+    expect(out.diagnostics).toEqual([]);
+    expect(out.declOutput).toEqual(
+      'declare type cpus = number;\nimport { cpus } from "os";\n'
+    );
+  });
+
+  it("overwrite imported namespace with value", () => {
+    const out = conv.convert('import * as os from "os";', "let os = 10;");
+    expect(out.diagnostics).toEqual([]);
+    expect(out.output).toEqual("let os = 10;\nexports.os = os;\n");
+    expect(out.declOutput).toEqual("declare let os: number;\n");
+  });
+
+  it("merge imported namespace with new type", () => {
+    const out = conv.convert('import * as os from "os";', "type os = string;");
+    expect(out.diagnostics).toEqual([]);
+    expect(out.output).toEqual("");
+    expect(out.declOutput).toEqual(
+      'declare type os = string;\nimport * as os from "os";\n'
+    );
+  });
+
   it("overwrite-global", () => {
     let out = conv.convert("", "let x = process;");
     expect(out.diagnostics).toEqual([]);
@@ -559,5 +618,133 @@ declare let m: Map;
     expect(out.declOutput).toEqual(
       "declare let n: Map;\ndeclare let m: Map;\n"
     );
+  });
+});
+
+describe("keepNamesInImport", () => {
+  it("keep named import", () => {
+    const src = ts.createSourceFile(
+      "src.ts",
+      'import mydefault, {foo, bar as baz} from "mylib";',
+      ts.ScriptTarget.ES2017
+    );
+    const stmt = src.statements[0];
+    if (!ts.isImportDeclaration(stmt)) {
+      fail("stmt is not isImportDeclaration");
+      return;
+    }
+    const names = new Set(["foo"]);
+    converter.keepNamesInImport(stmt, names as Set<ts.__String>);
+    let printer = ts.createPrinter();
+    expect(printer.printFile(src)).toEqual('import { foo } from "mylib";\n');
+  });
+
+  it("keep renamed import", () => {
+    const src = ts.createSourceFile(
+      "src.ts",
+      'import mydefault, {foo, bar as baz} from "mylib";',
+      ts.ScriptTarget.ES2017
+    );
+    const stmt = src.statements[0];
+    if (!ts.isImportDeclaration(stmt)) {
+      fail("stmt is not isImportDeclaration");
+      return;
+    }
+    const names = new Set(["baz"]);
+    converter.keepNamesInImport(stmt, names as Set<ts.__String>);
+    let printer = ts.createPrinter();
+    expect(printer.printFile(src)).toEqual(
+      'import { bar as baz } from "mylib";\n'
+    );
+  });
+
+  it("keep default import", () => {
+    const src = ts.createSourceFile(
+      "src.ts",
+      'import mydefault, {foo, bar as baz} from "mylib";',
+      ts.ScriptTarget.ES2017
+    );
+    const stmt = src.statements[0];
+    if (!ts.isImportDeclaration(stmt)) {
+      fail("stmt is not isImportDeclaration");
+      return;
+    }
+    const names = new Set(["mydefault"]);
+    converter.keepNamesInImport(stmt, names as Set<ts.__String>);
+    let printer = ts.createPrinter();
+    expect(printer.printFile(src)).toEqual('import mydefault from "mylib";\n');
+  });
+
+  it("keep default and named import", () => {
+    const src = ts.createSourceFile(
+      "src.ts",
+      'import mydefault, {foo, bar as baz} from "mylib";',
+      ts.ScriptTarget.ES2017
+    );
+    const stmt = src.statements[0];
+    if (!ts.isImportDeclaration(stmt)) {
+      fail("stmt is not isImportDeclaration");
+      return;
+    }
+    const names = new Set(["mydefault", "baz"]);
+    converter.keepNamesInImport(stmt, names as Set<ts.__String>);
+    let printer = ts.createPrinter();
+    expect(printer.printFile(src)).toEqual(
+      'import mydefault, { bar as baz } from "mylib";\n'
+    );
+  });
+
+  it("keep namespace", () => {
+    const src = ts.createSourceFile(
+      "src.ts",
+      'import mydefault, * as ns from "mylib";',
+      ts.ScriptTarget.ES2017
+    );
+    const stmt = src.statements[0];
+    if (!ts.isImportDeclaration(stmt)) {
+      fail("stmt is not isImportDeclaration");
+      return;
+    }
+    const names = new Set(["ns"]);
+    converter.keepNamesInImport(stmt, names as Set<ts.__String>);
+    let printer = ts.createPrinter();
+    expect(printer.printFile(src)).toEqual('import * as ns from "mylib";\n');
+  });
+
+  it("keep default remove namespace", () => {
+    const src = ts.createSourceFile(
+      "src.ts",
+      'import mydefault, * as ns from "mylib";',
+      ts.ScriptTarget.ES2017
+    );
+    const stmt = src.statements[0];
+    if (!ts.isImportDeclaration(stmt)) {
+      fail("stmt is not isImportDeclaration");
+      return;
+    }
+    const names = new Set(["mydefault"]);
+    converter.keepNamesInImport(stmt, names as Set<ts.__String>);
+    let printer = ts.createPrinter();
+    expect(printer.printFile(src)).toEqual('import mydefault from "mylib";\n');
+  });
+
+  it("wrong names", () => {
+    const src = ts.createSourceFile(
+      "src.ts",
+      'import mydefault, * as ns from "mylib";',
+      ts.ScriptTarget.ES2017
+    );
+    const stmt = src.statements[0];
+    if (!ts.isImportDeclaration(stmt)) {
+      fail("stmt is not isImportDeclaration");
+      return;
+    }
+    const names = new Set(["wrong"]);
+    try {
+      converter.keepNamesInImport(stmt, names as Set<ts.__String>);
+      fail("keepNamesInImport must fail.");
+    } catch (e) {
+      expect(String(e)).toEqual("Error: no symbol is included in names");
+    }
   });
 });

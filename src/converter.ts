@@ -220,7 +220,40 @@ export function createConverter(): Converter {
           }
           return;
         }
+        if (ts.isImportDeclaration(node)) {
+          if (keep.type && keep.value) {
+            addName(node, key);
+            return;
+          }
+          let aliased = checker.getAliasedSymbol(sym);
+          if (!keep.value) {
+            // Here, keep.type == true.
+            if (aliased.flags & ts.SymbolFlags.Value) {
+              // Overwritten with a new value.
+              return;
+            }
+            if (aliased.flags && ts.SymbolFlags.Type) {
+              addName(node, key);
+            }
+            return;
+          }
+          // Here, keep.value == true and keep.type == false.
+          if (aliased.flags & ts.SymbolFlags.Type) {
+            // Overwritten with a new type.
+            if (
+              aliased.flags & ts.SymbolFlags.Value &&
+              !valueNames.has(aliased.escapedName)
+            ) {
+              anyVars.add(aliased.escapedName);
+            }
+            return;
+          }
+          addName(node, key);
+          return;
+        }
         // TODO: Support more kinds.
+        // - FunctionDeclaration
+        // - InterfaceDeclaration
         // console.log(
         //   ts.SyntaxKind[node.kind],
         //   ts.createPrinter().printNode(ts.EmitHint.Unspecified, node, declsSF)
@@ -247,6 +280,9 @@ export function createConverter(): Converter {
           decls.push(decl);
         });
         stmt.declarationList.declarations = ts.createNodeArray(decls);
+      }
+      if (ts.isImportDeclaration(stmt)) {
+        keepNamesInImport(stmt, names);
       }
       // Do nothing for
       // - TypeAliasDeclaration (No multiple specs)
@@ -378,5 +414,40 @@ export function createConverter(): Converter {
         return node;
       };
     }
+  }
+}
+
+export function keepNamesInImport(
+  im: ts.ImportDeclaration,
+  names: Set<ts.__String>
+) {
+  if (!names || !names.size) {
+    throw new Error("names is empty of null");
+  }
+  let imc = im.importClause;
+  if (imc.name && !names.has(imc.name.escapedText)) {
+    delete imc.name;
+  }
+  if (imc.namedBindings) {
+    if (ts.isNamespaceImport(imc.namedBindings)) {
+      if (!names.has(imc.namedBindings.name.escapedText)) {
+        delete imc.namedBindings;
+      }
+    } else {
+      let elms: ts.ImportSpecifier[] = [];
+      imc.namedBindings.elements.forEach(elm => {
+        if (names.has(elm.name.escapedText)) {
+          elms.push(elm);
+        }
+      });
+      if (elms.length) {
+        imc.namedBindings.elements = ts.createNodeArray(elms);
+      } else {
+        delete imc.namedBindings;
+      }
+    }
+  }
+  if (!imc.name && !imc.namedBindings) {
+    throw new Error("no symbol is included in names");
   }
 }
