@@ -616,7 +616,15 @@ declare let m: Map;
     out = conv.convert(out.declOutput, "let n = createMap();");
     expect(out.diagnostics).toEqual([]);
     expect(out.declOutput).toEqual(
-      "declare let n: Map;\ndeclare let m: Map;\n"
+      [
+        "declare let n: Map;",
+        "interface Map {",
+        "    mymethod(): number;",
+        "}",
+        "declare function createMap(): Map;",
+        "declare let m: Map;",
+        ""
+      ].join("\n")
     );
   });
 });

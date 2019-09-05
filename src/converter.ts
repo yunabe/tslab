@@ -251,9 +251,18 @@ export function createConverter(): Converter {
           addName(node, key);
           return;
         }
+        if (ts.isFunctionDeclaration(node)) {
+          if (keep.value) {
+            addName(node, key);
+          }
+          return;
+        }
+        if (ts.isInterfaceDeclaration(node)) {
+          if (keep.type) {
+            addName(node, key);
+          }
+        }
         // TODO: Support more kinds.
-        // - FunctionDeclaration
-        // - InterfaceDeclaration
         // console.log(
         //   ts.SyntaxKind[node.kind],
         //   ts.createPrinter().printNode(ts.EmitHint.Unspecified, node, declsSF)
@@ -286,6 +295,8 @@ export function createConverter(): Converter {
       }
       // Do nothing for
       // - TypeAliasDeclaration (No multiple specs)
+      // - FunctionDeclaration (ditto)
+      // - InterfaceDeclaration (ditto)
     });
     declsSF.statements = ts.createNodeArray(statements);
     let printer = ts.createPrinter();
