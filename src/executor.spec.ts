@@ -28,11 +28,25 @@ describe("executor", () => {
     expect(ex.locals).toEqual({ x: 30, y: 30, z: 10 });
   });
 
+  it("recursion", () => {
+    ex.execute(
+      `function naiveFib(n: number) {
+        if (n > 1) {
+          return naiveFib(n - 1) + naiveFib(n - 2);
+        }
+        return 1;
+    }
+    let fib20 = naiveFib(20);`
+    );
+    expect(ex.locals.fib20).toEqual(10946);
+  });
+
   it("node globals", () => {
-    ex.execute(`let myglobal = global`);
-    ex.execute(`let myprocess = process`);
-    ex.execute(`let myconsole = console`);
-    ex.execute(`let MyArray = Array`);
+    ex.execute(`
+    let myglobal = global;
+    let myprocess = process;
+    let myconsole = console;
+    let MyArray = Array;`);
     const expectLocals = {
       myglobal: global,
       myprocess: process,
@@ -44,5 +58,11 @@ describe("executor", () => {
       delete expectLocals[key];
     }
     expect(Object.getOwnPropertyNames(expectLocals)).toEqual([]);
+  });
+
+  it("redeclare const", () => {
+    ex.execute(`const x = 3;`);
+    ex.execute(`const x = 4;`);
+    expect(ex.locals).toEqual({ x: 4 });
   });
 });
