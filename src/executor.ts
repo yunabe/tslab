@@ -9,20 +9,23 @@ export interface Executor {
 
 export function createExecutor(conv: Converter): Executor {
   const locals: { [key: string]: any } = {};
-  let context = new Proxy(locals, {
+  const proxyHandler: ProxyHandler<{ [key: string]: any }> = {
     get: function(_target, prop) {
       if (prop === "require") {
         // TODO: Handle the relative path import properly.
         return require;
+      }
+      if (prop === "exports") {
+        return locals;
       }
       if (locals.hasOwnProperty(prop)) {
         return locals[prop as any];
       }
       return global[prop];
     }
-  });
-  vm.createContext(context);
+  };
   let prevDecl = "";
+
   function execute(src: string) {
     const converted = conv.convert(prevDecl, src);
     if (converted.diagnostics.length > 0) {
@@ -32,12 +35,8 @@ export function createExecutor(conv: Converter): Executor {
     if (!converted.output) {
       return;
     }
-    vm.runInContext(
-      `(function(exports){
-${converted.output}
-}(this))`,
-      context
-    );
+    const context = new Proxy(locals, proxyHandler);
+    let ret = vm.runInNewContext(converted.output, context);
     prevDecl = converted.declOutput || "";
   }
 

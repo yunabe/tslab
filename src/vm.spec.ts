@@ -24,4 +24,18 @@ describe("vmspec", () => {
     );
     expect(sandbox).toEqual({ x: 49, y: 98 });
   });
+
+  it("contexify performance", () => {
+    // createContext takes less than 10[ms].
+    let rep = 100;
+    const start = process.hrtime();
+    for (let i = 0; i < rep; i++) {
+      const sandbox = {};
+      vm.createContext(sandbox);
+      vm.runInContext(`var x = ${i};`, sandbox);
+      expect(sandbox).toEqual({ x: i });
+    }
+    const diff = process.hrtime(start);
+    expect(diff[0]).toEqual(0);
+  });
 });

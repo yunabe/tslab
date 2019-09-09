@@ -31,13 +31,14 @@ describe("executor", () => {
 
   it("recursion", () => {
     ex.execute(
-      `function naiveFib(n: number) {
+      `
+      function naiveFib(n: number) {
         if (n > 1) {
           return naiveFib(n - 1) + naiveFib(n - 2);
         }
         return 1;
-    }
-    let fib20 = naiveFib(20);`
+      }
+      let fib20 = naiveFib(20);`
     );
     expect(ex.locals.fib20).toEqual(10946);
   });
