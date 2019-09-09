@@ -1,5 +1,6 @@
 import * as executor from "./executor";
 import { createConverter, Converter } from "./converter";
+import { createHash } from "crypto";
 
 let ex: executor.Executor;
 let conv: Converter;
@@ -64,5 +65,37 @@ describe("executor", () => {
     ex.execute(`const x = 3;`);
     ex.execute(`const x = 4;`);
     expect(ex.locals).toEqual({ x: 4 });
+  });
+
+  it("class", () => {
+    ex.execute(`
+    class Person {
+      name: string;
+      age: number;
+
+      constructor(name: string, age: number) {
+        this.name = name;
+        this.age = age;
+      }
+
+      toString(): string {
+        return 'Person(' + this.name + ', ' + this.age + ')';
+      }
+    }
+    let alice = (new Person('alice', 123)).toString();
+    `);
+    expect(ex.locals.alice).toEqual("Person(alice, 123)");
+  });
+
+  it("import", () => {
+    ex.execute(`
+    import * as crypto from "crypto";
+    const message = "Hello TypeScript!";
+    const hash = crypto.createHash("sha256").update(message).digest("hex");
+    `);
+    const hash = createHash("sha256")
+      .update("Hello TypeScript!")
+      .digest("hex");
+    expect(ex.locals.hash).toEqual(hash);
   });
 });

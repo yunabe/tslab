@@ -11,6 +11,10 @@ export function createExecutor(conv: Converter): Executor {
   const locals: { [key: string]: any } = {};
   let context = new Proxy(locals, {
     get: function(_target, prop) {
+      if (prop === "require") {
+        // TODO: Handle the relative path import properly.
+        return require;
+      }
       if (locals.hasOwnProperty(prop)) {
         return locals[prop as any];
       }
