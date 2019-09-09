@@ -247,6 +247,43 @@ exports.Direction = Direction;
 `);
   });
 
+  it("labeled expressions look object literals", () => {
+    // TODO: Revisit how to handle this ambiguity.
+    let out = conv.convert("", "{x: 10}");
+    expect(out.diagnostics).toEqual([]);
+    expect(out.output).toEqual(`{
+    x: 10;
+}
+`);
+    expect(out.declOutput).toEqual("");
+
+    out = conv.convert("", "{x: 3, y: 4}");
+    expect(out.diagnostics).toEqual([
+      {
+        category: 1,
+        code: 2695,
+        length: 1,
+        messageText:
+          "Left side of comma operator is unused and has no side effects.",
+        start: 4
+      },
+      {
+        category: 1,
+        code: 2304,
+        length: 1,
+        messageText: "Cannot find name 'y'.",
+        start: 7
+      },
+      {
+        category: 1,
+        code: 1005,
+        length: 1,
+        messageText: "';' expected.",
+        start: 8
+      }
+    ]);
+  });
+
   it("imported", () => {
     const out = conv.convert(
       "",
