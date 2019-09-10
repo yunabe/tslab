@@ -681,23 +681,6 @@ declare let m: Map;
     // TODO: Fix this.
     expect(out.output).toEqual('path_1.join("a", "b");\n');
   });
-
-  it("bug: can not call named imported functions", () => {
-    let out = conv.convert("", 'import {join} from "path";\nlet path_1 = 10;');
-    expect(out.diagnostics).toEqual([]);
-    expect(out.output).toEqual(
-      [
-        'const path_1 = require("path");',
-        "exports.join = path_1.join;",
-        ""
-      ].join("\n")
-    );
-    out = conv.convert(out.declOutput, 'join("a", "b");');
-    expect(out.diagnostics).toEqual([]);
-    expect(out.declOutput).toEqual('import { join } from "path";\n');
-    // TODO: Fix this.
-    expect(out.output).toEqual('path_1.join("a", "b");\n');
-  });
 });
 
 describe("keepNamesInImport", () => {
