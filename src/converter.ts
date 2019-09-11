@@ -8,6 +8,7 @@ export interface ConvertResult {
   output?: string;
   declOutput?: string;
   diagnostics: Diagnostic[];
+  hasLastExpression: boolean;
 }
 
 export interface Diagnostic {
@@ -118,6 +119,7 @@ export function createConverter(): Converter {
     let declsFile = builder.getSourceFile(declFilename);
     let srcFile = builder.getSourceFile(srcFilename);
 
+    const hasLastExpression = checkHasLastExpression(srcFile);
     const locals = (srcFile as any).locals as ts.SymbolTable;
     const keys: string[] = [];
     if (locals) {
@@ -158,7 +160,8 @@ export function createConverter(): Converter {
       diagnostics: convertDiagnostics(
         srcPrefix.length,
         ts.getPreEmitDiagnostics(program, srcFile)
-      )
+      ),
+      hasLastExpression
     };
   }
 
@@ -426,6 +429,14 @@ export function createConverter(): Converter {
       };
     }
   }
+}
+
+function checkHasLastExpression(src: ts.SourceFile) {
+  if (!src.statements.length) {
+    return false;
+  }
+  const last = src.statements[src.statements.length - 1];
+  return ts.isExpressionStatement(last);
 }
 
 export function keepNamesInImport(

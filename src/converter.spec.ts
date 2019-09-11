@@ -462,6 +462,20 @@ class ShapeImpl implements Shape {}
       }
     ]);
   });
+
+  it("hasLastExpression", () => {
+    let out = conv.convert("", "let x = 3 + 4\n;x * x;");
+    expect(out.diagnostics).toEqual([]);
+    expect(out.hasLastExpression).toBe(true);
+
+    out = conv.convert("", "let x = 3 + 4\n;let y = x * x;");
+    expect(out.diagnostics).toEqual([]);
+    expect(out.hasLastExpression).toBe(false);
+
+    out = conv.convert("", "class C {}");
+    expect(out.diagnostics).toEqual([]);
+    expect(out.hasLastExpression).toBe(false);
+  });
 });
 
 describe("with prev", () => {
