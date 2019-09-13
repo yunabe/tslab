@@ -39,3 +39,35 @@ describe("vmspec", () => {
     expect(diff[0]).toEqual(0);
   });
 });
+
+describe("vm-modules", () => {
+  it("basic", async () => {
+    const mod = new (vm as any).SourceTextModule(`
+    let x = 3;
+    let y = x + 4;
+    let z = {a: x, y}
+    export { y, z };
+    x * x;
+  `);
+    expect(mod.status).toEqual("uninstantiated");
+    expect(mod.linkingStatus).toEqual("unlinked");
+
+    await mod.link(() => {});
+    expect(mod.status).toEqual("uninstantiated");
+    expect(mod.linkingStatus).toEqual("linked");
+
+    mod.instantiate();
+    expect(mod.status).toEqual("instantiated");
+    expect(mod.linkingStatus).toEqual("linked");
+
+    let ret = await mod.evaluate();
+    expect(mod.status).toEqual("evaluated");
+    expect(mod.linkingStatus).toEqual("linked");
+    expect(ret).toEqual({ result: 9 });
+    let ns = {};
+    for (const key in mod.namespace) {
+      ns[key] = mod.namespace[key];
+    }
+    expect(ns).toEqual({ y: 7, z: { a: 3, y: 7 } });
+  });
+});
