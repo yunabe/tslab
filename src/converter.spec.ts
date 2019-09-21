@@ -463,6 +463,20 @@ class ShapeImpl implements Shape {}
     ]);
   });
 
+  it("require is reserved", () => {
+    const out = conv.convert("", "let require = 123;");
+    expect(out.diagnostics).toEqual([
+      {
+        category: 1,
+        code: 2441,
+        length: 7,
+        messageText:
+          "Duplicate identifier 'require'. Compiler reserves name 'require' in top level scope of a module.",
+        start: 4
+      }
+    ]);
+  });
+
   it("hasLastExpression", () => {
     let out = conv.convert("", "let x = 3 + 4\n;x * x;");
     expect(out.diagnostics).toEqual([]);
