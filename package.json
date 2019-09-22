@@ -13,7 +13,8 @@
   },
   "scripts": {
     "//": "experimental-vm-modules enables https://nodejs.org/docs/latest-v12.x/api/vm.html#vm_class_vm_sourcetextmodule",
-    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --verbose"
+    "build": "tsc",
+    "test": "jest --verbose"
   },
   "devDependencies": {
     "@types/glob": "^7.1.1",
