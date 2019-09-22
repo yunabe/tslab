@@ -838,3 +838,49 @@ describe("keepNamesInImport", () => {
     }
   });
 });
+
+describe("esModuleToCommonJSModule", () => {
+  it("empty", () => {
+    expect(converter.esModuleToCommonJSModule("")).toEqual("");
+  });
+
+  it("variables", () => {
+    const src = [
+      "let x = 10;",
+      "const y = 20;",
+      "var z = x + y;",
+      "export {x, y, z}"
+    ].join("\n");
+    const want = [
+      "let x = 10;",
+      "exports.x = x;",
+      "const y = 20;",
+      "exports.y = y;",
+      "var z = x + y;",
+      "exports.z = z;",
+      ""
+    ].join("\n");
+    expect(converter.esModuleToCommonJSModule(src)).toEqual(want);
+  });
+
+  it("import", () => {
+    const src = [
+      'import * as os from "os";',
+      'import {a, b} from "vm";',
+      "let c = a() + b;",
+      "export {os, a, b, c}"
+    ].join("\n");
+    expect(converter.esModuleToCommonJSModule(src)).toEqual(
+      [
+        'const os = require("os");',
+        "exports.os = os;",
+        'const vm_1 = require("vm");',
+        "exports.a = vm_1.a;",
+        "exports.b = vm_1.b;",
+        "let c = vm_1.a() + vm_1.b;",
+        "exports.c = c;",
+        ""
+      ].join("\n")
+    );
+  });
+});

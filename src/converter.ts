@@ -439,6 +439,25 @@ function checkHasLastExpression(src: ts.SourceFile) {
   return ts.isExpressionStatement(last);
 }
 
+/*@internal*/
+export function esModuleToCommonJSModule(js: string): string {
+  let out = ts.transpileModule(js, {
+    fileName: "custom.js",
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2017,
+      // Remove 'use strict' from outputs.
+      noImplicitUseStrict: true
+    }
+  }).outputText;
+  // Delete Object.defineProperty(exports, "__esModule", { value: true });
+  if (out.startsWith("Object.defineProperty(exports")) {
+    out = out.substr(out.indexOf("\n") + 1);
+  }
+  return out;
+}
+
+/*@internal*/
 export function keepNamesInImport(
   im: ts.ImportDeclaration,
   names: Set<ts.__String>
