@@ -82,7 +82,7 @@ export function createConverter(): Converter {
   const host = ts.createWatchCompilerHost(
     [declFilename, srcFilename],
     {
-      module: ts.ModuleKind.CommonJS,
+      module: ts.ModuleKind.ES2015,
       target: ts.ScriptTarget.ES2017,
       declaration: true,
       // Remove 'use strict' from outputs.
@@ -155,7 +155,7 @@ export function createConverter(): Converter {
     );
     declOutput += remainingDecls(program.getTypeChecker(), srcFile, declsFile);
     return {
-      output,
+      output: esModuleToCommonJSModule(output),
       declOutput,
       diagnostics: convertDiagnostics(
         srcPrefix.length,
@@ -400,18 +400,8 @@ export function createConverter(): Converter {
 
   function getCustomTransformers(): ts.CustomTransformers {
     return {
-      after: [after],
       afterDeclarations: [afterDeclarations]
     };
-    function after(
-      context: ts.TransformationContext
-    ): (node: ts.SourceFile) => ts.SourceFile {
-      return (node: ts.SourceFile) => {
-        // Delete Object.defineProperty(exports, \"__esModule\", { value: true });
-        node.statements = ts.createNodeArray(node.statements.slice(1));
-        return node;
-      };
-    }
     function afterDeclarations(
       context: ts.TransformationContext
     ): (node: ts.SourceFile) => ts.SourceFile {
