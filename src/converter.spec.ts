@@ -577,6 +577,54 @@ let A: any;
 `);
   });
 
+  it("overwrite prev enum with value", () => {
+    const out = conv.convert(
+      [
+        "declare enum A {",
+        "    K = 1",
+        "}",
+        "declare enum B {",
+        "    L = 2",
+        "}"
+      ].join("\n"),
+      "let A = 10;"
+    );
+    expect(out.diagnostics).toEqual([]);
+    expect(out.output).toEqual("let A = 10;\nexports.A = A;\n");
+    expect(out.declOutput).toEqual(
+      "declare let A: number;\ndeclare enum B {\n    L = 2\n}\n"
+    );
+  });
+
+  it("overwrite prev enum with type", () => {
+    // TODO: Fill this test.
+    const out = conv.convert(
+      [
+        "declare enum A {",
+        "    K = 1",
+        "}",
+        "declare enum B {",
+        "    L = 2",
+        "}"
+      ].join("\n"),
+      "interface A {x: number}"
+    );
+    expect(out.diagnostics).toEqual([]);
+    expect(out.output).toEqual("");
+    expect(out.declOutput).toEqual(
+      [
+        "interface A {",
+        "    x: number;",
+        "}",
+        "declare enum B {",
+        "    L = 2",
+        "}",
+        "let A: any;",
+        ""
+      ].join("\n")
+    );
+  });
+
   it("overwrite imported type", () => {
     const out = conv.convert(
       'import { CpuInfo, UserInfo } from "os";',

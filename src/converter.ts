@@ -209,7 +209,7 @@ export function createConverter(): Converter {
           }
           return;
         }
-        if (ts.isClassDeclaration(node)) {
+        if (ts.isClassDeclaration(node) || ts.isEnumDeclaration(node)) {
           if (keep.type) {
             if (keep.value) {
               addName(node, key);

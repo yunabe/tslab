@@ -99,4 +99,19 @@ describe("executor", () => {
       .digest("hex");
     expect(ex.locals.hash).toEqual(hash);
   });
+
+  it("enum", () => {
+    ex.execute(`
+    enum Direction {
+      Up = 1,
+      Down,
+      Left,
+      Right,
+    }
+    `);
+    ex.execute(`const x = Direction.Down`);
+    ex.execute(`const y = Direction[2]`);
+    ex.execute(`let Direction = null;`);
+    expect(ex.locals).toEqual({ x: 2, y: "Down", Direction: null });
+  });
 });
