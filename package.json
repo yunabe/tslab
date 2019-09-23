@@ -6,6 +6,11 @@
   "repository": "https://github.com/yunabe/tslab",
   "author": "Yu Watanabe",
   "license": "MIT",
+  "files": [
+    "dist/**/*",
+    "bin/**/*",
+    "python/**/*"
+  ],
   "dependencies": {
     "glob": "^7.1.4",
     "typescript": "^3.6.2",
