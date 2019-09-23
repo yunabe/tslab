@@ -11,9 +11,18 @@ export interface ConvertResult {
   hasLastExpression: boolean;
 }
 
+export interface DiagnosticPos {
+  /** Byte-offset. */
+  offset: number;
+  /** Zero-based line number. */
+  line: number;
+  /** Zero-based char offset in the line. */
+  character: number;
+}
+
 export interface Diagnostic {
-  start: number;
-  length: number;
+  start: DiagnosticPos;
+  end: DiagnosticPos;
   messageText: string;
   category: number;
   code: number;
@@ -158,7 +167,7 @@ export function createConverter(): Converter {
       output: esModuleToCommonJSModule(output),
       declOutput,
       diagnostics: convertDiagnostics(
-        srcPrefix.length,
+        createOffsetToDiagnosticPos(srcFile, srcPrefix),
         ts.getPreEmitDiagnostics(program, srcFile)
       ),
       hasLastExpression
@@ -349,7 +358,7 @@ export function createConverter(): Converter {
   }
 
   function convertDiagnostics(
-    offset: number,
+    toDiagnosticPos: (number) => DiagnosticPos,
     input: readonly ts.Diagnostic[]
   ): Diagnostic[] {
     const ret: Diagnostic[] = [];
@@ -357,35 +366,32 @@ export function createConverter(): Converter {
       if (!d.file || d.file.fileName !== "__tslab__.ts") {
         continue;
       }
+      const start = toDiagnosticPos(d.start),
+        end = toDiagnosticPos(d.start + d.length);
       if (typeof d.messageText === "string") {
         ret.push({
-          start: d.start - offset,
-          length: d.length,
+          start,
+          end,
           messageText: d.messageText.toString(),
           category: d.category,
           code: d.code
         });
         continue;
       }
-      traverseDiagnosticMessageChain(
-        d.start - offset,
-        d.length,
-        d.messageText,
-        ret
-      );
+      traverseDiagnosticMessageChain(start, end, d.messageText, ret);
     }
     return ret;
   }
 
   function traverseDiagnosticMessageChain(
-    start: number,
-    length: number,
+    start: DiagnosticPos,
+    end: DiagnosticPos,
     msg: ts.DiagnosticMessageChain,
     out: Diagnostic[]
   ) {
     out.push({
       start,
-      length,
+      end,
       messageText: msg.messageText,
       category: msg.category,
       code: msg.code
@@ -394,7 +400,7 @@ export function createConverter(): Converter {
       return;
     }
     for (const child of msg.next) {
-      traverseDiagnosticMessageChain(start, length, child, out);
+      traverseDiagnosticMessageChain(start, end, child, out);
     }
   }
 
@@ -481,4 +487,22 @@ export function keepNamesInImport(
   if (!imc.name && !imc.namedBindings) {
     throw new Error("no symbol is included in names");
   }
+}
+
+/** @internal */
+function createOffsetToDiagnosticPos(
+  src: ts.SourceFile,
+  prefix: string
+): (offset: number) => DiagnosticPos {
+  const offsetPrefix = prefix.length;
+  const linePrefix = (prefix.match(/\n/g) || []).length;
+  const charPrefix = prefix.length - (prefix.lastIndexOf("\n") + 1);
+  return function(offset: number) {
+    const lineChar = ts.getLineAndCharacterOfPosition(src, offset);
+    return {
+      offset: offset - offsetPrefix,
+      line: lineChar.line - linePrefix,
+      character: lineChar.character - charPrefix
+    };
+  };
 }

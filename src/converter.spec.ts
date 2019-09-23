@@ -262,24 +262,48 @@ exports.Direction = Direction;
       {
         category: 1,
         code: 2695,
-        length: 1,
         messageText:
           "Left side of comma operator is unused and has no side effects.",
-        start: 4
+        start: {
+          character: 4,
+          line: 0,
+          offset: 4
+        },
+        end: {
+          character: 5,
+          line: 0,
+          offset: 5
+        }
       },
       {
         category: 1,
         code: 2304,
-        length: 1,
         messageText: "Cannot find name 'y'.",
-        start: 7
+        start: {
+          character: 7,
+          line: 0,
+          offset: 7
+        },
+        end: {
+          character: 8,
+          line: 0,
+          offset: 8
+        }
       },
       {
         category: 1,
         code: 1005,
-        length: 1,
         messageText: "';' expected.",
-        start: 8
+        start: {
+          character: 8,
+          line: 0,
+          offset: 8
+        },
+        end: {
+          character: 9,
+          line: 0,
+          offset: 9
+        }
       }
     ]);
   });
@@ -371,9 +395,17 @@ describe("converter diagnostics", () => {
       {
         category: 1,
         code: 1005,
-        length: 1,
         messageText: "',' expected.",
-        start: 6
+        start: {
+          character: 6,
+          line: 0,
+          offset: 6
+        },
+        end: {
+          character: 7,
+          line: 0,
+          offset: 7
+        }
       }
     ]);
   });
@@ -384,9 +416,17 @@ describe("converter diagnostics", () => {
       {
         category: 1,
         code: 2322,
-        length: 1,
         messageText: "Type '10' is not assignable to type 'string'.",
-        start: 4
+        start: {
+          character: 4,
+          line: 0,
+          offset: 4
+        },
+        end: {
+          character: 5,
+          line: 0,
+          offset: 5
+        }
       }
     ]);
   });
@@ -397,16 +437,32 @@ describe("converter diagnostics", () => {
       {
         category: 1,
         code: 2451,
-        length: 1,
         messageText: "Cannot redeclare block-scoped variable 'x'.",
-        start: 4
+        start: {
+          character: 4,
+          line: 0,
+          offset: 4
+        },
+        end: {
+          character: 5,
+          line: 0,
+          offset: 5
+        }
       },
       {
         category: 1,
         code: 2451,
-        length: 1,
         messageText: "Cannot redeclare block-scoped variable 'x'.",
-        start: 15
+        start: {
+          character: 15,
+          line: 0,
+          offset: 15
+        },
+        end: {
+          character: 16,
+          line: 0,
+          offset: 16
+        }
       }
     ]);
   });
@@ -425,18 +481,34 @@ class ShapeImpl implements Shape {}
       {
         category: 1,
         code: 2420,
-        length: 9,
         messageText:
           "Class 'ShapeImpl' incorrectly implements interface 'Shape'.",
-        start: 44
+        start: {
+          character: 6,
+          line: 4,
+          offset: 44
+        },
+        end: {
+          character: 15,
+          line: 4,
+          offset: 53
+        }
       },
       {
         category: 1,
         code: 2741,
-        length: 9,
         messageText:
           "Property 'color' is missing in type 'ShapeImpl' but required in type 'Shape'.",
-        start: 44
+        start: {
+          character: 6,
+          line: 4,
+          offset: 44
+        },
+        end: {
+          character: 15,
+          line: 4,
+          offset: 53
+        }
       }
     ]);
   });
@@ -455,10 +527,18 @@ class ShapeImpl implements Shape {}
       {
         category: 1,
         code: 4060,
-        length: 2,
         messageText:
           "Return type of exported function has or is using private name 'Promise'.",
-        start: 22
+        start: {
+          character: 21,
+          line: 1,
+          offset: 22
+        },
+        end: {
+          character: 23,
+          line: 1,
+          offset: 24
+        }
       }
     ]);
   });
@@ -511,9 +591,17 @@ describe("with prev", () => {
       {
         category: 1,
         code: 2588,
-        length: 1,
         messageText: "Cannot assign to 'x' because it is a constant.",
-        start: 0
+        start: {
+          character: 0,
+          line: 0,
+          offset: 0
+        },
+        end: {
+          character: 1,
+          line: 0,
+          offset: 1
+        }
       }
     ]);
   });
