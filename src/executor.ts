@@ -7,7 +7,15 @@ export interface Executor {
   locals: { [key: string]: any };
 }
 
-export function createExecutor(conv: Converter): Executor {
+export interface ConsoleInterface {
+  log(message?: any, ...optionalParams: any[]): void;
+  error(message?: any, ...optionalParams: any[]): void;
+}
+
+export function createExecutor(
+  conv: Converter,
+  console: ConsoleInterface
+): Executor {
   const locals: { [key: string]: any } = {};
   const proxyHandler: ProxyHandler<{ [key: string]: any }> = {
     get: function(_target, prop) {
@@ -29,7 +37,14 @@ export function createExecutor(conv: Converter): Executor {
   function execute(src: string) {
     const converted = conv.convert(prevDecl, src);
     if (converted.diagnostics.length > 0) {
-      console.error(converted.diagnostics.join("\n"));
+      for (const diag of converted.diagnostics) {
+        console.error(
+          "%d:%d - %s",
+          diag.start.line + 1,
+          diag.start.character + 1,
+          diag.messageText
+        );
+      }
       return;
     }
     if (!converted.output) {
@@ -37,6 +52,9 @@ export function createExecutor(conv: Converter): Executor {
     }
     const context = new Proxy(locals, proxyHandler);
     let ret = vm.runInNewContext(converted.output, context);
+    if (converted.hasLastExpression && ret !== undefined) {
+      console.log(ret);
+    }
     prevDecl = converted.declOutput || "";
   }
 

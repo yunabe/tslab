@@ -5,9 +5,20 @@ import { createHash } from "crypto";
 let ex: executor.Executor;
 let conv: Converter;
 
+let consoleLogCalls = [];
+let consoleErrorCalls = [];
+
 beforeAll(() => {
   conv = createConverter();
-  ex = executor.createExecutor(conv);
+  let exconsole = {
+    log: function(...args) {
+      consoleLogCalls.push(args);
+    },
+    error: function(...args) {
+      consoleErrorCalls.push(args);
+    }
+  };
+  ex = executor.createExecutor(conv, exconsole);
 });
 afterAll(() => {
   if (conv) {
@@ -15,8 +26,10 @@ afterAll(() => {
   }
 });
 
-beforeEach(() => {
+afterEach(() => {
   ex.reset();
+  consoleLogCalls = [];
+  consoleErrorCalls = [];
 });
 
 describe("executor", () => {
@@ -27,6 +40,7 @@ describe("executor", () => {
     expect(ex.locals).toEqual({ x: 3, y: 30, z: 10 });
     ex.execute(`x = Math.max(z, y)`);
     expect(ex.locals).toEqual({ x: 30, y: 30, z: 10 });
+    expect(consoleLogCalls).toEqual([[10], [30], [30]]);
   });
 
   it("recursion", () => {
@@ -113,5 +127,13 @@ describe("executor", () => {
     ex.execute(`const y = Direction[2]`);
     ex.execute(`let Direction = null;`);
     expect(ex.locals).toEqual({ x: 2, y: "Down", Direction: null });
+  });
+
+  it("syntax error", () => {
+    ex.execute(`let x + y;`);
+    expect(consoleErrorCalls).toEqual([
+      ["%d:%d - %s", 1, 7, "',' expected."],
+      ["%d:%d - %s", 1, 9, "Cannot find name 'y'."]
+    ]);
   });
 });
