@@ -5,6 +5,9 @@ import { promisify } from "util";
 import * as zmq from "zeromq";
 import { createHmac, randomBytes } from "crypto";
 
+import { Converter, createConverter } from "./converter";
+import { Executor, createExecutor } from "./executor";
+
 interface ConnectionInfo {
   shell_port: number;
   iopub_port: number;
@@ -194,6 +197,20 @@ interface IsCompleteReply {
   indent?: string;
 }
 
+interface ShutdownRequest {
+  /**
+   * False if final shutdown, or True if shutdown precedes a restart
+   */
+  restart: boolean;
+}
+
+interface ShutdownReply {
+  /**
+   * False if final shutdown, or True if shutdown precedes a restart
+   */
+  restart: boolean;
+}
+
 class ZmqMessage {
   identity: string;
   delim: string;
@@ -287,15 +304,23 @@ interface JupyterHandler {
   handleKernel(): KernelInfoReply;
   handleExecute(req: ExecuteRequest): ExecuteReply;
   handleIsComplete(req: IsCompleteRequest): IsCompleteReply;
+  handleShutdown(req: ShutdownRequest): ShutdownReply;
 }
 
 class JupyterHandlerImpl implements JupyterHandler {
   private ts: boolean;
 
   private execCount: number = 0;
+  private converter: Converter = null;
+  private executor: Executor = null;
 
   constructor(ts: boolean) {
     this.ts = ts;
+    this.converter = createConverter();
+    this.executor = createExecutor(this.converter, {
+      log: console.log,
+      error: console.error
+    });
   }
 
   handleKernel(): KernelInfoReply {
@@ -314,6 +339,7 @@ class JupyterHandlerImpl implements JupyterHandler {
   }
 
   handleExecute(req: ExecuteRequest): ExecuteReply {
+    this.executor.execute(req.code);
     return {
       status: "ok",
       execution_count: ++this.execCount
@@ -323,6 +349,13 @@ class JupyterHandlerImpl implements JupyterHandler {
   handleIsComplete(req: IsCompleteRequest): IsCompleteReply {
     return {
       status: "complete"
+    };
+  }
+  handleShutdown(req: ShutdownRequest): ShutdownReply {
+    console.log("shutdown_request:", JSON.stringify(req));
+    this.converter.close();
+    return {
+      restart: false
     };
   }
 }
@@ -368,6 +401,9 @@ class ZmqServer {
         case "is_complete_request":
           await this.handleIsComplete(sock, msg);
           break;
+        case "shutdown_request":
+          await this.handleShutdown(sock, msg);
+          break;
         default:
           console.warn(`unknown msg_type: ${msg.header.msg_type}`);
       }
@@ -387,9 +423,6 @@ class ZmqServer {
     const reply = await msg.createReply();
     reply.header.msg_type = "execute_reply";
     reply.content = this.handler.handleExecute(msg.content as ExecuteRequest);
-    await (() => {
-      return new Promise(resolve => setTimeout(resolve, 5000));
-    })();
     reply.signAndSend(this.connInfo.key, sock);
   }
 
@@ -399,6 +432,13 @@ class ZmqServer {
     reply.content = this.handler.handleIsComplete(
       msg.content as IsCompleteRequest
     );
+    reply.signAndSend(this.connInfo.key, sock);
+  }
+
+  async handleShutdown(sock, msg: ZmqMessage) {
+    const reply = await msg.createReply();
+    reply.header.msg_type = "shutdown_reply";
+    reply.content = this.handler.handleShutdown(msg.content as ShutdownRequest);
     reply.signAndSend(this.connInfo.key, sock);
   }
 
