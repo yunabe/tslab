@@ -389,7 +389,7 @@ class ZmqServer {
 
   async handleShellMessage(sock, ...args: Buffer[]) {
     const msg = ZmqMessage.fromRaw(this.connInfo.key, args);
-    await this.publishStatus("status", msg);
+    await this.publishStatus("busy", msg);
     try {
       switch (msg.header.msg_type) {
         case "kernel_info_request":
