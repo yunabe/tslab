@@ -1,4 +1,5 @@
 import * as ts from "typescript";
+import { getQuickInfoAtPosition } from "./inspect";
 
 // TODO: Disallow accessing "module" of Node.js.
 
@@ -30,6 +31,7 @@ export interface Diagnostic {
 
 export interface Converter {
   convert(prevDecl: string, src: string): ConvertResult;
+  inspect(prevDecl: string, src: string, position: number);
   close(): void;
 }
 
@@ -115,7 +117,8 @@ export function createConverter(): Converter {
   }
   return {
     close,
-    convert
+    convert,
+    inspect
   };
 
   function close() {
@@ -172,6 +175,26 @@ export function createConverter(): Converter {
       ),
       hasLastExpression
     };
+  }
+
+  function inspect(
+    prevDecl: string,
+    src: string,
+    position: number
+  ): ts.QuickInfo | undefined {
+    // c.f.
+    // https://github.com/microsoft/vscode/blob/master/extensions/typescript-language-features/src/features/hover.ts
+    updateContent(prevDecl, src);
+    let declsFile = builder.getSourceFile(declFilename);
+    let srcFile = builder.getSourceFile(srcFilename);
+    srcFile.parent = declsFile;
+    const info = getQuickInfoAtPosition(
+      srcFile,
+      builder.getProgram().getTypeChecker(),
+      position + srcPrefix.length
+    );
+    info.textSpan.start -= srcPrefix.length;
+    return info;
   }
 
   function remainingDecls(
