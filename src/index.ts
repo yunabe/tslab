@@ -212,7 +212,9 @@ interface ShutdownReply {
 }
 
 class ZmqMessage {
-  identity: string;
+  // identity must not string because jupyter sends non-string identity since 5.3 prototocol.
+  // TODO: Check this is an intentional change in Jupyter.
+  identity: Buffer;
   delim: string;
   hmac: string;
   header: HeaderMessage;
@@ -237,7 +239,7 @@ class ZmqMessage {
 
   static fromRaw(key: string, raw: Buffer[]): ZmqMessage {
     const ret = new ZmqMessage();
-    ret.identity = raw[0].toString();
+    ret.identity = raw[0];
     ret.delim = raw[1].toString();
     ret.hmac = raw[2].toString();
     ret.header = JSON.parse(raw[3].toString());
@@ -255,12 +257,12 @@ class ZmqMessage {
   }
 
   async createReply(): Promise<ZmqMessage> {
-    // https://github.com/ipython/ipykernel/blob/master/ipykernel/kernelbase.py#L222
-    // idents should be copied from the parent.
     const rep = new ZmqMessage();
+    // https://github.com/ipython/ipykernel/blob/master/ipykernel/kernelbase.py#L222
+    // idents must be copied from the parent.
     rep.identity = this.identity;
-    // rep.identity = await ZmqMessage.newIdentity();
     rep.delim = this.delim;
+    // Sets an empty string to hmac because it won't be used.
     rep.hmac = "";
     rep.header = {
       version: "5.3",
@@ -278,7 +280,7 @@ class ZmqMessage {
   }
 
   signAndSend(key: string, sock) {
-    const heads: string[] = [];
+    const heads: (string | Buffer)[] = [];
     heads.push(this.identity);
     heads.push(this.delim);
     const bodies: string[] = [];
