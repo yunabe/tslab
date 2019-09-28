@@ -1,4 +1,5 @@
 import * as converter from "./converter";
+import { printQuickInfo } from "./inspect";
 
 let conv: converter.Converter;
 beforeAll(() => {
@@ -57,6 +58,9 @@ describe("inspect", () => {
         start: position
       }
     });
+    expect(printQuickInfo(info)).toEqual(
+      ["let xyz: number", "", "xys is a great variable"].join("\n")
+    );
   });
 
   it("var boolean", () => {
@@ -105,6 +109,9 @@ describe("inspect", () => {
         start: position
       }
     });
+    expect(printQuickInfo(info)).toEqual(
+      ["var klm: boolean", "", "klm is a great boolean"].join("\n")
+    );
   });
 
   it("const string", () => {
@@ -153,6 +160,9 @@ describe("inspect", () => {
         start: position
       }
     });
+    expect(printQuickInfo(info)).toEqual(
+      ['const abc: "hello"', "", "abc is a great string"].join("\n")
+    );
   });
 
   it("std method", () => {
@@ -206,13 +216,21 @@ describe("inspect", () => {
         }
       ]
     });
+    expect(printQuickInfo(info)).toEqual(
+      [
+        "(method) String.indexOf(searchString: string, position?: number): number",
+        "",
+        "Returns the position of the first occurrence of a substring.",
+        "@param searchString The substring to search for in the string",
+        "@param position The index at which to begin searching the String object. If omitted, search starts at the beginning of the string."
+      ].join("\n")
+    );
   });
 
   it("std constructor with override", () => {
     const src = "let m = new Map();";
     const position = src.indexOf("Map(");
     const info = conv.inspect(``, src, position);
-    let m = new Map();
     expect(info).toEqual({
       kind: "var",
       kindModifiers: "declare",
@@ -249,6 +267,12 @@ describe("inspect", () => {
       ],
       documentation: []
     });
+    expect(printQuickInfo(info)).toEqual(
+      [
+        "var Map: MapConstructor",
+        "new () => Map<any, any> (+2 overloads)"
+      ].join("\n")
+    );
   });
 
   it("let interface", () => {
@@ -275,6 +299,7 @@ describe("inspect", () => {
       ],
       documentation: []
     });
+    expect(printQuickInfo(info)).toEqual("let m: Map<string, number>");
   });
 
   it("std interface", () => {
@@ -298,6 +323,7 @@ describe("inspect", () => {
       ],
       documentation: []
     });
+    expect(printQuickInfo(info)).toEqual("interface Map<K, V>");
   });
 
   it("enum member", () => {
@@ -323,5 +349,6 @@ describe("inspect", () => {
       ],
       documentation: []
     });
+    expect(printQuickInfo(info)).toEqual("(enum member) myenum.key1 = 0");
   });
 });
