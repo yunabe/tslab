@@ -1,8 +1,10 @@
 import { Converter, ConvertResult } from "./converter";
 import * as vm from "vm";
+import * as ts from "typescript";
 
 export interface Executor {
   execute(src: string): void;
+  inspect(src: string, position: number): ts.QuickInfo;
   reset(): void;
   locals: { [key: string]: any };
 }
@@ -58,6 +60,10 @@ export function createExecutor(
     prevDecl = converted.declOutput || "";
   }
 
+  function inspect(src: string, position: number): ts.QuickInfo {
+    return conv.inspect(prevDecl, src, position);
+  }
+
   function reset(): void {
     prevDecl = "";
     for (const name of Object.getOwnPropertyNames(locals)) {
@@ -67,6 +73,7 @@ export function createExecutor(
 
   return {
     execute,
+    inspect,
     locals,
     reset
   };

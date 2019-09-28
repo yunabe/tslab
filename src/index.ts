@@ -7,6 +7,7 @@ import { createHmac, randomBytes } from "crypto";
 
 import { Converter, createConverter } from "./converter";
 import { Executor, createExecutor } from "./executor";
+import { printQuickInfo } from "./inspect";
 
 interface ConnectionInfo {
   shell_port: number;
@@ -197,6 +198,40 @@ interface IsCompleteReply {
   indent?: string;
 }
 
+interface InspectRequest {
+  /**
+   * The code context in which introspection is requested
+   * this may be up to an entire multiline cell.
+   */
+  code: string;
+
+  /**
+   * The cursor position within 'code' (in unicode characters) where inspection is requested
+   */
+  cursor_pos: number;
+
+  /**
+   *
+   * The level of detail desired.  In IPython, the default (0) is equivalent to typing
+   * 'x?' at the prompt, 1 is equivalent to 'x??'.
+   * The difference is up to kernels, but in IPython level 1 includes the source code
+   * if available.
+   */
+  detail_level: 0 | 1;
+}
+
+interface InspectReply {
+  /** 'ok' if the request succeeded or 'error', with error information as in all other replies. */
+  status: "ok";
+
+  /** found should be true if an object was found, false otherwise */
+  found: boolean;
+
+  /** data can be empty if nothing is found */
+  data: { [key: string]: string };
+  metadata: { [key: string]: never };
+}
+
 interface ShutdownRequest {
   /**
    * False if final shutdown, or True if shutdown precedes a restart
@@ -306,6 +341,7 @@ interface JupyterHandler {
   handleKernel(): KernelInfoReply;
   handleExecute(req: ExecuteRequest): ExecuteReply;
   handleIsComplete(req: IsCompleteRequest): IsCompleteReply;
+  handleInspect(req: InspectRequest): InspectReply;
   handleShutdown(req: ShutdownRequest): ShutdownReply;
 }
 
@@ -353,8 +389,31 @@ class JupyterHandlerImpl implements JupyterHandler {
       status: "complete"
     };
   }
+
+  handleInspect(req: InspectRequest): InspectReply {
+    const info = this.executor.inspect(req.code, req.cursor_pos);
+    if (!info) {
+      return {
+        status: "ok",
+        found: false,
+        data: {},
+        metadata: {}
+      };
+    }
+    let text = printQuickInfo(info);
+    return {
+      status: "ok",
+      found: true,
+      data: {
+        // text/plain must be filled even if "text/html" is provided.
+        // TODO: Fill text/html too if necessary.
+        "text/plain": text
+      },
+      metadata: {}
+    };
+  }
+
   handleShutdown(req: ShutdownRequest): ShutdownReply {
-    console.log("shutdown_request:", JSON.stringify(req));
     this.converter.close();
     return {
       restart: false
@@ -403,6 +462,9 @@ class ZmqServer {
         case "is_complete_request":
           await this.handleIsComplete(sock, msg);
           break;
+        case "inspect_request":
+          await this.handleInspect(sock, msg);
+          break;
         case "shutdown_request":
           await this.handleShutdown(sock, msg);
           break;
@@ -434,6 +496,13 @@ class ZmqServer {
     reply.content = this.handler.handleIsComplete(
       msg.content as IsCompleteRequest
     );
+    reply.signAndSend(this.connInfo.key, sock);
+  }
+
+  async handleInspect(sock, msg: ZmqMessage) {
+    const reply = await msg.createReply();
+    reply.header.msg_type = "inspect_reply";
+    reply.content = this.handler.handleInspect(msg.content as InspectRequest);
     reply.signAndSend(this.connInfo.key, sock);
   }
 

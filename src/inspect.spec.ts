@@ -12,6 +12,12 @@ afterAll(() => {
 });
 
 describe("inspect", () => {
+  it("no info", () => {
+    const src = "";
+    const info = conv.inspect(``, src, 0);
+    expect(info).toBeUndefined();
+  });
+
   it("let number", () => {
     const src = "/** xys is a great variable */\nlet xyz = 10;";
     const position = src.indexOf("xyz =");

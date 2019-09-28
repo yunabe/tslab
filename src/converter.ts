@@ -193,7 +193,9 @@ export function createConverter(): Converter {
       builder.getProgram().getTypeChecker(),
       position + srcPrefix.length
     );
-    info.textSpan.start -= srcPrefix.length;
+    if (info && info.textSpan) {
+      info.textSpan.start -= srcPrefix.length;
+    }
     return info;
   }
 
