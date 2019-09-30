@@ -3,7 +3,7 @@ import * as path from "path";
 import { promisify } from "util";
 
 import * as zmq from "zeromq";
-import { createHmac, randomBytes } from "crypto";
+import { createHmac } from "crypto";
 
 import { Converter, createConverter } from "./converter";
 import { Executor, createExecutor } from "./executor";
@@ -286,12 +286,7 @@ class ZmqMessage {
     return ret;
   }
 
-  private static async newIdentity(): Promise<string> {
-    const hex = (await promisify(randomBytes)(16)).toString("hex");
-    return hex.substr(0, 8) + "-" + hex.substr(8);
-  }
-
-  async createReply(): Promise<ZmqMessage> {
+  createReply(): ZmqMessage {
     const rep = new ZmqMessage();
     // https://github.com/ipython/ipykernel/blob/master/ipykernel/kernelbase.py#L222
     // idents must be copied from the parent.
@@ -440,7 +435,7 @@ class ZmqServer {
   }
 
   async publishStatus(status: string, parent: ZmqMessage) {
-    const reply = await parent.createReply();
+    const reply = parent.createReply();
     reply.content = {
       execution_state: status
     };
@@ -477,21 +472,21 @@ class ZmqServer {
   }
 
   async handleKernelInfo(sock, msg: ZmqMessage) {
-    const reply = await msg.createReply();
+    const reply = msg.createReply();
     reply.header.msg_type = "kernel_info_reply";
     reply.content = this.handler.handleKernel();
     reply.signAndSend(this.connInfo.key, sock);
   }
 
   async handleExecute(sock, msg: ZmqMessage) {
-    const reply = await msg.createReply();
+    const reply = msg.createReply();
     reply.header.msg_type = "execute_reply";
     reply.content = this.handler.handleExecute(msg.content as ExecuteRequest);
     reply.signAndSend(this.connInfo.key, sock);
   }
 
   async handleIsComplete(sock, msg: ZmqMessage) {
-    const reply = await msg.createReply();
+    const reply = msg.createReply();
     reply.header.msg_type = "is_complete_reply";
     reply.content = this.handler.handleIsComplete(
       msg.content as IsCompleteRequest
@@ -500,14 +495,14 @@ class ZmqServer {
   }
 
   async handleInspect(sock, msg: ZmqMessage) {
-    const reply = await msg.createReply();
+    const reply = msg.createReply();
     reply.header.msg_type = "inspect_reply";
     reply.content = this.handler.handleInspect(msg.content as InspectRequest);
     reply.signAndSend(this.connInfo.key, sock);
   }
 
   async handleShutdown(sock, msg: ZmqMessage) {
-    const reply = await msg.createReply();
+    const reply = msg.createReply();
     reply.header.msg_type = "shutdown_reply";
     reply.content = this.handler.handleShutdown(msg.content as ShutdownRequest);
     reply.signAndSend(this.connInfo.key, sock);
