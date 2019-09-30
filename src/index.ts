@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import { promisify } from "util";
+import { promisify, TextDecoder } from "util";
 
 import * as zmq from "zeromq";
 import { createHmac } from "crypto";
@@ -8,6 +8,8 @@ import { createHmac } from "crypto";
 import { Converter, createConverter } from "./converter";
 import { Executor, createExecutor } from "./executor";
 import { printQuickInfo } from "./inspect";
+
+const utf8Decoder = new TextDecoder();
 
 interface ConnectionInfo {
   shell_port: number;
@@ -434,7 +436,7 @@ class ZmqServer {
     return promisify(sock.bind).bind(sock)(addr);
   }
 
-  async publishStatus(status: string, parent: ZmqMessage) {
+  publishStatus(status: string, parent: ZmqMessage) {
     const reply = parent.createReply();
     reply.content = {
       execution_state: status
@@ -445,33 +447,33 @@ class ZmqServer {
 
   async handleShellMessage(sock, ...args: Buffer[]) {
     const msg = ZmqMessage.fromRaw(this.connInfo.key, args);
-    await this.publishStatus("busy", msg);
+    this.publishStatus("busy", msg);
     try {
       switch (msg.header.msg_type) {
         case "kernel_info_request":
-          await this.handleKernelInfo(sock, msg);
+          this.handleKernelInfo(sock, msg);
           break;
         case "execute_request":
           await this.handleExecute(sock, msg);
           break;
         case "is_complete_request":
-          await this.handleIsComplete(sock, msg);
+          this.handleIsComplete(sock, msg);
           break;
         case "inspect_request":
-          await this.handleInspect(sock, msg);
+          this.handleInspect(sock, msg);
           break;
         case "shutdown_request":
-          await this.handleShutdown(sock, msg);
+          this.handleShutdown(sock, msg);
           break;
         default:
           console.warn(`unknown msg_type: ${msg.header.msg_type}`);
       }
     } finally {
-      await this.publishStatus("idle", msg);
+      this.publishStatus("idle", msg);
     }
   }
 
-  async handleKernelInfo(sock, msg: ZmqMessage) {
+  handleKernelInfo(sock, msg: ZmqMessage) {
     const reply = msg.createReply();
     reply.header.msg_type = "kernel_info_reply";
     reply.content = this.handler.handleKernel();
@@ -481,11 +483,15 @@ class ZmqServer {
   async handleExecute(sock, msg: ZmqMessage) {
     const reply = msg.createReply();
     reply.header.msg_type = "execute_reply";
+    // Python kernel forward outputs to the cell even after the execution is finished.
+    // We follow the same convension here.
+    process.stdout.write = this.createWriteToIopub(msg, "stdout") as any;
+    process.stderr.write = this.createWriteToIopub(msg, "stderr") as any;
     reply.content = this.handler.handleExecute(msg.content as ExecuteRequest);
     reply.signAndSend(this.connInfo.key, sock);
   }
 
-  async handleIsComplete(sock, msg: ZmqMessage) {
+  handleIsComplete(sock, msg: ZmqMessage) {
     const reply = msg.createReply();
     reply.header.msg_type = "is_complete_reply";
     reply.content = this.handler.handleIsComplete(
@@ -494,18 +500,37 @@ class ZmqServer {
     reply.signAndSend(this.connInfo.key, sock);
   }
 
-  async handleInspect(sock, msg: ZmqMessage) {
+  handleInspect(sock, msg: ZmqMessage) {
     const reply = msg.createReply();
     reply.header.msg_type = "inspect_reply";
     reply.content = this.handler.handleInspect(msg.content as InspectRequest);
     reply.signAndSend(this.connInfo.key, sock);
   }
 
-  async handleShutdown(sock, msg: ZmqMessage) {
+  handleShutdown(sock, msg: ZmqMessage) {
     const reply = msg.createReply();
     reply.header.msg_type = "shutdown_reply";
     reply.content = this.handler.handleShutdown(msg.content as ShutdownRequest);
     reply.signAndSend(this.connInfo.key, sock);
+  }
+
+  createWriteToIopub(parent: ZmqMessage, name: "stdout" | "stderr") {
+    return (buffer: string | Uint8Array, encoding?: string): boolean => {
+      let text: string;
+      if (typeof buffer === "string") {
+        text = buffer;
+      } else {
+        text = utf8Decoder.decode(buffer);
+      }
+      const reply = parent.createReply();
+      reply.header.msg_type = "stream";
+      reply.content = {
+        name,
+        text
+      };
+      reply.signAndSend(this.connInfo.key, this.iopub);
+      return true;
+    };
   }
 
   async init() {
