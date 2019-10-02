@@ -1,9 +1,17 @@
-import { Converter, ConvertResult } from "./converter";
+import { Converter } from "./converter";
 import * as vm from "vm";
 import * as ts from "typescript";
 
 export interface Executor {
-  execute(src: string): void;
+  /**
+   * Transpiles and executes `src`.
+   *
+   * Note: Although this method returns a promise, `src` is executed immdiately
+   * when this code is executed.
+   * @param src source code to be executed.
+   * @returns Whether `src` was executed successfully.
+   */
+  execute(src: string): Promise<boolean>;
   inspect(src: string, position: number): ts.QuickInfo;
   reset(): void;
   locals: { [key: string]: any };
@@ -36,7 +44,7 @@ export function createExecutor(
   };
   let prevDecl = "";
 
-  function execute(src: string) {
+  async function execute(src: string): Promise<boolean> {
     const converted = conv.convert(prevDecl, src);
     if (converted.diagnostics.length > 0) {
       for (const diag of converted.diagnostics) {
@@ -47,17 +55,34 @@ export function createExecutor(
           diag.messageText
         );
       }
-      return;
+      return false;
     }
     if (!converted.output) {
-      return;
+      prevDecl = converted.declOutput || "";
+      return true;
     }
     const context = new Proxy(locals, proxyHandler);
-    let ret = vm.runInNewContext(converted.output, context);
-    if (converted.hasLastExpression && ret !== undefined) {
-      console.log(ret);
+    let ret: any;
+    try {
+      ret = vm.runInNewContext(converted.output, context);
+    } catch (e) {
+      console.error(e);
+      return false;
     }
     prevDecl = converted.declOutput || "";
+    if (converted.hasLastExpression && ret !== undefined) {
+      if (ret instanceof Promise) {
+        try {
+          console.log(await ret);
+        } catch (e) {
+          console.error(e);
+          return false;
+        }
+        return true;
+      }
+      console.log(ret);
+    }
+    return true;
   }
 
   function inspect(src: string, position: number): ts.QuickInfo {
