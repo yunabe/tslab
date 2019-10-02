@@ -8,6 +8,7 @@ import { createHmac } from "crypto";
 import { Converter, createConverter } from "./converter";
 import { Executor, createExecutor } from "./executor";
 import { printQuickInfo } from "./inspect";
+import { TaskQueue, TaskCanceledError } from "./util";
 
 const utf8Decoder = new TextDecoder();
 
@@ -248,6 +249,31 @@ interface ShutdownReply {
   restart: boolean;
 }
 
+interface DisplayData {
+  /**
+   * Who create the data
+   * Used in V4. Removed in V5.
+   */
+  source: string;
+
+  /**
+   * The data dict contains key/value pairs, where the keys are MIME
+   * types and the values are the raw data of the representation in that
+   * format.
+   */
+  data: { [key: string]: string };
+
+  /** Any metadata that describes the data */
+  metadata: { [key: string]: string };
+
+  /**
+   * Optional transient data introduced in 5.1. Information not to be
+   * persisted to a notebook or other documents. Intended to live only
+   * during a live kernel session.
+   */
+  transient: { [key: string]: string };
+}
+
 class ZmqMessage {
   // identity must not string because jupyter sends non-string identity since 5.3 prototocol.
   // TODO: Check this is an intentional change in Jupyter.
@@ -336,26 +362,41 @@ class ZmqMessage {
 
 interface JupyterHandler {
   handleKernel(): KernelInfoReply;
-  handleExecute(req: ExecuteRequest): ExecuteReply;
+  handleExecute(
+    req: ExecuteRequest,
+    writeStream: (name: string, text: string) => void,
+    writeDisplayData: (data: DisplayData, update: boolean) => void
+  ): Promise<ExecuteReply>;
   handleIsComplete(req: IsCompleteRequest): IsCompleteReply;
   handleInspect(req: InspectRequest): InspectReply;
   handleShutdown(req: ShutdownRequest): ShutdownReply;
 }
 
+class ExecutionCount {
+  count: number;
+  constructor(count: number) {
+    this.count = count;
+  }
+}
+
 class JupyterHandlerImpl implements JupyterHandler {
   private ts: boolean;
 
-  private execCount: number = 0;
-  private converter: Converter = null;
-  private executor: Executor = null;
+  private execCount: number;
+  private converter: Converter;
+  private executor: Executor;
+  private execQueue: TaskQueue;
+  private static execFailedError = new Error("execution failed");
 
   constructor(ts: boolean) {
     this.ts = ts;
+    this.execCount = 0;
     this.converter = createConverter();
     this.executor = createExecutor(this.converter, {
       log: console.log,
       error: console.error
     });
+    this.execQueue = new TaskQueue();
   }
 
   handleKernel(): KernelInfoReply {
@@ -373,11 +414,73 @@ class JupyterHandlerImpl implements JupyterHandler {
     };
   }
 
-  handleExecute(req: ExecuteRequest): ExecuteReply {
-    this.executor.execute(req.code);
+  async handleExecute(
+    req: ExecuteRequest,
+    writeStream: (name: string, text: string) => void,
+    writeDisplayData: (data: DisplayData, update: boolean) => void
+  ): Promise<ExecuteReply> {
+    let status = "ok";
+    let count: ExecutionCount = null;
+    try {
+      count = await this.execQueue.add(() =>
+        this.handleExecuteImpl(req, writeStream, writeDisplayData)
+      );
+    } catch (e) {
+      if (e instanceof ExecutionCount) {
+        status = "error";
+        count = e;
+      } else if (e instanceof TaskCanceledError) {
+        status = "abort";
+      } else {
+        status = "error";
+        console.error("unexpected error:", e);
+      }
+      // TODO: Reset request queued on the Zmq socket.
+      this.execQueue = new TaskQueue();
+    }
     return {
-      status: "ok",
-      execution_count: ++this.execCount
+      status: status,
+      execution_count: count ? count.count : undefined
+    };
+  }
+
+  async handleExecuteImpl(
+    req: ExecuteRequest,
+    writeStream: (name: string, text: string) => void,
+    writeDisplayData: (data: DisplayData, update: boolean) => void
+  ): Promise<ExecutionCount> {
+    // Python kernel forward outputs to the cell even after the execution is finished.
+    // We follow the same convension here.
+    // TODO: Do this in the sequential task queue.
+    process.stdout.write = this.createWriteToIopub(
+      "stdout",
+      writeStream
+    ) as any;
+    process.stderr.write = this.createWriteToIopub(
+      "stderr",
+      writeStream
+    ) as any;
+    let count = new ExecutionCount(++this.execCount);
+    let ok: boolean = await this.executor.execute(req.code);
+    if (!ok) {
+      throw count;
+    }
+    return count;
+  }
+
+  createWriteToIopub(
+    name: "stdout" | "stderr",
+    writeStream: (name: string, text: string) => void
+  ) {
+    return (buffer: string | Uint8Array, encoding?: string): boolean => {
+      let text: string;
+      if (typeof buffer === "string") {
+        text = buffer;
+      } else {
+        text = utf8Decoder.decode(buffer);
+      }
+      writeStream(name, text);
+      return true;
     };
   }
 
@@ -483,11 +586,24 @@ class ZmqServer {
   async handleExecute(sock, msg: ZmqMessage) {
     const reply = msg.createReply();
     reply.header.msg_type = "execute_reply";
-    // Python kernel forward outputs to the cell even after the execution is finished.
-    // We follow the same convension here.
-    process.stdout.write = this.createWriteToIopub(msg, "stdout") as any;
-    process.stderr.write = this.createWriteToIopub(msg, "stderr") as any;
-    reply.content = this.handler.handleExecute(msg.content as ExecuteRequest);
+    const writeStream = (name: string, text: string) => {
+      const reply = msg.createReply();
+      reply.header.msg_type = "stream";
+      reply.content = {
+        name,
+        text
+      };
+      reply.signAndSend(this.connInfo.key, this.iopub);
+    };
+    const writeDisplayData = (data: DisplayData, update: boolean) => {
+      throw new Error("not implemented");
+    };
+    const content: ExecuteReply = await this.handler.handleExecute(
+      msg.content as ExecuteRequest,
+      writeStream,
+      writeDisplayData
+    );
+    reply.content = content;
     reply.signAndSend(this.connInfo.key, sock);
   }
 
@@ -512,25 +628,6 @@ class ZmqServer {
     reply.header.msg_type = "shutdown_reply";
     reply.content = this.handler.handleShutdown(msg.content as ShutdownRequest);
     reply.signAndSend(this.connInfo.key, sock);
-  }
-
-  createWriteToIopub(parent: ZmqMessage, name: "stdout" | "stderr") {
-    return (buffer: string | Uint8Array, encoding?: string): boolean => {
-      let text: string;
-      if (typeof buffer === "string") {
-        text = buffer;
-      } else {
-        text = utf8Decoder.decode(buffer);
-      }
-      const reply = parent.createReply();
-      reply.header.msg_type = "stream";
-      reply.content = {
-        name,
-        text
-      };
-      reply.signAndSend(this.connInfo.key, this.iopub);
-      return true;
-    };
   }
 
   async init() {
