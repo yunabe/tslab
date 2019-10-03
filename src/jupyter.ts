@@ -1,5 +1,4 @@
 import * as fs from "fs";
-import * as path from "path";
 import { promisify, TextDecoder } from "util";
 
 import * as zmq from "zeromq";
@@ -159,7 +158,7 @@ interface ExecuteRequest {
   stop_on_error?: boolean;
 }
 
-interface ExecuteReply {
+export interface ExecuteReply {
   /** One of: 'ok' OR 'error' OR 'abort' */
   status: string;
 
@@ -379,23 +378,18 @@ class ExecutionCount {
   }
 }
 
-class JupyterHandlerImpl implements JupyterHandler {
+export class JupyterHandlerImpl implements JupyterHandler {
   private ts: boolean;
 
   private execCount: number;
-  private converter: Converter;
   private executor: Executor;
   private execQueue: TaskQueue;
   private static execFailedError = new Error("execution failed");
 
-  constructor(ts: boolean) {
+  constructor(ts: boolean, executor: Executor) {
     this.ts = ts;
     this.execCount = 0;
-    this.converter = createConverter();
-    this.executor = createExecutor(this.converter, {
-      log: console.log,
-      error: console.error
-    });
+    this.executor = executor;
     this.execQueue = new TaskQueue();
   }
 
@@ -405,6 +399,8 @@ class JupyterHandlerImpl implements JupyterHandler {
       implementation: this.ts ? "tslab" : "jslab",
       implementation_version: "1.0.0",
       language_info: {
+        // "typescript" does not work well because CodeMirror does not have 'typscript' mode?
+        // TODO: Figure out the correct way to specify typescript.
         name: "javascript",
         version: "",
         mimetype: "",
@@ -444,7 +440,14 @@ class JupyterHandlerImpl implements JupyterHandler {
     };
   }
 
-  async handleExecuteImpl(
+  /**
+   * The body of handleExecute.
+   * When the execution failed, this method throws ExecutionCount to
+   * - Pass ExecutionCount to the caller.
+   * - At the same time, cancel pending tasks on execQueue.
+   * TODO: Figure out a cleaner and more natural solution.
+   */
+  private async handleExecuteImpl(
     req: ExecuteRequest,
     writeStream: (name: string, text: string) => void,
     writeDisplayData: (data: DisplayData, update: boolean) => void
@@ -514,14 +517,13 @@ class JupyterHandlerImpl implements JupyterHandler {
   }
 
   handleShutdown(req: ShutdownRequest): ShutdownReply {
-    this.converter.close();
     return {
       restart: false
     };
   }
 }
 
-class ZmqServer {
+export class ZmqServer {
   handler: JupyterHandler;
   configPath: string;
   connInfo: ConnectionInfo;
@@ -656,17 +658,3 @@ class ZmqServer {
     this.bindSocket(hb, cinfo.hb_port);
   }
 }
-
-async function main() {
-  const cmd = path.basename(process.argv[1]);
-  let ts = false;
-  if (cmd.startsWith("ts")) {
-    ts = true;
-  }
-
-  const configPath = process.argv[2];
-  const server = new ZmqServer(new JupyterHandlerImpl(true), configPath);
-  await server.init();
-}
-
-main();
