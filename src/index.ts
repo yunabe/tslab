@@ -9,7 +9,6 @@ async function main() {
   if (cmd.startsWith("ts")) {
     ts = true;
   }
-
   const configPath = process.argv[2];
   const converter = createConverter();
   const executor = createExecutor(converter, {
@@ -20,6 +19,9 @@ async function main() {
     new JupyterHandlerImpl(true, executor),
     configPath
   );
+  process.on("SIGINT", () => {
+    // Ignore SIGINT. This kernel is killed by shutdown_request.
+  });
   await server.init();
 }
 

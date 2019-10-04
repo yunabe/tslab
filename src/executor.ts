@@ -64,7 +64,10 @@ export function createExecutor(
     const context = new Proxy(locals, proxyHandler);
     let ret: any;
     try {
-      ret = vm.runInNewContext(converted.output, context);
+      // TODO: Remove `as any` once https://github.com/DefinitelyTyped/DefinitelyTyped/pull/38859 is pushed.
+      ret = vm.runInNewContext(converted.output, context, {
+        breakOnSigint: true
+      } as any);
     } catch (e) {
       console.error(e);
       return false;
@@ -73,6 +76,7 @@ export function createExecutor(
     if (converted.hasLastExpression && ret !== undefined) {
       if (ret instanceof Promise) {
         try {
+          // TODO: Cancel await by SIGINT.
           console.log(await ret);
         } catch (e) {
           console.error(e);
