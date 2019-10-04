@@ -14,6 +14,13 @@ export interface Executor {
   execute(src: string): Promise<boolean>;
   inspect(src: string, position: number): ts.QuickInfo;
   reset(): void;
+
+  /**
+   * Interrupts non-blocking code execution. This method is called from SIGINT signal handler.
+   * Note that blocking code execution is terminated by SIGINT separately because it is impossible
+   * to call `interrupt` while `execute` is blocked.
+   */
+  interrupt(): void;
   locals: { [key: string]: any };
 }
 
@@ -43,6 +50,23 @@ export function createExecutor(
     }
   };
   let prevDecl = "";
+
+  let interrupted = new Error("Interrupted asynchronously");
+  let rejectInterruptPromise: (reason?: any) => void;
+  let interruptPromise: Promise<void>;
+  function resetInterruptPromise(): void {
+    interruptPromise = new Promise((_, reject) => {
+      rejectInterruptPromise = reject;
+    });
+    // Suppress "UnhandledPromiseRejectionWarning".
+    interruptPromise.catch(() => {});
+  }
+  resetInterruptPromise();
+
+  function interrupt(): void {
+    rejectInterruptPromise(interrupted);
+    resetInterruptPromise();
+  }
 
   async function execute(src: string): Promise<boolean> {
     const converted = conv.convert(prevDecl, src);
@@ -76,8 +100,7 @@ export function createExecutor(
     if (converted.hasLastExpression && ret !== undefined) {
       if (ret instanceof Promise) {
         try {
-          // TODO: Cancel await by SIGINT.
-          console.log(await ret);
+          console.log(await Promise.race([ret, interruptPromise]));
         } catch (e) {
           console.error(e);
           return false;
@@ -104,6 +127,7 @@ export function createExecutor(
     execute,
     inspect,
     locals,
-    reset
+    reset,
+    interrupt
   };
 }

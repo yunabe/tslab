@@ -20,7 +20,7 @@ async function main() {
     configPath
   );
   process.on("SIGINT", () => {
-    // Ignore SIGINT. This kernel is killed by shutdown_request.
+    executor.interrupt();
   });
   await server.init();
 }

@@ -454,7 +454,6 @@ export class JupyterHandlerImpl implements JupyterHandler {
   ): Promise<ExecutionCount> {
     // Python kernel forward outputs to the cell even after the execution is finished.
     // We follow the same convension here.
-    // TODO: Do this in the sequential task queue.
     process.stdout.write = this.createWriteToIopub(
       "stdout",
       writeStream

@@ -32,7 +32,7 @@ afterEach(() => {
   consoleErrorCalls = [];
 });
 
-describe("executor", () => {
+describe("execute", () => {
   it("immediate", () => {
     // Show code is executed immediately with execute.
     // See a docstring of execute for details.
@@ -195,5 +195,29 @@ describe("executor", () => {
     expect(await promise).toBe(false);
     expect(consoleLogCalls).toEqual([]);
     expect(consoleErrorCalls).toEqual([["Good Bye Promise"]]);
+  });
+});
+
+describe("interrupt", () => {
+  it("interrupt without execute", () => {
+    // Confirm it does not cause any problem like "UnhandledPromiseRejection".
+    ex.interrupt();
+  });
+
+  it("interrupt", async () => {
+    // Confirm it does not cause any problem like "UnhandledPromiseRejection".
+    let src = "new Promise(resolve => setTimeout(() => resolve('done'), 10));";
+    let promise = ex.execute(src);
+    expect(await promise).toBe(true);
+    expect(consoleLogCalls).toEqual([["done"]]);
+    consoleLogCalls = [];
+
+    promise = ex.execute(src);
+    ex.interrupt();
+    expect(await promise).toBe(false);
+    expect(consoleLogCalls).toEqual([]);
+    expect(consoleErrorCalls).toEqual([
+      [new Error("Interrupted asynchronously")]
+    ]);
   });
 });
