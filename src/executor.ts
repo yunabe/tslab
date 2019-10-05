@@ -22,6 +22,9 @@ export interface Executor {
    */
   interrupt(): void;
   locals: { [key: string]: any };
+
+  /** Release internal resources to terminate the process gracefully. */
+  close(): void;
 }
 
 export interface ConsoleInterface {
@@ -123,11 +126,16 @@ export function createExecutor(
     }
   }
 
+  function close(): void {
+    conv.close();
+  }
+
   return {
     execute,
     inspect,
     locals,
     reset,
-    interrupt
+    interrupt,
+    close
   };
 }

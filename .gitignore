@@ -62,3 +62,7 @@ typings/
 
 # TypeScript output dir
 dist/
+
+# Python
+.pyc
+.ipynb_checkpoints/

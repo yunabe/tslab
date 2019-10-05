@@ -32,6 +32,7 @@ export interface Diagnostic {
 export interface Converter {
   convert(prevDecl: string, src: string): ConvertResult;
   inspect(prevDecl: string, src: string, position: number);
+  /** Release internal resources to terminate the process gracefully. */
   close(): void;
 }
 

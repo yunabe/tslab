@@ -3,7 +3,7 @@ import { createConverter } from "./converter";
 import { createExecutor } from "./executor";
 import { JupyterHandlerImpl, ZmqServer } from "./jupyter";
 
-async function main() {
+function main() {
   const cmd = path.basename(process.argv[1]);
   let ts = false;
   if (cmd.startsWith("ts")) {
@@ -22,7 +22,7 @@ async function main() {
   process.on("SIGINT", () => {
     executor.interrupt();
   });
-  await server.init();
+  server.init();
 }
 
 main();

@@ -4,8 +4,7 @@ import { promisify, TextDecoder } from "util";
 import * as zmq from "zeromq";
 import { createHmac } from "crypto";
 
-import { Converter, createConverter } from "./converter";
-import { Executor, createExecutor } from "./executor";
+import { Executor } from "./executor";
 import { printQuickInfo } from "./inspect";
 import { TaskQueue, TaskCanceledError } from "./util";
 
@@ -369,6 +368,8 @@ interface JupyterHandler {
   handleIsComplete(req: IsCompleteRequest): IsCompleteReply;
   handleInspect(req: InspectRequest): InspectReply;
   handleShutdown(req: ShutdownRequest): ShutdownReply;
+  /** Release internal resources to terminate the process gracefully. */
+  close(): void;
 }
 
 class ExecutionCount {
@@ -520,6 +521,10 @@ export class JupyterHandlerImpl implements JupyterHandler {
       restart: false
     };
   }
+
+  close(): void {
+    this.executor.close();
+  }
 }
 
 export class ZmqServer {
@@ -527,17 +532,22 @@ export class ZmqServer {
   configPath: string;
   connInfo: ConnectionInfo;
 
+  // ZMQ sockets
   iopub: any;
+  shell: any;
+  control: any;
+  stdin: any;
+  hb: any;
 
   constructor(handler: JupyterHandler, configPath: string) {
     this.handler = handler;
     this.configPath = configPath;
   }
 
-  private bindSocket(sock, port: number) {
+  private bindSocket(sock, port: number): void {
     const conn = this.connInfo;
     const addr = `${conn.transport}://${conn.ip}:${port}`;
-    return promisify(sock.bind).bind(sock)(addr);
+    sock.bindSync(addr);
   }
 
   publishStatus(status: string, parent: ZmqMessage) {
@@ -551,6 +561,7 @@ export class ZmqServer {
 
   async handleShellMessage(sock, ...args: Buffer[]) {
     const msg = ZmqMessage.fromRaw(this.connInfo.key, args);
+    let terminated = false;
     this.publishStatus("busy", msg);
     try {
       switch (msg.header.msg_type) {
@@ -568,12 +579,17 @@ export class ZmqServer {
           break;
         case "shutdown_request":
           this.handleShutdown(sock, msg);
+          terminated = true;
           break;
         default:
           console.warn(`unknown msg_type: ${msg.header.msg_type}`);
       }
     } finally {
       this.publishStatus("idle", msg);
+    }
+    if (terminated) {
+      // TODO: Write tests for the graceful termination.
+      this.close();
     }
   }
 
@@ -631,29 +647,45 @@ export class ZmqServer {
     reply.signAndSend(this.connInfo.key, sock);
   }
 
-  async init() {
+  init(): void {
     const cinfo: ConnectionInfo = JSON.parse(
-      await fs.promises.readFile(this.configPath, "utf-8")
+      fs.readFileSync(this.configPath, "utf-8")
     );
     this.connInfo = cinfo;
 
     // http://zeromq.github.io/zeromq.js/
     this.iopub = zmq.socket("pub");
-    const shell = zmq.socket("router");
-    shell.on("message", this.handleShellMessage.bind(this, shell));
-    const control = zmq.socket("router");
-    control.on("message", this.handleShellMessage.bind(this, control));
-    const stdin = zmq.socket("router");
-    const hb = zmq.socket("rep");
-    hb.on("message", function(...args) {
+    this.shell = zmq.socket("router");
+    this.shell.on("message", this.handleShellMessage.bind(this, this.shell));
+    this.control = zmq.socket("router");
+    this.control.on(
+      "message",
+      this.handleShellMessage.bind(this, this.control)
+    );
+    this.stdin = zmq.socket("router");
+    this.hb = zmq.socket("rep");
+    this.hb.on("message", function(...args) {
       // console.log('hb args', args);
-      hb.send(args);
+      this.hb.send(args);
     });
 
     this.bindSocket(this.iopub, cinfo.iopub_port);
-    this.bindSocket(shell, cinfo.shell_port);
-    this.bindSocket(control, cinfo.control_port);
-    this.bindSocket(stdin, cinfo.stdin_port);
-    this.bindSocket(hb, cinfo.hb_port);
+    this.bindSocket(this.shell, cinfo.shell_port);
+    this.bindSocket(this.control, cinfo.control_port);
+    this.bindSocket(this.stdin, cinfo.stdin_port);
+    this.bindSocket(this.hb, cinfo.hb_port);
+  }
+
+  /** Release internal resources to terminate the process gracefully. */
+  close(): void {
+    // First internal resources (e.g. ts watcher in converter).
+    this.handler.close();
+
+    // Then, close sockets.
+    this.iopub.close();
+    this.shell.close();
+    this.control.close();
+    this.stdin.close();
+    this.hb.close();
   }
 }
