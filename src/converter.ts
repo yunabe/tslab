@@ -31,7 +31,8 @@ export interface Diagnostic {
 
 export interface Converter {
   convert(prevDecl: string, src: string): ConvertResult;
-  inspect(prevDecl: string, src: string, position: number);
+  inspect(prevDecl: string, src: string, position: number): ts.QuickInfo;
+  complete(prevDecl: string, src: string, position: number): ts.CompletionInfo;
   /** Release internal resources to terminate the process gracefully. */
   close(): void;
 }
@@ -119,7 +120,8 @@ export function createConverter(): Converter {
   return {
     close,
     convert,
-    inspect
+    inspect,
+    complete
   };
 
   function close() {
@@ -197,6 +199,25 @@ export function createConverter(): Converter {
     if (info && info.textSpan) {
       info.textSpan.start -= srcPrefix.length;
     }
+    return info;
+  }
+
+  function complete(prevDecl: string, src: string, position: number) {
+    updateContent(prevDecl, src);
+    let declsFile = builder.getSourceFile(declFilename);
+    let srcFile = builder.getSourceFile(srcFilename);
+    srcFile.parent = declsFile;
+
+    const info = getCompletionsAtPosition(
+      builder.getProgram(),
+      () => {
+        // ignore log messages
+      },
+      srcFile,
+      position + srcPrefix.length,
+      {},
+      undefined
+    );
     return info;
   }
 
@@ -531,4 +552,24 @@ function createOffsetToDiagnosticPos(
       character: lineChar.character - charPrefix
     };
   };
+}
+
+function getCompletionsAtPosition(
+  program: ts.Program,
+  log: (message: string) => void,
+  sourceFile: ts.SourceFile,
+  position: number,
+  preferences: ts.UserPreferences,
+  triggerCharacter?: ts.CompletionsTriggerCharacter
+): ts.CompletionInfo {
+  const host: ts.LanguageServiceHost = {} as any;
+  return (ts as any).Completions.getCompletionsAtPosition(
+    host,
+    program,
+    log,
+    sourceFile,
+    position,
+    preferences,
+    triggerCharacter
+  );
 }
