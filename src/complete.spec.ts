@@ -284,6 +284,30 @@ describe("converter", () => {
     });
   });
 
+  it("sort candidates", () => {
+    const src = `let v = { bxy: true, axy: "hello", cxy: 3.4, dXY: false, xyz: 10, XYZ: 30 }; v.XY[cur]`;
+    const info = complete(src);
+    const end = src.indexOf(`[cur]`);
+    expect(info).toEqual({
+      start: end - 2,
+      end,
+      candidates: ["XYZ", "xyz", "bxy", "axy", "cxy", "dXY"],
+      original: {
+        isGlobalCompletion: false,
+        isMemberCompletion: true,
+        isNewIdentifierLocation: false,
+        entries: [
+          { name: "bxy", kind: "property", kindModifiers: "", sortText: "0" },
+          { name: "axy", kind: "property", kindModifiers: "", sortText: "0" },
+          { name: "cxy", kind: "property", kindModifiers: "", sortText: "0" },
+          { name: "dXY", kind: "property", kindModifiers: "", sortText: "0" },
+          { name: "xyz", kind: "property", kindModifiers: "", sortText: "0" },
+          { name: "XYZ", kind: "property", kindModifiers: "", sortText: "0" }
+        ]
+      }
+    });
+  });
+
   it("globals", () => {
     const src = `[cur]`;
     const info = complete(src);

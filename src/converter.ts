@@ -239,24 +239,8 @@ export function createConverter(): Converter {
     //
     // Note: Be careful. node.pos != node.getStart().
     // (e.g. `globals with prefix` test case)
-    if (
-      prev &&
-      ts.isIdentifier(prev) &&
-      prev.end >= pos &&
-      typeof prev.escapedText === "string"
-    ) {
-      prev.getStart(srcFile);
-      let name = prev.escapedText.toLowerCase();
-      const candidates = info.entries
-        .filter(e => e.name.toLowerCase().indexOf(name) >= 0)
-        .map(e => e.name);
-      // TODO: Prioritize prefix matches.
-      return {
-        start: prev.getStart(srcFile) - srcPrefix.length,
-        end: prev.end - srcPrefix.length,
-        candidates,
-        original: info
-      };
+    if (prev && ts.isIdentifier(prev) && prev.end >= pos) {
+      return completionWithId(info, prev, srcFile);
     }
     const next: ts.Node = prev
       ? (ts as any).findNextToken(prev, srcFile, srcFile)
@@ -265,19 +249,9 @@ export function createConverter(): Converter {
       next &&
       ts.isIdentifier(next) &&
       next.getStart(srcFile) <= pos &&
-      pos <= next.end &&
-      typeof next.escapedText === "string"
+      pos <= next.end
     ) {
-      let name = next.escapedText.toLowerCase();
-      const candidates = info.entries
-        .filter(e => e.name.toLowerCase().indexOf(name) >= 0)
-        .map(e => e.name);
-      return {
-        start: next.getStart(srcFile) - srcPrefix.length,
-        end: next.end - srcPrefix.length,
-        candidates,
-        original: info
-      };
+      return completionWithId(info, next, srcFile);
     }
     const candidates =
       info && info.entries
@@ -290,6 +264,52 @@ export function createConverter(): Converter {
       start: pos - srcPrefix.length,
       end: pos - srcPrefix.length,
       candidates,
+      original: info
+    };
+  }
+
+  function completionWithId(
+    info: ts.CompletionInfo,
+    id: ts.Identifier,
+    srcFile: ts.SourceFile
+  ): CompletionInfo {
+    id.getStart(srcFile);
+    let name = id.escapedText.toString();
+    let lower = name.toLowerCase();
+    const candidates = info.entries
+      .map((e, index) => {
+        const key = (() => {
+          if (e.name.startsWith(name)) {
+            return "0";
+          }
+          const lname = e.name.toLowerCase();
+          if (lname.toLowerCase().startsWith(lower)) {
+            return "1";
+          }
+          if (lname.indexOf(lower) >= 0) {
+            return "2";
+          }
+          return "";
+        })();
+        if (key === "") {
+          return null;
+        }
+        return {
+          name: e.name,
+          sortKey: e.sortText + key,
+          index
+        };
+      })
+      .filter(e => !!e);
+    // Sort stably by using the original index.
+    candidates.sort((a, b) => {
+      const ord = a.sortKey.localeCompare(b.sortKey);
+      return ord !== 0 ? ord : a.index - b.index;
+    });
+    return {
+      start: id.getStart(srcFile) - srcPrefix.length,
+      end: id.end - srcPrefix.length,
+      candidates: candidates.map(e => e.name),
       original: info
     };
   }
