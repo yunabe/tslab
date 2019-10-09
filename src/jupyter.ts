@@ -233,6 +233,43 @@ interface InspectReply {
   metadata: { [key: string]: never };
 }
 
+interface CompleteRequest {
+  /**
+   * The code context in which completion is requested
+   * this may be up to an entire multiline cell, such as
+   * 'foo = a.isal'
+   */
+  code: string;
+
+  /** The cursor position within 'code' (in unicode characters) where completion is requested */
+  cursor_pos: number;
+}
+
+interface CompleteReply {
+  /**
+   * The list of all matches to the completion request, such as
+   * ['a.isalnum', 'a.isalpha'] for the above example.
+   */
+  matches: string[];
+
+  /**
+   * The range of text that should be replaced by the above matches when a completion is accepted.
+   * typically cursor_end is the same as cursor_pos in the request.
+   */
+  cursor_start: number;
+  cursor_end: number;
+
+  /** Information that frontend plugins might use for extra display information about completions. */
+  metadata: { [key: string]: never };
+
+  /**
+   * status should be 'ok' unless an exception was raised during the request,
+   * in which case it should be 'error', along with the usual error message content
+   * in other messages.
+   */
+  status: "ok";
+}
+
 interface ShutdownRequest {
   /**
    * False if final shutdown, or True if shutdown precedes a restart
@@ -367,6 +404,7 @@ interface JupyterHandler {
   ): Promise<ExecuteReply>;
   handleIsComplete(req: IsCompleteRequest): IsCompleteReply;
   handleInspect(req: InspectRequest): InspectReply;
+  handleComplete(req: CompleteRequest): CompleteReply;
   handleShutdown(req: ShutdownRequest): ShutdownReply;
   /** Release internal resources to terminate the process gracefully. */
   close(): void;
@@ -516,6 +554,17 @@ export class JupyterHandlerImpl implements JupyterHandler {
     };
   }
 
+  handleComplete(req: CompleteRequest): CompleteReply {
+    const info = this.executor.complete(req.code, req.cursor_pos);
+    return {
+      cursor_start: info.start,
+      cursor_end: info.end,
+      matches: info.candidates,
+      metadata: {},
+      status: "ok"
+    };
+  }
+
   handleShutdown(req: ShutdownRequest): ShutdownReply {
     return {
       restart: false
@@ -577,6 +626,9 @@ export class ZmqServer {
         case "inspect_request":
           this.handleInspect(sock, msg);
           break;
+        case "complete_request":
+          this.handleComplete(sock, msg);
+          break;
         case "shutdown_request":
           this.handleShutdown(sock, msg);
           terminated = true;
@@ -637,6 +689,13 @@ export class ZmqServer {
     const reply = msg.createReply();
     reply.header.msg_type = "inspect_reply";
     reply.content = this.handler.handleInspect(msg.content as InspectRequest);
+    reply.signAndSend(this.connInfo.key, sock);
+  }
+
+  handleComplete(sock, msg: ZmqMessage) {
+    const reply = msg.createReply();
+    reply.header.msg_type = "complete_reply";
+    reply.content = this.handler.handleComplete(msg.content as CompleteRequest);
     reply.signAndSend(this.connInfo.key, sock);
   }
 

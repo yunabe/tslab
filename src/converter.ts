@@ -3,8 +3,6 @@ import { getQuickInfoAtPosition } from "./inspect";
 
 // TODO: Disallow accessing "module" of Node.js.
 
-const createSourceFileOrig = ts.createSourceFile;
-
 export interface ConvertResult {
   output?: string;
   declOutput?: string;
@@ -29,10 +27,21 @@ export interface Diagnostic {
   code: number;
 }
 
+export interface CompletionInfo {
+  start: number;
+  end: number;
+  candidates: string[];
+  /**
+   * The original completion from TS compiler.
+   * It's exposed for debugging purpuse.
+   */
+  original?: ts.CompletionInfo;
+}
+
 export interface Converter {
   convert(prevDecl: string, src: string): ConvertResult;
   inspect(prevDecl: string, src: string, position: number): ts.QuickInfo;
-  complete(prevDecl: string, src: string, position: number): ts.CompletionInfo;
+  complete(prevDecl: string, src: string, position: number): CompletionInfo;
   /** Release internal resources to terminate the process gracefully. */
   close(): void;
 }
@@ -47,7 +56,7 @@ interface RebuildTimer {
 }
 
 export function createConverter(): Converter {
-  const srcPrefix = "export {}" + ts.sys.newLine;
+  const srcPrefix = "export {};" + ts.sys.newLine;
   let srcContent: string = "";
   let declContent: string = "";
   let builder: ts.BuilderProgram = null;
@@ -202,23 +211,87 @@ export function createConverter(): Converter {
     return info;
   }
 
-  function complete(prevDecl: string, src: string, position: number) {
+  function complete(
+    prevDecl: string,
+    src: string,
+    position: number
+  ): CompletionInfo {
     updateContent(prevDecl, src);
     let declsFile = builder.getSourceFile(declFilename);
     let srcFile = builder.getSourceFile(srcFilename);
     srcFile.parent = declsFile;
 
+    const pos = position + srcPrefix.length;
     const info = getCompletionsAtPosition(
       builder.getProgram(),
       () => {
         // ignore log messages
       },
       srcFile,
-      position + srcPrefix.length,
+      pos,
       {},
       undefined
     );
-    return info;
+
+    const prev: ts.Node = (ts as any).findPrecedingToken(pos, srcFile);
+    // Note: In contradiction to the docstring, findPrecedingToken may return prev with
+    // prev.end > pos (e.g. `members with surrounding` test case).
+    //
+    // Note: Be careful. node.pos != node.getStart().
+    // (e.g. `globals with prefix` test case)
+    if (
+      prev &&
+      ts.isIdentifier(prev) &&
+      prev.end >= pos &&
+      typeof prev.escapedText === "string"
+    ) {
+      prev.getStart(srcFile);
+      let name = prev.escapedText.toLowerCase();
+      const candidates = info.entries
+        .filter(e => e.name.toLowerCase().indexOf(name) >= 0)
+        .map(e => e.name);
+      // TODO: Prioritize prefix matches.
+      return {
+        start: prev.getStart(srcFile) - srcPrefix.length,
+        end: prev.end - srcPrefix.length,
+        candidates,
+        original: info
+      };
+    }
+    const next: ts.Node = prev
+      ? (ts as any).findNextToken(prev, srcFile, srcFile)
+      : null;
+    if (
+      next &&
+      ts.isIdentifier(next) &&
+      next.getStart(srcFile) <= pos &&
+      pos <= next.end &&
+      typeof next.escapedText === "string"
+    ) {
+      let name = next.escapedText.toLowerCase();
+      const candidates = info.entries
+        .filter(e => e.name.toLowerCase().indexOf(name) >= 0)
+        .map(e => e.name);
+      return {
+        start: next.getStart(srcFile) - srcPrefix.length,
+        end: next.end - srcPrefix.length,
+        candidates,
+        original: info
+      };
+    }
+    const candidates =
+      info && info.entries
+        ? info.entries
+            .slice()
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .map(e => e.name)
+        : [];
+    return {
+      start: pos - srcPrefix.length,
+      end: pos - srcPrefix.length,
+      candidates,
+      original: info
+    };
   }
 
   function remainingDecls(

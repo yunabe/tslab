@@ -1,4 +1,4 @@
-import { Converter } from "./converter";
+import { Converter, CompletionInfo } from "./converter";
 import * as vm from "vm";
 import * as ts from "typescript";
 
@@ -13,6 +13,7 @@ export interface Executor {
    */
   execute(src: string): Promise<boolean>;
   inspect(src: string, position: number): ts.QuickInfo;
+  complete(src: string, positin: number): CompletionInfo;
   reset(): void;
 
   /**
@@ -119,6 +120,10 @@ export function createExecutor(
     return conv.inspect(prevDecl, src, position);
   }
 
+  function complete(src: string, position: number): CompletionInfo {
+    return conv.complete(prevDecl, src, position);
+  }
+
   function reset(): void {
     prevDecl = "";
     for (const name of Object.getOwnPropertyNames(locals)) {
@@ -133,6 +138,7 @@ export function createExecutor(
   return {
     execute,
     inspect,
+    complete,
     locals,
     reset,
     interrupt,
