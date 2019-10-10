@@ -92,10 +92,9 @@ export function createExecutor(
     const context = new Proxy(locals, proxyHandler);
     let ret: any;
     try {
-      // TODO: Remove `as any` once https://github.com/DefinitelyTyped/DefinitelyTyped/pull/38859 is pushed.
       ret = vm.runInNewContext(converted.output, context, {
         breakOnSigint: true
-      } as any);
+      });
     } catch (e) {
       console.error(e);
       return false;
