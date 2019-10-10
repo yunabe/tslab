@@ -1,4 +1,3 @@
-import * as ts from "typescript";
 import * as converter from "./converter";
 
 let conv: converter.Converter;
@@ -357,28 +356,18 @@ describe("converter", () => {
   });
 
   it("globals with prev", () => {
-    const src = `[cur]`;
-    const prev = `declare let myval: number;`;
+    const src = `let newval = 10; [cur]`;
+    const prev = `declare let oldval: number;`;
     const info = completeWithPrev(prev, src);
     expect(info.original).not.toBeUndefined();
     // Filter entries to keep this test short.
     info.candidates = info.candidates.slice(0, 5);
-    info.original.entries = info.original.entries.filter(e => {
-      if (e.name.startsWith("Array")) {
-        return true;
-      }
-      if (e.name === "let") {
-        return true;
-      }
-      if (e.name == "myval") {
-        return true;
-      }
-      return false;
-    });
-    // TODO: Prioritize `mylab` in entries and show it at the top of candidates.
+    info.original.entries = info.original.entries.slice(0, 5);
+    // TODO: Prioritize `oldval` and `newval` in entries and show it at the top of candidates.
+    const start = src.indexOf("[cur]");
     expect(info).toEqual({
-      start: 0,
-      end: 0,
+      start,
+      end: start,
       candidates: [
         "__dirname",
         "__filename",
@@ -392,24 +381,35 @@ describe("converter", () => {
         isNewIdentifierLocation: false,
         entries: [
           {
-            name: "myval",
+            name: "oldval",
             kind: "let",
             kindModifiers: "declare",
             sortText: "2"
           },
           {
-            name: "Array",
-            kind: "var",
+            name: "globalThis",
+            kind: "module",
+            kindModifiers: "",
+            sortText: "2"
+          },
+          {
+            name: "eval",
+            kind: "function",
             kindModifiers: "declare",
             sortText: "2"
           },
           {
-            name: "ArrayBuffer",
-            kind: "var",
+            name: "parseInt",
+            kind: "function",
             kindModifiers: "declare",
             sortText: "2"
           },
-          { name: "let", kind: "keyword", kindModifiers: "", sortText: "2" }
+          {
+            name: "parseFloat",
+            kind: "function",
+            kindModifiers: "declare",
+            sortText: "2"
+          }
         ]
       }
     });
@@ -564,7 +564,7 @@ describe("converter", () => {
     const info = complete(src);
     expect(info).not.toBeUndefined();
     // Filter entries to keep this test short.
-    info.candidates = info.candidates.slice(0, 5);
+    info.candidates = info.candidates.slice(0, 6);
     info.original.entries = info.original.entries.filter(e => {
       if (e.kind === "string") {
         return true;
@@ -577,11 +577,12 @@ describe("converter", () => {
       start,
       end: start,
       candidates: [
-        "__dirname",
-        "__filename",
         '"cupcake"',
         '"donut"',
-        '"eclair"'
+        '"eclair"',
+        '"froyo"',
+        "v",
+        "__dirname"
       ],
       original: {
         isGlobalCompletion: true,
@@ -614,6 +615,42 @@ describe("converter", () => {
             sortText: "0"
           },
           { name: '"froyo"', kind: "string", kindModifiers: "", sortText: "0" }
+        ]
+      }
+    });
+  });
+
+  it("locals", () => {
+    const src = `function fn(abc: number, xyz: string) { [cur] }`;
+    const info = complete(src);
+    // Filter entries to keep this test short.
+    info.candidates = info.candidates.slice(0, 5);
+    info.original.entries = info.original.entries.slice(0, 5);
+    const start = src.indexOf("[cur]");
+    expect(info).toEqual({
+      start,
+      end: start,
+      candidates: ["abc", "arguments", "fn", "xyz", "__dirname"],
+      original: {
+        isGlobalCompletion: true,
+        isMemberCompletion: false,
+        isNewIdentifierLocation: false,
+        entries: [
+          { name: "abc", kind: "parameter", kindModifiers: "", sortText: "0" },
+          { name: "xyz", kind: "parameter", kindModifiers: "", sortText: "0" },
+          {
+            name: "arguments",
+            kind: "local var",
+            kindModifiers: "",
+            sortText: "0"
+          },
+          { name: "fn", kind: "function", kindModifiers: "", sortText: "0" },
+          {
+            name: "globalThis",
+            kind: "module",
+            kindModifiers: "",
+            sortText: "2"
+          }
         ]
       }
     });

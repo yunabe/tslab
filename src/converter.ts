@@ -253,13 +253,12 @@ export function createConverter(): Converter {
     ) {
       return completionWithId(info, next, srcFile);
     }
-    const candidates =
-      info && info.entries
-        ? info.entries
-            .slice()
-            .sort((a, b) => a.name.localeCompare(b.name))
-            .map(e => e.name)
-        : [];
+    let entries = info && info.entries ? info.entries.slice() : [];
+    entries.sort((a, b) => {
+      const ord = a.sortText.localeCompare(b.sortText);
+      return ord !== 0 ? ord : a.name.localeCompare(b.name);
+    });
+    const candidates = entries.map(e => e.name);
     return {
       start: pos - srcPrefix.length,
       end: pos - srcPrefix.length,
@@ -273,7 +272,6 @@ export function createConverter(): Converter {
     id: ts.Identifier,
     srcFile: ts.SourceFile
   ): CompletionInfo {
-    id.getStart(srcFile);
     let name = id.escapedText.toString();
     let lower = name.toLowerCase();
     const candidates = info.entries
@@ -296,7 +294,7 @@ export function createConverter(): Converter {
         }
         return {
           name: e.name,
-          sortKey: e.sortText + key,
+          sortKey: key + e.sortText,
           index
         };
       })
