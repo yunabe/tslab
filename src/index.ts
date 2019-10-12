@@ -4,11 +4,6 @@ import { createExecutor } from "./executor";
 import { JupyterHandlerImpl, ZmqServer } from "./jupyter";
 
 function main() {
-  const cmd = path.basename(process.argv[1]);
-  let ts = false;
-  if (cmd.startsWith("ts")) {
-    ts = true;
-  }
   const configPath = process.argv[2];
   const converter = createConverter();
   const executor = createExecutor(converter, {

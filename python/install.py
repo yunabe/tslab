@@ -69,7 +69,7 @@ def main(argv=None):
     if not args.prefix and not _is_root():
         args.user = True
 
-    for is_ts in [False, True]:
+    for is_ts in [True]:
         install_kernel_spec(is_ts, args.user, args.prefix)
 
 
