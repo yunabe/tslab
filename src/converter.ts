@@ -107,6 +107,7 @@ export function createConverter(): Converter {
       module: ts.ModuleKind.ES2015,
       target: ts.ScriptTarget.ES2017,
       declaration: true,
+      newLine: ts.NewLineKind.LineFeed,
       // Remove 'use strict' from outputs.
       noImplicitUseStrict: true
     },
@@ -580,6 +581,7 @@ export function esModuleToCommonJSModule(js: string): string {
     compilerOptions: {
       module: ts.ModuleKind.CommonJS,
       target: ts.ScriptTarget.ES2017,
+      newLine: ts.NewLineKind.LineFeed,
       // Remove 'use strict' from outputs.
       noImplicitUseStrict: true
     }

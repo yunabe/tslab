@@ -4,6 +4,7 @@
     "module": "commonjs",
     "target": "ES2017",
     "lib": ["es2017"],
+    "newLine": "LF",
     "declaration": true
   },
   "include": ["src/**/*"],
