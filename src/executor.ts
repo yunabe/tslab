@@ -41,7 +41,11 @@ export function createExecutor(
   const proxyHandler: ProxyHandler<{ [key: string]: any }> = {
     get: function(_target, prop) {
       if (prop === "require") {
-        // TODO: Handle the relative path import properly.
+        // require is not bound to this file. require resolve
+        // relative paths using the caller context (`this`).
+        // Thus, we can use require from everywhere.
+        // In vm, require is called with global and relative paths are resolved
+        // from the current directory.
         return require;
       }
       if (prop === "exports") {
