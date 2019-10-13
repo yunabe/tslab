@@ -1,5 +1,4 @@
-import * as ts from "typescript";
-import { getQuickInfoAtPosition } from "./inspect";
+import * as ts from "@yunabe/typescript-for-tslab";
 
 // TODO: Disallow accessing "module" of Node.js.
 
@@ -54,6 +53,11 @@ const declFilename = "__prev__.d.ts";
 interface RebuildTimer {
   callback: (...args: any[]) => void;
 }
+
+const cancellationToken: ts.CancellationToken = {
+  isCancellationRequested: (): boolean => false,
+  throwIfCancellationRequested: (): void => {}
+};
 
 export function createConverter(): Converter {
   const srcPrefix = "export {};" + ts.sys.newLine;
@@ -145,7 +149,7 @@ export function createConverter(): Converter {
     let srcFile = builder.getSourceFile(srcFilename);
 
     const hasLastExpression = checkHasLastExpression(srcFile);
-    const locals = (srcFile as any).locals as ts.SymbolTable;
+    const locals: ts.SymbolTable = srcFile.locals;
     const keys: string[] = [];
     if (locals) {
       locals.forEach((_: any, key: any) => {
@@ -201,9 +205,10 @@ export function createConverter(): Converter {
     let declsFile = builder.getSourceFile(declFilename);
     let srcFile = builder.getSourceFile(srcFilename);
     srcFile.parent = declsFile;
-    const info = getQuickInfoAtPosition(
+    const info = ts.getQuickInfoAtPosition(
       srcFile,
       builder.getProgram().getTypeChecker(),
+      cancellationToken,
       position + srcPrefix.length
     );
     if (info && info.textSpan) {
@@ -234,7 +239,7 @@ export function createConverter(): Converter {
       undefined
     );
 
-    const prev: ts.Node = (ts as any).findPrecedingToken(pos, srcFile);
+    const prev: ts.Node = ts.tslab.findPrecedingToken(pos, srcFile);
     // Note: In contradiction to the docstring, findPrecedingToken may return prev with
     // prev.end > pos (e.g. `members with surrounding` test case).
     //
@@ -244,7 +249,7 @@ export function createConverter(): Converter {
       return completionWithId(info, prev, srcFile);
     }
     const next: ts.Node = prev
-      ? (ts as any).findNextToken(prev, srcFile, srcFile)
+      ? ts.tslab.findNextToken(prev, srcFile, srcFile)
       : null;
     if (
       next &&
@@ -318,8 +323,8 @@ export function createConverter(): Converter {
     srcSF: ts.SourceFile,
     declsSF: ts.SourceFile
   ): string {
-    const declLocals = (declsSF as any).locals as ts.SymbolTable;
-    const locals = (srcSF as any).locals as ts.SymbolTable;
+    const declLocals = declsSF.locals as ts.SymbolTable;
+    const locals = srcSF.locals as ts.SymbolTable;
     let keepMap = new Map<ts.Node, Set<ts.__String>>();
     function addName(node: ts.Node, name: ts.__String) {
       let set = keepMap.get(node);
@@ -656,7 +661,7 @@ function getCompletionsAtPosition(
   triggerCharacter?: ts.CompletionsTriggerCharacter
 ): ts.CompletionInfo {
   const host: ts.LanguageServiceHost = {} as any;
-  return (ts as any).Completions.getCompletionsAtPosition(
+  return ts.tslab.getCompletionsAtPosition(
     host,
     program,
     log,

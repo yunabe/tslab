@@ -12,8 +12,8 @@
     "python/**/*"
   ],
   "dependencies": {
+    "@yunabe/typescript-for-tslab": "^v3.6.4-tslab.5",
     "glob": "^7.1.4",
-    "typescript": "^3.6.4",
     "zeromq": "^5.1.0"
   },
   "scripts": {
@@ -26,6 +26,7 @@
     "@types/jest": "^24.0.18",
     "@types/node": "^12.7.12",
     "jest": "^24.9.0",
-    "ts-jest": "^24.0.2"
+    "ts-jest": "^24.0.2",
+    "typescript": "^3.6.4"
   }
 }
