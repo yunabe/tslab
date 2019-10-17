@@ -16,7 +16,7 @@ describe("JupyterHandlerImpl", () => {
 
   beforeEach(() => {
     executor = {} as Executor;
-    handler = new JupyterHandlerImpl(true, executor);
+    handler = new JupyterHandlerImpl(executor);
   });
 
   afterEach(() => {

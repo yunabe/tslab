@@ -1,4 +1,3 @@
-import * as path from "path";
 import { createConverter } from "./converter";
 import { createExecutor } from "./executor";
 import { JupyterHandlerImpl, ZmqServer } from "./jupyter";
@@ -10,10 +9,7 @@ function main() {
     log: console.log,
     error: console.error
   });
-  const server = new ZmqServer(
-    new JupyterHandlerImpl(true, executor),
-    configPath
-  );
+  const server = new ZmqServer(new JupyterHandlerImpl(executor), configPath);
   process.on("SIGINT", () => {
     executor.interrupt();
   });

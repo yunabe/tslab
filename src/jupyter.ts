@@ -1,5 +1,5 @@
 import * as fs from "fs";
-import { promisify, TextDecoder } from "util";
+import { TextDecoder } from "util";
 
 import * as zmq from "zeromq";
 import { createHmac } from "crypto";
@@ -9,6 +9,15 @@ import { printQuickInfo } from "./inspect";
 import { TaskQueue, TaskCanceledError } from "./util";
 
 const utf8Decoder = new TextDecoder();
+
+/**
+ * The process-wide global variable to hold the last valid
+ * writeDisplayData. This is used from the display public API.
+ */
+export let lastWriteDisplayData: (
+  data: DisplayData,
+  update: boolean
+) => void = null;
 
 interface ConnectionInfo {
   shell_port: number;
@@ -289,14 +298,14 @@ interface DisplayData {
    * Who create the data
    * Used in V4. Removed in V5.
    */
-  source: string;
+  source?: string;
 
   /**
    * The data dict contains key/value pairs, where the keys are MIME
    * types and the values are the raw data of the representation in that
    * format.
    */
-  data: { [key: string]: string };
+  data: { [key: string]: string | Uint8Array };
 
   /** Any metadata that describes the data */
   metadata: { [key: string]: string };
@@ -418,15 +427,12 @@ class ExecutionCount {
 }
 
 export class JupyterHandlerImpl implements JupyterHandler {
-  private ts: boolean;
-
   private execCount: number;
   private executor: Executor;
   private execQueue: TaskQueue;
   private static execFailedError = new Error("execution failed");
 
-  constructor(ts: boolean, executor: Executor) {
-    this.ts = ts;
+  constructor(executor: Executor) {
     this.execCount = 0;
     this.executor = executor;
     this.execQueue = new TaskQueue();
@@ -435,7 +441,7 @@ export class JupyterHandlerImpl implements JupyterHandler {
   handleKernel(): KernelInfoReply {
     return {
       protocol_version: "5.3",
-      implementation: this.ts ? "tslab" : "jslab",
+      implementation: "tslab",
       implementation_version: "1.0.0",
       language_info: {
         // "typescript" does not work well because CodeMirror does not have 'typscript' mode?
@@ -443,7 +449,7 @@ export class JupyterHandlerImpl implements JupyterHandler {
         name: "javascript",
         version: "",
         mimetype: "",
-        file_extension: this.ts ? ".ts" : ".js"
+        file_extension: ".ts"
       },
       banner: "TypeScript"
     };
@@ -501,6 +507,8 @@ export class JupyterHandlerImpl implements JupyterHandler {
       "stderr",
       writeStream
     ) as any;
+    lastWriteDisplayData = writeDisplayData;
+
     let count = new ExecutionCount(++this.execCount);
     let ok: boolean = await this.executor.execute(req.code);
     if (!ok) {
@@ -665,7 +673,10 @@ export class ZmqServer {
       reply.signAndSend(this.connInfo.key, this.iopub);
     };
     const writeDisplayData = (data: DisplayData, update: boolean) => {
-      throw new Error("not implemented");
+      const reply = msg.createReply();
+      reply.header.msg_type = "display_data";
+      reply.content = data;
+      reply.signAndSend(this.connInfo.key, this.iopub);
     };
     const content: ExecuteReply = await this.handler.handleExecute(
       msg.content as ExecuteRequest,

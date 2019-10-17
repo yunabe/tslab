@@ -2,7 +2,11 @@
   "name": "tslab",
   "version": "1.0.0",
   "description": "Jupyter for JavaScript and TypeScript",
-  "main": "dist/index.js",
+  "main": "dist/public.js",
+  "types": "dist/public.d.ts",
+  "bin": {
+    "tslab": "bin/tslab"
+  },
   "repository": "https://github.com/yunabe/tslab",
   "author": "Yu Watanabe",
   "license": "MIT",
