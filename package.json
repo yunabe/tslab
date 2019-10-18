@@ -17,7 +17,9 @@
     "/python/**/*.py"
   ],
   "dependencies": {
-    "@yunabe/typescript-for-tslab": "^v3.6.4-tslab.5",
+    "//": "@types/node is used at runtime (bug#10)",
+    "@types/node": "^12.7.12",
+    "@yunabe/typescript-for-tslab": "^v3.6.4-tslab.6",
     "glob": "^7.1.4",
     "zeromq": "^5.1.0"
   },
@@ -30,7 +32,6 @@
   "devDependencies": {
     "@types/glob": "^7.1.1",
     "@types/jest": "^24.0.18",
-    "@types/node": "^12.7.12",
     "jest": "^24.9.0",
     "ts-jest": "^24.0.2",
     "typescript": "^3.6.4"

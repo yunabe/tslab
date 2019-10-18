@@ -140,7 +140,8 @@ export function createConverter(): Converter {
       declaration: true,
       newLine: ts.NewLineKind.LineFeed,
       // Remove 'use strict' from outputs.
-      noImplicitUseStrict: true
+      noImplicitUseStrict: true,
+      typeRoots: getTypeRoots()
     },
     sys,
     null,
@@ -219,6 +220,23 @@ export function createConverter(): Converter {
       ),
       hasLastExpression
     };
+  }
+
+  function getTypeRoots(): string[] {
+    // If @types/node does not exist in the default type roots,
+    // use @types under tslab/node_modules (bug#10).
+    // TODO: Integration-test for this behavior.
+    const typeRoots =
+      ts.getDefaultTypeRoots(cwd, {
+        directoryExists: sys.directoryExists
+      }) || [];
+    for (const root of typeRoots) {
+      if (ts.sys.fileExists(pathlib.join(root, "node", "package.json"))) {
+        return typeRoots;
+      }
+    }
+    typeRoots.push(pathlib.join(__dirname, "..", "node_modules", "@types"));
+    return typeRoots;
   }
 
   function inspect(
