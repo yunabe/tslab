@@ -1,6 +1,6 @@
 {
   "name": "tslab",
-  "version": "1.0.0",
+  "version": "1.0.1-alpha.1",
   "description": "Jupyter for JavaScript and TypeScript",
   "main": "dist/public.js",
   "types": "dist/public.d.ts",
@@ -11,9 +11,10 @@
   "author": "Yu Watanabe",
   "license": "MIT",
   "files": [
-    "dist/**/*",
-    "bin/**/*",
-    "python/**/*"
+    "/dist/**/*.js",
+    "/dist/**/*.d.ts",
+    "/bin/**/*",
+    "/python/**/*.py"
   ],
   "dependencies": {
     "@yunabe/typescript-for-tslab": "^v3.6.4-tslab.5",
@@ -23,7 +24,8 @@
   "scripts": {
     "//": "experimental-vm-modules enables https://nodejs.org/docs/latest-v12.x/api/vm.html#vm_class_vm_sourcetextmodule",
     "build": "tsc",
-    "test": "jest --verbose"
+    "jest": "jest --verbose",
+    "test": "tsc && jest --verbose"
   },
   "devDependencies": {
     "@types/glob": "^7.1.1",

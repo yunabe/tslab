@@ -1,4 +1,5 @@
 import * as ts from "@yunabe/typescript-for-tslab";
+import * as pathlib from "path";
 
 // TODO: Disallow accessing "module" of Node.js.
 
@@ -67,6 +68,10 @@ export function createConverter(): Converter {
 
   const sys = Object.create(ts.sys) as ts.System;
   let rebuildTimer: RebuildTimer = null;
+  const cwd = ts.sys.getCurrentDirectory();
+  sys.getCurrentDirectory = function() {
+    return cwd;
+  };
   sys.setTimeout = (callback: (...args: any[]) => void): any => {
     if (rebuildTimer) {
       throw new Error("Unexpected pending rebuildTimer");
@@ -88,10 +93,31 @@ export function createConverter(): Converter {
     if (path === declFilename) {
       return srcPrefix + declContent;
     }
-    return ts.sys.readFile(path, encoding);
+    return ts.sys.readFile(forwardTslabPath(cwd, path), encoding);
+  };
+  sys.directoryExists = function(path: string): boolean {
+    return ts.sys.directoryExists(forwardTslabPath(cwd, path));
+  };
+  sys.fileExists = function(path: string): boolean {
+    return ts.sys.fileExists(forwardTslabPath(cwd, path));
+  };
+  sys.readDirectory = function(
+    path: string,
+    extensions?: readonly string[],
+    exclude?: readonly string[],
+    include?: readonly string[],
+    depth?: number
+  ): string[] {
+    return ts.sys.readDirectory(
+      forwardTslabPath(cwd, path),
+      extensions,
+      exclude,
+      include,
+      depth
+    );
   };
   sys.writeFile = function(path, data) {
-    throw new Error("writeFile should not be called");
+    throw new Error("writeFile must not be called");
   };
   let notifyUpdateSrc: ts.FileWatcherCallback = null;
   let notifyUpdateDecls: ts.FileWatcherCallback = null;
@@ -109,6 +135,7 @@ export function createConverter(): Converter {
     [declFilename, srcFilename],
     {
       module: ts.ModuleKind.ES2015,
+      moduleResolution: ts.ModuleResolutionKind.NodeJs,
       target: ts.ScriptTarget.ES2017,
       declaration: true,
       newLine: ts.NewLineKind.LineFeed,
@@ -670,4 +697,15 @@ function getCompletionsAtPosition(
     preferences,
     triggerCharacter
   );
+}
+
+function forwardTslabPath(cwd: string, path: string): string {
+  const rel = pathlib.relative(
+    pathlib.join(cwd, "node_modules", "tslab"),
+    path
+  );
+  if (rel.startsWith("..")) {
+    return path;
+  }
+  return pathlib.join(pathlib.dirname(__dirname), rel);
 }

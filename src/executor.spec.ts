@@ -196,6 +196,16 @@ describe("execute", () => {
     expect(consoleLogCalls).toEqual([]);
     expect(consoleErrorCalls).toEqual([["Good Bye Promise"]]);
   });
+
+  it("package tslab", async () => {
+    expect(
+      await ex.execute(`
+    import * as tslab from "tslab";
+    let id = tslab.display.newId();
+    `)
+    ).toBe(true);
+    expect(typeof ex.locals.id).toEqual("string");
+  });
 });
 
 describe("interrupt", () => {

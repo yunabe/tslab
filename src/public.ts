@@ -1,8 +1,11 @@
 import { randomBytes } from "crypto";
 import * as jupyter from "./jupyter";
 
+/**
+ * utility functions to display rich contents
+ */
 export namespace display {
-  export function newID(): string {
+  export function newId(): string {
     return randomBytes(8).toString("hex");
   }
   export function javascript(s: string, id?: string): void {
@@ -44,7 +47,7 @@ export namespace display {
       throw Error("Not ready");
     }
     if (!id) {
-      id = newID();
+      id = newId();
     }
     jupyter.lastWriteDisplayData(
       {

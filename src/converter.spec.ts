@@ -836,6 +836,29 @@ declare let m: Map;
     expect(out.declOutput).toEqual('import { join } from "path";\n');
     expect(out.output).toEqual('join("a", "b");\n');
   });
+
+  it("package tslab", () => {
+    const out = conv.convert(
+      "",
+      [
+        'import * as tslab from "tslab";',
+        "let id = tslab.display.newId();"
+      ].join("\n")
+    );
+    expect(out.diagnostics).toEqual([]);
+    expect(out.output).toEqual(
+      [
+        'const tslab = require("tslab");',
+        "exports.tslab = tslab;",
+        "let id = tslab.display.newId();",
+        "exports.id = id;",
+        ""
+      ].join("\n")
+    );
+    expect(out.declOutput).toEqual(
+      'import * as tslab from "tslab";\ndeclare let id: string;\n'
+    );
+  });
 });
 
 describe("keepNamesInImport", () => {
