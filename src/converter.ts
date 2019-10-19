@@ -96,7 +96,14 @@ export function createConverter(): Converter {
     return ts.sys.readFile(forwardTslabPath(cwd, path), encoding);
   };
   sys.directoryExists = function(path: string): boolean {
-    return ts.sys.directoryExists(forwardTslabPath(cwd, path));
+    if (ts.sys.directoryExists(forwardTslabPath(cwd, path))) {
+      return true;
+    }
+    // Fake the existence of node_modules for tslab. This is necessary
+    // to import `tslab` when `node_modules` does not exist in `cwd`.
+    // See forwardTslabPath for details.
+    // TODO: Test this behavior.
+    return pathlib.join(cwd, "node_modules") === path;
   };
   sys.fileExists = function(path: string): boolean {
     return ts.sys.fileExists(forwardTslabPath(cwd, path));

@@ -1,6 +1,6 @@
 {
   "name": "tslab",
-  "version": "1.0.1-alpha.1",
+  "version": "1.0.1-alpha.2",
   "description": "Jupyter for JavaScript and TypeScript",
   "main": "dist/public.js",
   "types": "dist/public.d.ts",
@@ -17,7 +17,6 @@
     "/python/**/*.py"
   ],
   "dependencies": {
-    "//": "@types/node is used at runtime (bug#10)",
     "@types/node": "^12.7.12",
     "@yunabe/typescript-for-tslab": "^v3.6.4-tslab.6",
     "glob": "^7.1.4",
@@ -26,6 +25,7 @@
   "scripts": {
     "//": "experimental-vm-modules enables https://nodejs.org/docs/latest-v12.x/api/vm.html#vm_class_vm_sourcetextmodule",
     "build": "tsc",
+    "prepublishOnly": "tsc",
     "jest": "jest --verbose",
     "test": "tsc && jest --verbose"
   },
