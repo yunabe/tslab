@@ -549,18 +549,43 @@ class ShapeImpl implements Shape {}
     expect(out.diagnostics).toEqual([]);
   });
 
-  it("hasLastExpression", () => {
+  it("lastExpressionVar", () => {
     let out = conv.convert("", "let x = 3 + 4\n;x * x;");
     expect(out.diagnostics).toEqual([]);
-    expect(out.hasLastExpression).toBe(true);
+    expect(out.lastExpressionVar).toBe("tsLastExpr");
+    expect(out.output).toEqual(
+      [
+        "let x = 3 + 4;",
+        "exports.x = x;",
+        "exports.tsLastExpr = x * x;",
+        ""
+      ].join("\n")
+    );
 
     out = conv.convert("", "let x = 3 + 4\n;let y = x * x;");
     expect(out.diagnostics).toEqual([]);
-    expect(out.hasLastExpression).toBe(false);
+    expect(out.lastExpressionVar).toBeUndefined();
 
     out = conv.convert("", "class C {}");
     expect(out.diagnostics).toEqual([]);
-    expect(out.hasLastExpression).toBe(false);
+    expect(out.lastExpressionVar).toBeUndefined();
+
+    out = conv.convert(
+      "",
+      "let tsLastExpr = 10; const tsLastExpr0 = 30; tsLastExpr + tsLastExpr0;"
+    );
+    expect(out.diagnostics).toEqual([]);
+    expect(out.lastExpressionVar).toEqual("tsLastExpr1");
+    expect(out.output).toEqual(
+      [
+        "let tsLastExpr = 10;",
+        "exports.tsLastExpr = tsLastExpr;",
+        "const tsLastExpr0 = 30;",
+        "exports.tsLastExpr0 = tsLastExpr0;",
+        "exports.tsLastExpr1 = tsLastExpr + tsLastExpr0;",
+        ""
+      ].join("\n")
+    );
   });
 });
 
@@ -581,7 +606,7 @@ describe("with prev", () => {
   it("assign to prev", () => {
     const out = conv.convert("declare let x: number\n", "x = x * x;\n");
     expect(out.diagnostics).toEqual([]);
-    expect(out.output).toEqual("x = x * x;\n");
+    expect(out.output).toEqual("exports.tsLastExpr = x = x * x;\n");
     expect(out.declOutput).toEqual("declare let x: number;\n");
   });
 
@@ -834,7 +859,7 @@ declare let m: Map;
     out = conv.convert(out.declOutput, 'join("a", "b");');
     expect(out.diagnostics).toEqual([]);
     expect(out.declOutput).toEqual('import { join } from "path";\n');
-    expect(out.output).toEqual('join("a", "b");\n');
+    expect(out.output).toEqual('exports.tsLastExpr = join("a", "b");\n');
   });
 
   it("package tslab", () => {

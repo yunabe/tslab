@@ -7,7 +7,11 @@ export interface ConvertResult {
   output?: string;
   declOutput?: string;
   diagnostics: Diagnostic[];
-  hasLastExpression: boolean;
+  /**
+   * The variable name to store the last expression if exists.
+   * This is necessary to fix #11
+   */
+  lastExpressionVar?: string;
 }
 
 export interface DiagnosticPos {
@@ -183,18 +187,17 @@ export function createConverter(): Converter {
     let declsFile = builder.getSourceFile(declFilename);
     let srcFile = builder.getSourceFile(srcFilename);
 
-    const hasLastExpression = checkHasLastExpression(srcFile);
     const locals: ts.SymbolTable = srcFile.locals;
-    const keys: string[] = [];
+    const keys = new Set<string>();
     if (locals) {
       locals.forEach((_: any, key: any) => {
-        keys.push(key);
+        keys.add(key);
       });
     }
-    if (keys.length > 0) {
+    if (keys.size > 0) {
       // Export all local variables.
       // TODO: Disallow "export" in the input.
-      const suffix = "\nexport {" + keys.join(", ") + "}";
+      const suffix = "\nexport {" + Array.from(keys).join(", ") + "}";
       updateContent(prevDecl, src + suffix);
       program = builder.getProgram();
       declsFile = builder.getSourceFile(declFilename);
@@ -204,6 +207,7 @@ export function createConverter(): Converter {
 
     let output: string;
     let declOutput: string;
+    let lastExpressionVar: string;
     builder.emit(
       srcFile,
       (fileName: string, data: string) => {
@@ -215,7 +219,9 @@ export function createConverter(): Converter {
       },
       undefined,
       undefined,
-      getCustomTransformers()
+      getCustomTransformers(keys, (name: string) => {
+        lastExpressionVar = name;
+      })
     );
     declOutput += remainingDecls(program.getTypeChecker(), srcFile, declsFile);
     return {
@@ -225,7 +231,7 @@ export function createConverter(): Converter {
         createOffsetToDiagnosticPos(srcFile, srcPrefix),
         ts.getPreEmitDiagnostics(program, srcFile)
       ),
-      hasLastExpression
+      lastExpressionVar
     };
   }
 
@@ -600,13 +606,69 @@ export function createConverter(): Converter {
     }
   }
 
-  function getCustomTransformers(): ts.CustomTransformers {
+  /**
+   * @param locals A set of names of declared variables.
+   * @param setLastExprName A callback to store the created name.
+   */
+  function getCustomTransformers(
+    locals: Set<string>,
+    setLastExprName: (name: string) => void
+  ): ts.CustomTransformers {
     return {
+      after: [after],
       afterDeclarations: [afterDeclarations]
     };
-    function afterDeclarations(
-      context: ts.TransformationContext
-    ): (node: ts.SourceFile) => ts.SourceFile {
+    function createLastExprVar() {
+      const prefix = "tsLastExpr";
+      if (!locals.has(prefix)) {
+        return prefix;
+      }
+      let i = 0;
+      while (true) {
+        let name = `${prefix}${i}`;
+        if (!locals.has(name)) {
+          return name;
+        }
+        i++;
+      }
+    }
+    function after(): (node: ts.SourceFile) => ts.SourceFile {
+      // Rewrite the output to store the last expression to a variable.
+      return (node: ts.SourceFile) => {
+        for (let i = node.statements.length - 1; i >= 0; i--) {
+          const stmt = node.statements[i];
+          if (ts.isExportDeclaration(stmt)) {
+            continue;
+          }
+          if (!ts.isExpressionStatement(stmt)) {
+            break;
+          }
+          const lastName = createLastExprVar();
+          let statements = node.statements.slice(0, i);
+          statements.push(
+            ts.createVariableStatement(
+              [ts.createModifier(ts.SyntaxKind.ExportKeyword)],
+              ts.createVariableDeclarationList(
+                [
+                  ts.createVariableDeclaration(
+                    lastName,
+                    undefined,
+                    stmt.expression
+                  )
+                ],
+                ts.NodeFlags.Const
+              )
+            )
+          );
+          setLastExprName(lastName);
+          statements.push(...node.statements.slice(i + 1));
+          node.statements = ts.createNodeArray(statements);
+          break;
+        }
+        return node;
+      };
+    }
+    function afterDeclarations(): (node: ts.SourceFile) => ts.SourceFile {
       // Delete all exports { ... }
       return (node: ts.SourceFile) => {
         const statements = [];
@@ -621,14 +683,6 @@ export function createConverter(): Converter {
       };
     }
   }
-}
-
-function checkHasLastExpression(src: ts.SourceFile) {
-  if (!src.statements.length) {
-    return false;
-  }
-  const last = src.statements[src.statements.length - 1];
-  return ts.isExpressionStatement(last);
 }
 
 /*@internal*/

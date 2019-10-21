@@ -102,9 +102,10 @@ export function createExecutor(
       return true;
     }
     const context = new Proxy(locals, proxyHandler);
-    let ret: any;
     try {
-      ret = vm.runInNewContext(converted.output, context, {
+      // Wrap code with (function(){...}) to improve the performance (#11)
+      const wrapped = "(function() { " + converted.output + "\n})()";
+      vm.runInNewContext(wrapped, context, {
         breakOnSigint: true
       });
     } catch (e) {
@@ -112,7 +113,12 @@ export function createExecutor(
       return false;
     }
     prevDecl = converted.declOutput || "";
-    if (converted.hasLastExpression && ret !== undefined) {
+    if (
+      converted.lastExpressionVar &&
+      locals[converted.lastExpressionVar] != null
+    ) {
+      let ret: any = locals[converted.lastExpressionVar];
+      delete locals[converted.lastExpressionVar];
       if (ret instanceof Promise) {
         try {
           console.log(await Promise.race([ret, interruptPromise]));

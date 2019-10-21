@@ -206,6 +206,37 @@ describe("execute", () => {
     ).toBe(true);
     expect(typeof ex.locals.id).toEqual("string");
   });
+
+  it("performance", async () => {
+    function naiveFib(n: number): number {
+      if (n > 1) {
+        return naiveFib(n - 1) + naiveFib(n - 2);
+      }
+      return 1;
+    }
+    let start = Date.now();
+    let want = naiveFib(35);
+    let end = Date.now();
+    let t0 = end - start;
+
+    start = Date.now();
+    expect(
+      await ex.execute(`
+      function naiveFib(n: number): number {
+        if (n > 1) {
+          return naiveFib(n - 1) + naiveFib(n - 2);
+        }
+        return 1;
+      }
+      let got = naiveFib(35);
+    `)
+    ).toBe(true);
+    end = Date.now();
+    let t1 = end - start;
+    expect(ex.locals.got).toBe(want);
+    expect(t1 / t0).toBeGreaterThan(0.5);
+    expect(t0 / t1).toBeGreaterThan(0.5);
+  });
 });
 
 describe("interrupt", () => {
