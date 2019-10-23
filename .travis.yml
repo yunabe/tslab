@@ -1,4 +1,4 @@
 language: node_js
 node_js:
-  - node
   - lts/*
+  # TODO: Add node when https://github.com/zeromq/zeromq.js/issues/346 is fixed.
