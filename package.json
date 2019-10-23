@@ -17,10 +17,9 @@
     "/python/**/*.py"
   ],
   "dependencies": {
-    "@types/node": "^12.7.12",
+    "@types/node": "^12.11.5",
     "@yunabe/typescript-for-tslab": "^v3.6.4-tslab.6",
-    "glob": "^7.1.4",
-    "zeromq": "^5.1.0"
+    "zeromq": "^5.1.1"
   },
   "scripts": {
     "//": "experimental-vm-modules enables https://nodejs.org/docs/latest-v12.x/api/vm.html#vm_class_vm_sourcetextmodule",
