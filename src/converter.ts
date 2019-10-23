@@ -708,10 +708,35 @@ export function createConverter(): Converter {
         continue;
       }
       if (diag.messageText.endsWith(" expected.")) {
-        return { completed: false };
+        const indent = indentOnEnter(src);
+        return { completed: false, indent };
       }
     }
     return { completed: true };
+  }
+
+  function indentOnEnter(src: string): string {
+    // References:
+    // https://code.visualstudio.com/api/language-extensions/language-configuration-guide#indentation-rules
+    // https://github.com/microsoft/vscode/blob/master/extensions/typescript-language-features/src/features/languageConfiguration.ts
+    let line = src.match(/[^\n]*$/)[0];
+    let current = line.match(/^\s*/)[0];
+    if (/^((?!.*?\/\*).*\*\/)?\s*[\}\]].*$/.test(line)) {
+      // decrease indent
+      // TODO: Look into the indent of the previous line.
+      if (current.endsWith("  ")) {
+        return current.substring(0, current.length - 2);
+      }
+      if (current.endsWith("\t") || current.endsWith(" ")) {
+        return current.substring(0, current.length - 1);
+      }
+      return current;
+    }
+    if (/^((?!\/\/).)*(\{[^}"'`]*|\([^)"'`]*|\[[^\]"'`]*)$/.test(line)) {
+      // increase indent
+      return current + "  ";
+    }
+    return current;
   }
 }
 

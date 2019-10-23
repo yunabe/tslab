@@ -534,12 +534,14 @@ export class JupyterHandlerImpl implements JupyterHandler {
   }
 
   handleIsComplete(req: IsCompleteRequest): IsCompleteReply {
-    if (this.executor.isCompleteCode(req.code)) {
+    const res = this.executor.isCompleteCode(req.code);
+    if (res.completed) {
       return {
         status: "complete"
       };
     }
     return {
+      indent: res.indent,
       status: "incomplete"
     };
   }

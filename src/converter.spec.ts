@@ -888,9 +888,13 @@ declare let m: Map;
 
 describe("isCompleteCode", () => {
   it("force complete", () => {
-    expect(conv.isCompleteCode("function f() {")).toEqual({ completed: false });
+    expect(conv.isCompleteCode("function f() {")).toEqual({
+      completed: false,
+      indent: "  "
+    });
     expect(conv.isCompleteCode("function f() {\n")).toEqual({
-      completed: false
+      completed: false,
+      indent: ""
     });
     expect(conv.isCompleteCode("function f() {\n\n")).toEqual({
       completed: true
@@ -917,16 +921,33 @@ describe("isCompleteCode", () => {
   });
 
   it("incompleted", () => {
-    expect(conv.isCompleteCode("function f() {\nf()")).toEqual({
-      completed: false
+    expect(conv.isCompleteCode("function f() {\n  f()")).toEqual({
+      completed: false,
+      indent: "  "
     });
-    expect(conv.isCompleteCode("while (true) {\nlet x = 10;")).toEqual({
-      completed: false
+    expect(conv.isCompleteCode("while (true) {\n\tlet x = 10;")).toEqual({
+      completed: false,
+      indent: "\t"
     });
-    expect(conv.isCompleteCode("f(x,\ny")).toEqual({
-      completed: false
+    expect(conv.isCompleteCode("fn(x,\n   y")).toEqual({
+      completed: false,
+      indent: "   "
     });
-    expect(conv.isCompleteCode("let x = y +")).toEqual({ completed: false });
+    expect(conv.isCompleteCode("let x = y +")).toEqual({
+      completed: false,
+      indent: ""
+    });
+
+    // increase indnet
+    expect(conv.isCompleteCode("  function f() {")).toEqual({
+      completed: false,
+      indent: "    "
+    });
+    // decrease indent
+    expect(conv.isCompleteCode("function f() {\n  if (x) {\n    }")).toEqual({
+      completed: false,
+      indent: "  "
+    });
   });
 });
 
