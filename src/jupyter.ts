@@ -534,8 +534,13 @@ export class JupyterHandlerImpl implements JupyterHandler {
   }
 
   handleIsComplete(req: IsCompleteRequest): IsCompleteReply {
+    if (this.executor.isCompleteCode(req.code)) {
+      return {
+        status: "complete"
+      };
+    }
     return {
-      status: "complete"
+      status: "incomplete"
     };
   }
 
@@ -734,8 +739,9 @@ export class ZmqServer {
     );
     this.stdin = zmq.socket("router");
     this.hb = zmq.socket("rep");
-    this.hb.on("message", function(...args) {
-      // console.log('hb args', args);
+    this.hb.on("message", (...args) => {
+      // hb is used by `jupyter console`.
+      // TODO: Test this behavior by integration tests.
       this.hb.send(args);
     });
 

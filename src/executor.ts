@@ -1,4 +1,4 @@
-import { Converter, CompletionInfo } from "./converter";
+import { Converter, CompletionInfo, IsCompleteResult } from "./converter";
 import * as vm from "vm";
 import * as ts from "@yunabe/typescript-for-tslab";
 
@@ -14,6 +14,7 @@ export interface Executor {
   execute(src: string): Promise<boolean>;
   inspect(src: string, position: number): ts.QuickInfo;
   complete(src: string, positin: number): CompletionInfo;
+  isCompleteCode(src: string): IsCompleteResult;
   reset(): void;
 
   /**
@@ -148,6 +149,10 @@ export function createExecutor(
     }
   }
 
+  function isCompleteCode(src: string): IsCompleteResult {
+    return conv.isCompleteCode(src);
+  }
+
   function close(): void {
     conv.close();
   }
@@ -159,6 +164,7 @@ export function createExecutor(
     locals,
     reset,
     interrupt,
+    isCompleteCode,
     close
   };
 }

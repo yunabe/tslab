@@ -886,6 +886,50 @@ declare let m: Map;
   });
 });
 
+describe("isCompleteCode", () => {
+  it("force complete", () => {
+    expect(conv.isCompleteCode("function f() {")).toEqual({ completed: false });
+    expect(conv.isCompleteCode("function f() {\n")).toEqual({
+      completed: false
+    });
+    expect(conv.isCompleteCode("function f() {\n\n")).toEqual({
+      completed: true
+    });
+    expect(conv.isCompleteCode("function f() {\n  \n\t")).toEqual({
+      completed: true
+    });
+    expect(conv.isCompleteCode("function f() {\r\n  \r\n\t")).toEqual({
+      completed: true
+    });
+    expect(conv.isCompleteCode("  \n  ")).toEqual({
+      completed: true
+    });
+  });
+
+  it("completed", () => {
+    expect(conv.isCompleteCode("let x = 10")).toEqual({ completed: true });
+    expect(conv.isCompleteCode("function f() {\n}")).toEqual({
+      completed: true
+    });
+    expect(conv.isCompleteCode("class C {\n}")).toEqual({
+      completed: true
+    });
+  });
+
+  it("incompleted", () => {
+    expect(conv.isCompleteCode("function f() {\nf()")).toEqual({
+      completed: false
+    });
+    expect(conv.isCompleteCode("while (true) {\nlet x = 10;")).toEqual({
+      completed: false
+    });
+    expect(conv.isCompleteCode("f(x,\ny")).toEqual({
+      completed: false
+    });
+    expect(conv.isCompleteCode("let x = y +")).toEqual({ completed: false });
+  });
+});
+
 describe("keepNamesInImport", () => {
   it("keep named import", () => {
     const src = ts.createSourceFile(

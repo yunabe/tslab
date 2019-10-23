@@ -42,10 +42,16 @@ export interface CompletionInfo {
   original?: ts.CompletionInfo;
 }
 
+export interface IsCompleteResult {
+  completed: boolean;
+  indent?: string;
+}
+
 export interface Converter {
   convert(prevDecl: string, src: string): ConvertResult;
   inspect(prevDecl: string, src: string, position: number): ts.QuickInfo;
   complete(prevDecl: string, src: string, position: number): CompletionInfo;
+  isCompleteCode(src: string): IsCompleteResult;
   /** Release internal resources to terminate the process gracefully. */
   close(): void;
 }
@@ -174,7 +180,8 @@ export function createConverter(): Converter {
     close,
     convert,
     inspect,
-    complete
+    complete,
+    isCompleteCode
   };
 
   function close() {
@@ -682,6 +689,29 @@ export function createConverter(): Converter {
         return node;
       };
     }
+  }
+
+  function isCompleteCode(src: string): IsCompleteResult {
+    if (/(^|\n)\s*\n\s*$/.test(src)) {
+      // Force to process src if it ends with two white-space lines.
+      return { completed: true };
+    }
+    updateContent("", src);
+    const program = builder.getProgram();
+    const srcFile = builder.getSourceFile(srcFilename);
+    const end = src.length + srcPrefix.length;
+    for (const diag of program.getSyntacticDiagnostics(srcFile)) {
+      if (diag.start !== end || diag.length !== 0) {
+        continue;
+      }
+      if (typeof diag.messageText !== "string") {
+        continue;
+      }
+      if (diag.messageText.endsWith(" expected.")) {
+        return { completed: false };
+      }
+    }
+    return { completed: true };
   }
 }
 
