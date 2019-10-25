@@ -19,6 +19,7 @@
   "dependencies": {
     "@types/node": "^12.11.5",
     "@yunabe/typescript-for-tslab": "^v3.6.4-tslab.6",
+    "commander": "^3.0.2",
     "zeromq": "^5.1.1"
   },
   "scripts": {

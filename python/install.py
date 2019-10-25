@@ -18,7 +18,7 @@ def create_kernel_jaon(is_ts):
         os.path.join(os.path.dirname(__file__), '../bin',
                      'tslab' if is_ts else 'jslab'))
     return {
-        "argv": [bin, "{connection_file}"],
+        "argv": [bin, "kernel", "--config-path={connection_file}"],
         "display_name": "TypeScript" if is_ts else "JavaScript",
         "language": "typescript" if is_ts else "javascript",
     }
@@ -37,7 +37,6 @@ def install_kernel_spec(is_ts, user, prefix):
         KernelSpecManager().install_kernel_spec(td,
                                                 'tslab' if is_ts else 'jslab',
                                                 user=user,
-                                                replace=True,
                                                 prefix=prefix)
 
 
