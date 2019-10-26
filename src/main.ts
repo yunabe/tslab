@@ -1,11 +1,60 @@
+import * as fs from "fs";
 import * as child_process from "child_process";
 import * as path from "path";
 import * as program from "commander";
 import { createConverter } from "./converter";
-import { createExecutor } from "./executor";
+import { createExecutor, createRequire } from "./executor";
 import { JupyterHandlerImpl, ZmqServer } from "./jupyter";
 
-export function startKernel({ configPath = "" }) {
+function* traverseAncestorDirs(
+  dir: string
+): Generator<{ dir: string; level: number }> {
+  for (let level = 0; ; level++) {
+    yield { dir, level };
+    const parent = path.dirname(dir);
+    if (parent === dir) {
+      break;
+    }
+    dir = parent;
+  }
+}
+
+const mainPath = ["node_modules", "tslab", "dist", "main.js"];
+
+function findLocalStartKernel(): typeof startKernel {
+  for (const { dir, level } of traverseAncestorDirs(process.cwd())) {
+    if (path.basename(dir) == "node_modules") {
+      continue;
+    }
+    if (!fs.existsSync(path.join(dir, ...mainPath))) {
+      continue;
+    }
+    const reqPath = ["."];
+    for (let i = 0; i < level; i++) {
+      reqPath.push("..");
+    }
+    reqPath.push(...mainPath);
+    const { startKernel } = createRequire(process.cwd())(reqPath.join("/"));
+    return startKernel;
+  }
+  return null;
+}
+
+/**
+ * Start the Jupyter kernel.
+ *
+ * This method can be imported from the globally-installed tslab (https://github.com/yunabe/tslab/issues/4),
+ * whose version can be differnt from locally-installed tslab.
+ * Thus, we should not rename, move or change the interface of startKernel for backward compatibiliy.
+ */
+export function startKernel({ configPath = "", enableFindLocal = true }): void {
+  if (enableFindLocal) {
+    const local = findLocalStartKernel();
+    if (local) {
+      local({ configPath, enableFindLocal: false });
+      return;
+    }
+  }
   const converter = createConverter();
   const executor = createExecutor(process.cwd(), converter, {
     log: console.log,
