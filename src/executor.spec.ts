@@ -18,7 +18,7 @@ beforeAll(() => {
       consoleErrorCalls.push(args);
     }
   };
-  ex = executor.createExecutor(conv, exconsole);
+  ex = executor.createExecutor(process.cwd(), conv, exconsole);
 });
 afterAll(() => {
   if (conv) {

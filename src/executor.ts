@@ -1,6 +1,7 @@
-import { Converter, CompletionInfo, IsCompleteResult } from "./converter";
+import * as path from "path";
 import * as vm from "vm";
 import * as ts from "@yunabe/typescript-for-tslab";
+import { Converter, CompletionInfo, IsCompleteResult } from "./converter";
 
 export interface Executor {
   /**
@@ -34,28 +35,39 @@ export interface ConsoleInterface {
   error(message?: any, ...optionalParams: any[]): void;
 }
 
-function requireImpl(id: string): any {
-  if (id === "tslab") {
-    return require("..");
-  }
-  // require must not be bound to this file. require resolve
-  // relative paths using the caller context (`this`).
-  // Thus, we can use require from everywhere.
-  // In vm, require is called with global and relative paths are resolved
-  // from the current directory.
-  // TODO: Test this behavior.
-  return require.call(this, id);
+/**
+ * createRequire creates `require` which resolves modules from `rootDir`.
+ * @param rootDir
+ */
+export function createRequire(rootDir: string): NodeRequire {
+  // TODO: Write integration tests to test this behavior.
+  const module = require("module");
+  // createRequire is added in Node v12. createRequireFromPath is deprecated.
+  const create = module.createRequire || module.createRequireFromPath;
+  const req = create(path.join(rootDir, "tslabSrc.js"));
+  return new Proxy(req, {
+    // Hook require('tslab').
+    // TODO: Test this behavior.
+    apply: (target: object, thisArg: any, argArray?: any): any => {
+      if (argArray.length == 1 && argArray[0] === "tslab") {
+        return require("..");
+      }
+      return req.apply(thisArg, argArray);
+    }
+  });
 }
 
 export function createExecutor(
+  rootDir: string,
   conv: Converter,
   console: ConsoleInterface
 ): Executor {
   const locals: { [key: string]: any } = {};
+  const req = createRequire(rootDir);
   const proxyHandler: ProxyHandler<{ [key: string]: any }> = {
     get: function(_target, prop) {
       if (prop === "require") {
-        return requireImpl;
+        return req;
       }
       if (prop === "exports") {
         return locals;

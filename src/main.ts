@@ -1,13 +1,13 @@
 import * as child_process from "child_process";
-import * as program from "commander";
 import * as path from "path";
+import * as program from "commander";
 import { createConverter } from "./converter";
 import { createExecutor } from "./executor";
 import { JupyterHandlerImpl, ZmqServer } from "./jupyter";
 
 export function startKernel({ configPath = "" }) {
   const converter = createConverter();
-  const executor = createExecutor(converter, {
+  const executor = createExecutor(process.cwd(), converter, {
     log: console.log,
     error: console.error
   });
