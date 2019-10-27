@@ -78,6 +78,13 @@ export function createExecutor(
       return global[prop];
     }
   };
+  const sandbox = new Proxy(locals, proxyHandler);
+  vm.createContext(sandbox);
+  // Get Promise of async functions, which is different from Promise
+  // in sandbox for some reason (See 'async and Promise' in vm.spec.ts).
+  const asyncPromise = vm.runInContext("(async () => {})()", sandbox)
+    .constructor;
+
   let prevDecl = "";
 
   let interrupted = new Error("Interrupted asynchronously");
@@ -114,11 +121,11 @@ export function createExecutor(
       prevDecl = converted.declOutput || "";
       return true;
     }
-    const context = new Proxy(locals, proxyHandler);
     try {
       // Wrap code with (function(){...}) to improve the performance (#11)
+      // Also, it's necessary to redeclare let and const in tslab.
       const wrapped = "(function() { " + converted.output + "\n})()";
-      vm.runInNewContext(wrapped, context, {
+      vm.runInContext(wrapped, sandbox, {
         breakOnSigint: true
       });
     } catch (e) {
@@ -132,7 +139,7 @@ export function createExecutor(
     ) {
       let ret: any = locals[converted.lastExpressionVar];
       delete locals[converted.lastExpressionVar];
-      if (ret instanceof Promise) {
+      if (ret instanceof Promise || ret instanceof asyncPromise) {
         try {
           console.log(await Promise.race([ret, interruptPromise]));
         } catch (e) {

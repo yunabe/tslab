@@ -197,6 +197,36 @@ describe("execute", () => {
     expect(consoleErrorCalls).toEqual([["Good Bye Promise"]]);
   });
 
+  it("async resolved", async () => {
+    let promise = ex.execute(`
+    (async (msg)=>{
+      return 'Hello ' + msg;
+    })('async');
+    `);
+    // The promise is not resolved yet.
+    expect(consoleLogCalls).toEqual([]);
+    expect(consoleErrorCalls).toEqual([]);
+
+    expect(await promise).toBe(true);
+    expect(consoleLogCalls).toEqual([["Hello async"]]);
+    expect(consoleErrorCalls).toEqual([]);
+  });
+
+  it("async rejected", async () => {
+    let promise = ex.execute(`
+    (async (msg)=>{
+      throw 'Good Bye async';
+    })();
+    `);
+    // The promise is not resolved yet.
+    expect(consoleLogCalls).toEqual([]);
+    expect(consoleErrorCalls).toEqual([]);
+
+    expect(await promise).toBe(false);
+    expect(consoleLogCalls).toEqual([]);
+    expect(consoleErrorCalls).toEqual([["Good Bye async"]]);
+  });
+
   it("package tslab", async () => {
     expect(
       await ex.execute(`
