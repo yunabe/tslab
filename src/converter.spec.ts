@@ -1,5 +1,5 @@
 import * as converter from "./converter";
-import * as ts from "typescript";
+import * as ts from "@yunabe/typescript-for-tslab";
 
 let conv: converter.Converter;
 beforeAll(() => {
@@ -118,6 +118,31 @@ exports.c = c;
     expect(out.declOutput).toEqual(`declare let x: number, y: string;
 declare let a: number, c: string;
 `);
+  });
+
+  it("optional chaining and nullish coalescing", () => {
+    // Supported since TypeScript 3.7
+    const out = conv.convert(
+      "",
+      `
+      let obj: any = null;
+      let a = obj?.a?.b;
+      let b = a ?? obj;
+      `
+    );
+    expect(out.diagnostics).toEqual([]);
+    expect(out.output).toEqual(
+      [
+        "var _a, _b;",
+        "let obj = null;",
+        "exports.obj = obj;",
+        "let a = (_b = (_a = obj) === null || _a === void 0 ? void 0 : _a.a) === null || _b === void 0 ? void 0 : _b.b;",
+        "exports.a = a;",
+        "let b = (a !== null && a !== void 0 ? a : obj);",
+        "exports.b = b;",
+        ""
+      ].join("\n")
+    );
   });
 
   it("side-effect to var", () => {

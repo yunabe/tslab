@@ -25,7 +25,7 @@ function complete(src: string): converter.CompletionInfo {
   return completeWithPrev("", src);
 }
 
-describe("converter", () => {
+describe("complete", () => {
   it("members", () => {
     const src = `let v = { abc: "hello", xyz: 10 }; v.[cur]`;
     const info = complete(src);
@@ -341,15 +341,15 @@ describe("converter", () => {
             name: "Array",
             kind: "var",
             kindModifiers: "declare",
-            sortText: "2"
+            sortText: "4"
           },
           {
             name: "ArrayBuffer",
             kind: "var",
             kindModifiers: "declare",
-            sortText: "2"
+            sortText: "4"
           },
-          { name: "let", kind: "keyword", kindModifiers: "", sortText: "2" }
+          { name: "let", kind: "keyword", kindModifiers: "", sortText: "4" }
         ]
       }
     });
@@ -384,31 +384,31 @@ describe("converter", () => {
             name: "oldval",
             kind: "let",
             kindModifiers: "declare",
-            sortText: "2"
+            sortText: "4"
           },
           {
             name: "globalThis",
             kind: "module",
             kindModifiers: "",
-            sortText: "2"
+            sortText: "4"
           },
           {
             name: "eval",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "2"
+            sortText: "4"
           },
           {
             name: "parseInt",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "2"
+            sortText: "4"
           },
           {
             name: "parseFloat",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "2"
+            sortText: "4"
           }
         ]
       }
@@ -432,31 +432,31 @@ describe("converter", () => {
             name: "globalThis",
             kind: "module",
             kindModifiers: "",
-            sortText: "2"
+            sortText: "4"
           },
           {
             name: "eval",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "2"
+            sortText: "4"
           },
           {
             name: "parseInt",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "2"
+            sortText: "4"
           },
           {
             name: "parseFloat",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "2"
+            sortText: "4"
           },
           {
             name: "isNaN",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "2"
+            sortText: "4"
           }
         ]
       }
@@ -480,31 +480,31 @@ describe("converter", () => {
             name: "globalThis",
             kind: "module",
             kindModifiers: "",
-            sortText: "2"
+            sortText: "4"
           },
           {
             name: "eval",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "2"
+            sortText: "4"
           },
           {
             name: "parseInt",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "2"
+            sortText: "4"
           },
           {
             name: "parseFloat",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "2"
+            sortText: "4"
           },
           {
             name: "isNaN",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "2"
+            sortText: "4"
           }
         ]
       }
@@ -528,31 +528,31 @@ describe("converter", () => {
             name: "globalThis",
             kind: "module",
             kindModifiers: "",
-            sortText: "2"
+            sortText: "4"
           },
           {
             name: "eval",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "2"
+            sortText: "4"
           },
           {
             name: "parseInt",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "2"
+            sortText: "4"
           },
           {
             name: "parseFloat",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "2"
+            sortText: "4"
           },
           {
             name: "isNaN",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "2"
+            sortText: "4"
           }
         ]
       }
@@ -593,13 +593,13 @@ describe("converter", () => {
             name: "Array",
             kind: "var",
             kindModifiers: "declare",
-            sortText: "2"
+            sortText: "4"
           },
           {
             name: "ArrayBuffer",
             kind: "var",
             kindModifiers: "declare",
-            sortText: "2"
+            sortText: "4"
           },
           {
             name: '"cupcake"',
@@ -649,7 +649,7 @@ describe("converter", () => {
             name: "globalThis",
             kind: "module",
             kindModifiers: "",
-            sortText: "2"
+            sortText: "4"
           }
         ]
       }

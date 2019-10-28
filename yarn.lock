@@ -392,10 +392,10 @@
   dependencies:
     "@types/yargs-parser" "*"
 
-"@yunabe/typescript-for-tslab@^v3.6.4-tslab.6":
-  version "3.6.4-tslab.6"
-  resolved "https://registry.yarnpkg.com/@yunabe/typescript-for-tslab/-/typescript-for-tslab-3.6.4-tslab.6.tgz#ba2623909394f30e3822772abf077a5038bf1e5d"
-  integrity sha512-qW7edEzd6mZCv359Zhl1dwYq9NJzg8xhQ4f6MNgm0VrB5e7d2ng8uI81WZvNqD0KPubSe0LpD7Au+paLxqT/FQ==
+"@yunabe/typescript-for-tslab@^3.7.1-tslab.0":
+  version "3.7.1-tslab.0"
+  resolved "https://registry.yarnpkg.com/@yunabe/typescript-for-tslab/-/typescript-for-tslab-3.7.1-tslab.0.tgz#44fae28cd31168ebeffeb21d38f59d79dc697403"
+  integrity sha512-VcXCdxpsU3VnspoAQc5ExcdZW9Pn9XkvHGV/j0/SXk1y/8IqkVfwwciAict6/lYs+un7DS3N1nBzCoC5gpkVIQ==
 
 abab@^2.0.0:
   version "2.0.2"
