@@ -47,6 +47,11 @@ export interface IsCompleteResult {
   indent?: string;
 }
 
+export interface ConverterOptions {
+  /** If true, JavaScript mode. TypeSceript mode otherwise */
+  isJS?: boolean;
+}
+
 export interface Converter {
   convert(prevDecl: string, src: string): ConvertResult;
   inspect(prevDecl: string, src: string, position: number): ts.QuickInfo;
@@ -55,11 +60,6 @@ export interface Converter {
   /** Release internal resources to terminate the process gracefully. */
   close(): void;
 }
-
-const srcFilename = "__tslab__.ts";
-const dstFilename = "__tslab__.js";
-const dstDeclFilename = "__tslab__.d.ts";
-const declFilename = "__prev__.d.ts";
 
 interface RebuildTimer {
   callback: (...args: any[]) => void;
@@ -70,7 +70,12 @@ const cancellationToken: ts.CancellationToken = {
   throwIfCancellationRequested: (): void => {}
 };
 
-export function createConverter(): Converter {
+export function createConverter(options?: ConverterOptions): Converter {
+  const srcFilename = options && options.isJS ? "__tslab__.js" : "__tslab__.ts";
+  const dstFilename = "__tslab__.js";
+  const dstDeclFilename = "__tslab__.d.ts";
+  const declFilename = "__prev__.d.ts";
+
   const srcPrefix = "export {};" + ts.sys.newLine;
   let srcContent: string = "";
   let declContent: string = "";
@@ -158,7 +163,11 @@ export function createConverter(): Converter {
       newLine: ts.NewLineKind.LineFeed,
       // Remove 'use strict' from outputs.
       noImplicitUseStrict: true,
-      typeRoots: getTypeRoots()
+      typeRoots: getTypeRoots(),
+      // allowJs, checkJs and outDir are necessary to transpile .js files.
+      allowJs: true,
+      checkJs: true,
+      outDir: "outDir"
     },
     sys,
     null,
@@ -218,6 +227,7 @@ export function createConverter(): Converter {
     builder.emit(
       srcFile,
       (fileName: string, data: string) => {
+        fileName = pathlib.basename(fileName);
         if (fileName === dstFilename) {
           output = data;
         } else if (fileName === dstDeclFilename) {
@@ -572,7 +582,7 @@ export function createConverter(): Converter {
   ): Diagnostic[] {
     const ret: Diagnostic[] = [];
     for (const d of input) {
-      if (!d.file || d.file.fileName !== "__tslab__.ts") {
+      if (!d.file || d.file.fileName !== srcFilename) {
         continue;
       }
       const start = toDiagnosticPos(d.start),
