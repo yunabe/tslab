@@ -9,7 +9,7 @@
   },
   "repository": "https://github.com/yunabe/tslab",
   "author": "Yu Watanabe",
-  "license": "MIT",
+  "license": "BSD-3-Clause",
   "files": [
     "/dist/**/*.js",
     "/dist/**/*.d.ts",
