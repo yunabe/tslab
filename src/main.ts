@@ -47,20 +47,27 @@ function findLocalStartKernel(): typeof startKernel {
  * whose version can be differnt from locally-installed tslab.
  * Thus, we should not rename, move or change the interface of startKernel for backward compatibiliy.
  */
-export function startKernel({ configPath = "", enableFindLocal = true }): void {
+export function startKernel({
+  configPath = "",
+  enableFindLocal = true,
+  jsKernel = false
+}): void {
   if (enableFindLocal) {
     const local = findLocalStartKernel();
     if (local) {
-      local({ configPath, enableFindLocal: false });
+      local({ configPath, enableFindLocal: false, jsKernel });
       return;
     }
   }
-  const converter = createConverter();
+  const converter = createConverter({ isJS: jsKernel });
   const executor = createExecutor(process.cwd(), converter, {
     log: console.log,
     error: console.error
   });
-  const server = new ZmqServer(new JupyterHandlerImpl(executor), configPath);
+  const server = new ZmqServer(
+    new JupyterHandlerImpl(executor, jsKernel),
+    configPath
+  );
   process.on("SIGINT", () => {
     executor.interrupt();
   });
@@ -116,6 +123,7 @@ export function main() {
     .command("kernel")
     .description("Start Jupyter kernel. Used from Jupyter internally")
     .option("--config-path <path>", "Path of config file")
+    .option("--js", "If set, start JavaScript kernel. Otherwise, TypeScript.")
     .action(function() {
       if (arguments.length != 1) {
         console.error(
@@ -126,8 +134,8 @@ export function main() {
         );
         process.exit(1);
       }
-      let { configPath } = arguments[0];
-      startKernel({ configPath });
+      let { configPath, js: jsKernel } = arguments[0];
+      startKernel({ configPath, jsKernel });
     });
 
   program.parse(process.argv);

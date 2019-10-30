@@ -430,28 +430,39 @@ export class JupyterHandlerImpl implements JupyterHandler {
   private execCount: number;
   private executor: Executor;
   private execQueue: TaskQueue;
-  private static execFailedError = new Error("execution failed");
+  /** If true, JavaScript kernel. Otherwise, TypeScript. */
+  private isJs: boolean;
 
-  constructor(executor: Executor) {
+  constructor(executor: Executor, isJs: boolean) {
     this.execCount = 0;
     this.executor = executor;
     this.execQueue = new TaskQueue();
+    this.isJs = isJs;
   }
 
   handleKernel(): KernelInfoReply {
+    // "typescript" does not work well because CodeMirror does not have 'typscript' mode?
+    // TODO: Figure out the correct way to specify typescript.
+    const lang = "javascript";
+    let implementation = "tslab";
+    let extension = ".ts";
+    let banner = "TypeScript";
+    if (this.isJs) {
+      implementation = "jslab";
+      extension = ".js";
+      banner = "JavaScript";
+    }
     return {
       protocol_version: "5.3",
-      implementation: "tslab",
+      implementation,
       implementation_version: "1.0.0",
       language_info: {
-        // "typescript" does not work well because CodeMirror does not have 'typscript' mode?
-        // TODO: Figure out the correct way to specify typescript.
-        name: "javascript",
+        name: lang,
         version: "",
         mimetype: "",
-        file_extension: ".ts"
+        file_extension: extension
       },
-      banner: "TypeScript"
+      banner
     };
   }
 

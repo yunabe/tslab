@@ -16,7 +16,7 @@ describe("JupyterHandlerImpl", () => {
 
   beforeEach(() => {
     executor = {} as Executor;
-    handler = new JupyterHandlerImpl(executor);
+    handler = new JupyterHandlerImpl(executor, false);
   });
 
   afterEach(() => {
@@ -49,7 +49,23 @@ describe("JupyterHandlerImpl", () => {
     });
   });
 
-  it("handleKernel", () => {
+  it("handleJsKernel", () => {
+    handler = new JupyterHandlerImpl(executor, true);
+    expect(handler.handleKernel()).toEqual({
+      banner: "JavaScript",
+      implementation: "jslab",
+      implementation_version: "1.0.0",
+      language_info: {
+        file_extension: ".js",
+        mimetype: "",
+        name: "javascript",
+        version: ""
+      },
+      protocol_version: "5.3"
+    });
+  });
+
+  it("handleInspect", () => {
     const want: ts.QuickInfo = {
       displayParts: [
         {

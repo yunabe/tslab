@@ -13,31 +13,32 @@ except:
     sys.exit(1)
 
 
-def create_kernel_jaon(is_ts):
-    bin = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), '../bin',
-                     'tslab' if is_ts else 'jslab'))
+def create_kernel_jaon(is_js):
+    bin = os.path.abspath(os.path.join(
+        os.path.dirname(__file__), '..', 'bin', 'tslab'))
+    argv = [bin, 'kernel', '--config-path={connection_file}']
+    if is_js:
+        argv.append('--js')
     return {
-        "argv": [bin, "kernel", "--config-path={connection_file}"],
-        "display_name": "TypeScript" if is_ts else "JavaScript",
-        "language": "typescript" if is_ts else "javascript",
+        "argv": argv,
+        "display_name": "JavaScript" if is_js else "TypeScript",
+        "language": "javascript" if is_js else "typescript",
     }
 
 
-def install_kernel_spec(is_ts, user, prefix):
+def install_kernel_spec(is_js, user, prefix):
     create_kernel_jaon(True)
     with TemporaryDirectory() as td:
         os.chmod(td, 0o755)  # Starts off as 700, not user readable
         with open(os.path.join(td, 'kernel.json'), 'w') as f:
-            json.dump(create_kernel_jaon(is_ts), f, sort_keys=True)
+            json.dump(create_kernel_jaon(is_js), f, sort_keys=True)
         # TODO: Copy any resources
-
         print('Installing {} kernel spec'.format(
-            'TypeScript' if is_ts else 'JavaScript'))
-        KernelSpecManager().install_kernel_spec(td,
-                                                'tslab' if is_ts else 'jslab',
-                                                user=user,
-                                                prefix=prefix)
+            'JavaScript' if is_js else 'TypeScript'))
+        KernelSpecManager().install_kernel_spec(
+            td, 'jslab' if is_js else 'tslab',
+            user=user,
+            prefix=prefix)
 
 
 def _is_root():
@@ -68,8 +69,8 @@ def main(argv=None):
     if not args.prefix and not _is_root():
         args.user = True
 
-    for is_ts in [True]:
-        install_kernel_spec(is_ts, args.user, args.prefix)
+    for is_js in [False, True]:
+        install_kernel_spec(is_js, args.user, args.prefix)
 
 
 if __name__ == '__main__':
