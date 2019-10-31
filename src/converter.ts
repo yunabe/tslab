@@ -349,13 +349,14 @@ export function createConverter(options?: ConverterOptions): Converter {
   }
 
   function completionWithId(
-    info: ts.CompletionInfo,
+    info: ts.CompletionInfo | undefined,
     id: ts.Identifier,
     srcFile: ts.SourceFile
   ): CompletionInfo {
     let name = id.escapedText.toString();
     let lower = name.toLowerCase();
-    const candidates = info.entries
+    let entries = info ? info.entries : [];
+    const candidates = entries
       .map((e, index) => {
         const key = (() => {
           if (e.name.startsWith(name)) {

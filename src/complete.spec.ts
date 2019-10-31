@@ -112,6 +112,46 @@ describe("complete", () => {
     });
   });
 
+  it("members mismatch", () => {
+    const src = `let v = { abc: "hello", xyz: 10 }; v.qwerty[cur]`;
+    const info = complete(src);
+    const end = src.indexOf(`[cur]`);
+    const start = end - "querty".length;
+    expect(info).toEqual({
+      start,
+      end,
+      candidates: [],
+      original: {
+        isGlobalCompletion: false,
+        isMemberCompletion: true,
+        isNewIdentifierLocation: false,
+        entries: [
+          { name: "abc", kind: "property", kindModifiers: "", sortText: "0" },
+          { name: "xyz", kind: "property", kindModifiers: "", sortText: "0" }
+        ]
+      }
+    });
+  });
+
+  it("members of any", () => {
+    let src = `let x: any = 10; x.[cur]`;
+    let info = complete(src);
+    let start = src.indexOf(`[cur]`);
+    expect(info).toEqual({
+      start,
+      end: start,
+      candidates: [],
+      original: undefined
+    });
+
+    // https://github.com/yunabe/tslab/issues/13
+    src = `let x: any = 10; x.abc[cur]`;
+    info = complete(src);
+    let end = src.indexOf(`[cur]`);
+    start = end - 3;
+    expect(info).toEqual({ start, end, candidates: [], original: undefined });
+  });
+
   it("members in object literal", () => {
     const src = `let v: {alpha: string, beta: number} = {[cur]};`;
     const info = complete(src);
