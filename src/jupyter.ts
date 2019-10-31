@@ -1,8 +1,8 @@
+import { createHmac, randomBytes } from "crypto";
 import * as fs from "fs";
 import { TextDecoder } from "util";
 
 import * as zmq from "zeromq";
-import { createHmac } from "crypto";
 
 import { Executor } from "./executor";
 import { printQuickInfo } from "./inspect";
@@ -34,10 +34,13 @@ interface ConnectionInfo {
 
 interface HeaderMessage {
   version: string;
+  /** ISO 8601 timestamp for when the message is created */
   date: string;
+  /** typically UUID, should be unique per session */
   session: string;
   username: string;
   msg_type: string;
+  /** typically UUID, must be unique per message */
   msg_id: string;
 }
 
@@ -372,7 +375,9 @@ class ZmqMessage {
       session: this.header.session,
       username: this.header.username,
       msg_type: this.header.msg_type,
-      msg_id: this.header.msg_id
+      // Set a unique ID to prevent a problem like #14.
+      // TODO: Check this by integration tests.
+      msg_id: randomBytes(16).toString("hex")
     };
     rep.parent = this.header;
     rep.metadata = {};
@@ -401,6 +406,13 @@ class ZmqMessage {
     heads.push(hash.digest("hex"));
     const raw = heads.concat(bodies);
     sock.send(raw);
+
+    // raw[0] = typeof raw[0];
+    fs.writeFileSync(
+      "/tmp/log.txt",
+      JSON.stringify(raw) + "\n#############################\n",
+      { flag: "a" }
+    );
   }
 }
 
