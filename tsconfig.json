@@ -2,6 +2,7 @@
   "compilerOptions": {
     "outDir": "dist",
     "module": "commonjs",
+    "esModuleInterop": true,
     "target": "ES2017",
     "lib": ["es2017"],
     "newLine": "LF",

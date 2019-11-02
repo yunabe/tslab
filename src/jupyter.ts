@@ -1,8 +1,8 @@
 import { createHmac, randomBytes } from "crypto";
-import * as fs from "fs";
+import fs from "fs";
 import { TextDecoder } from "util";
 
-import * as zmq from "zeromq";
+import zmq from "zeromq";
 
 import { Executor } from "./executor";
 import { printQuickInfo } from "./inspect";

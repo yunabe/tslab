@@ -1,5 +1,5 @@
+import pathlib from "path";
 import * as ts from "@yunabe/typescript-for-tslab";
-import * as pathlib from "path";
 
 // TODO: Disallow accessing "module" of Node.js.
 

@@ -1,7 +1,7 @@
-import * as fs from "fs";
-import * as child_process from "child_process";
-import * as path from "path";
-import * as program from "commander";
+import fs from "fs";
+import child_process from "child_process";
+import path from "path";
+import program from "commander";
 import { createConverter } from "./converter";
 import { createExecutor, createRequire } from "./executor";
 import { JupyterHandlerImpl, ZmqServer } from "./jupyter";

@@ -1,5 +1,5 @@
-import * as path from "path";
-import * as vm from "vm";
+import path from "path";
+import vm from "vm";
 import * as ts from "@yunabe/typescript-for-tslab";
 import { Converter, CompletionInfo, IsCompleteResult } from "./converter";
 

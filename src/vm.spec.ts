@@ -1,4 +1,4 @@
-import * as vm from "vm";
+import vm from "vm";
 
 describe("vmspec", () => {
   it("basics", () => {
