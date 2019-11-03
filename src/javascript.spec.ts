@@ -17,20 +17,34 @@ afterAll(() => {
   }
 });
 
+function buildOutput(
+  lines: string[],
+  opts?: {
+    noEsModule?: boolean;
+  }
+): string {
+  const out: string[] = [];
+  if (!opts || !opts.noEsModule) {
+    out.push('Object.defineProperty(exports, "__esModule", { value: true });');
+  }
+  out.push(...lines);
+  out.push("");
+  return out.join("\n");
+}
+
 describe("convert", () => {
   it("variables", () => {
     const out = conv.convert("", `let x = 123; const y = 'foo'; var z = true;`);
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
-      [
+      buildOutput([
         "let x = 123;",
         "exports.x = x;",
         "const y = 'foo';",
         "exports.y = y;",
         "var z = true;",
-        "exports.z = z;",
-        ""
-      ].join("\n")
+        "exports.z = z;"
+      ])
     );
     expect(out.declOutput).toEqual(
       [
@@ -63,7 +77,7 @@ describe("convert", () => {
     );
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
-      [
+      buildOutput([
         "function sum(x, y) {",
         "    return x + y;",
         "}",
@@ -79,9 +93,8 @@ describe("convert", () => {
         "        setTimeout(resolve, ms);",
         "    });",
         "}",
-        "exports.sleep = sleep;",
-        ""
-      ].join("\n")
+        "exports.sleep = sleep;"
+      ])
     );
     expect(out.declOutput).toEqual(
       [
@@ -111,7 +124,7 @@ describe("convert", () => {
       `
     );
     expect(out.output).toEqual(
-      [
+      buildOutput([
         "/** @type {any} */",
         "let x = 10;",
         "exports.x = x;",
@@ -123,9 +136,8 @@ describe("convert", () => {
         "function sum(x, y) {",
         "    return x + y;",
         "}",
-        "exports.sum = sum;",
-        ""
-      ].join("\n")
+        "exports.sum = sum;"
+      ])
     );
     expect(out.declOutput).toEqual(
       [

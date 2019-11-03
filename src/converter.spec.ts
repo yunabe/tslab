@@ -11,8 +11,20 @@ afterAll(() => {
   }
 });
 
-function buildOutput(lines: string[]): string {
-  return lines.join("\n") + "\n";
+function buildOutput(
+  lines: string[],
+  opts?: {
+    noEsModule?: boolean;
+  }
+): string {
+  const out: string[] = [];
+  if (!opts || !opts.noEsModule) {
+    // cf. https://www.typescriptlang.org/docs/handbook/release-notes/typescript-2-7.html#support-for-import-d-from-cjs-from-commonjs-modules-with---esmoduleinteropa
+    out.push('Object.defineProperty(exports, "__esModule", { value: true });');
+  }
+  out.push(...lines);
+  out.push("");
+  return out.join("\n");
 }
 
 describe("converter valid", () => {
@@ -294,7 +306,9 @@ enum Direction {
     // TODO: Revisit how to handle this ambiguity.
     let out = conv.convert("", "{x: 10}");
     expect(out.diagnostics).toEqual([]);
-    expect(out.output).toEqual(buildOutput(["{", "    x: 10;", "}"]));
+    expect(out.output).toEqual(
+      buildOutput(["{", "    x: 10;", "}"], { noEsModule: true })
+    );
     expect(out.declOutput).toEqual("");
 
     out = conv.convert("", "{x: 3, y: 4}");

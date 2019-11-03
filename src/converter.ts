@@ -763,10 +763,6 @@ export function esModuleToCommonJSModule(js: string): string {
       noImplicitUseStrict: true
     }
   }).outputText;
-  // Delete Object.defineProperty(exports, "__esModule", { value: true });
-  if (out.startsWith("Object.defineProperty(exports")) {
-    out = out.substr(out.indexOf("\n") + 1);
-  }
   return out;
 }
 
