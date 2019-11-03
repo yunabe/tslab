@@ -158,6 +158,7 @@ export function createConverter(options?: ConverterOptions): Converter {
     {
       module: ts.ModuleKind.ES2015,
       moduleResolution: ts.ModuleResolutionKind.NodeJs,
+      esModuleInterop: true,
       target: ts.ScriptTarget.ES2017,
       declaration: true,
       newLine: ts.NewLineKind.LineFeed,
@@ -757,6 +758,7 @@ export function esModuleToCommonJSModule(js: string): string {
     fileName: "custom.js",
     compilerOptions: {
       module: ts.ModuleKind.CommonJS,
+      esModuleInterop: true,
       target: ts.ScriptTarget.ES2017,
       newLine: ts.NewLineKind.LineFeed,
       // Remove 'use strict' from outputs.

@@ -112,18 +112,25 @@ describe("execute", () => {
     expect(ex.locals.alice).toEqual("Person(alice, 123)");
   });
 
-  it("import", async () => {
-    let ok = await ex.execute(`
-    import * as crypto from "crypto";
-    const message = "Hello TypeScript!";
-    const hash = crypto.createHash("sha256").update(message).digest("hex");
-    `);
-    expect(ok).toBe(true);
-    const hash = createHash("sha256")
-      .update("Hello TypeScript!")
-      .digest("hex");
-    expect(ex.locals.hash).toEqual(hash);
-  });
+  for (const star of [true, false]) {
+    it("import " + (star ? "star" : "default"), async () => {
+      const imprt = star
+        ? 'import * as crypto from "crypto";'
+        : 'import crypto from "crypto";';
+      let ok = await ex.execute(
+        [
+          imprt,
+          'const message = "Hello TypeScript!";',
+          'const hash = crypto.createHash("sha256").update(message).digest("hex");'
+        ].join("\n")
+      );
+      expect(ok).toBe(true);
+      const hash = createHash("sha256")
+        .update("Hello TypeScript!")
+        .digest("hex");
+      expect(ex.locals.hash).toEqual(hash);
+    });
+  }
 
   it("enum", async () => {
     expect(

@@ -15,9 +15,33 @@ function buildOutput(
   lines: string[],
   opts?: {
     noEsModule?: boolean;
+    importStar?: boolean;
+    importDefault?: boolean;
   }
 ): string {
   const out: string[] = [];
+  if (opts && opts.importDefault) {
+    out.push(
+      ...[
+        "var __importDefault = (this && this.__importDefault) || function (mod) {",
+        '    return (mod && mod.__esModule) ? mod : { "default": mod };',
+        "};"
+      ]
+    );
+  }
+  if (opts && opts.importStar) {
+    out.push(
+      ...[
+        "var __importStar = (this && this.__importStar) || function (mod) {",
+        "    if (mod && mod.__esModule) return mod;",
+        "    var result = {};",
+        "    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];",
+        '    result["default"] = mod;',
+        "    return result;",
+        "};"
+      ]
+    );
+  }
   if (!opts || !opts.noEsModule) {
     // cf. https://www.typescriptlang.org/docs/handbook/release-notes/typescript-2-7.html#support-for-import-d-from-cjs-from-commonjs-modules-with---esmoduleinteropa
     out.push('Object.defineProperty(exports, "__esModule", { value: true });');
@@ -362,7 +386,7 @@ enum Direction {
     ]);
   });
 
-  it("imported", () => {
+  it("import", () => {
     const out = conv.convert(
       "",
       `
@@ -374,14 +398,17 @@ let info: CpuInfo;
     );
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
-      buildOutput([
-        'const os = require("os");',
-        "exports.os = os;",
-        "const os2 = os;",
-        "exports.os2 = os2;",
-        "let info;",
-        "exports.info = info;"
-      ])
+      buildOutput(
+        [
+          'const os = __importStar(require("os"));',
+          "exports.os = os;",
+          "const os2 = os;",
+          "exports.os2 = os2;",
+          "let info;",
+          "exports.info = info;"
+        ],
+        { importStar: true }
+      )
     );
     // let info: CpuInfo; in src causes /// reference for some reason.
     // TODO: Understand why /// reference is in the output.
@@ -390,6 +417,36 @@ import * as os from "os";
 declare const os2: typeof os;
 import { CpuInfo, UserInfo } from "os";
 declare let info: CpuInfo;
+`);
+  });
+
+  it("import default", () => {
+    // Test esModuleInterop
+    const out = conv.convert(
+      "",
+      `import os from "os";
+let info: os.CpuInfo;
+import * as pathlib from "path";
+`
+    );
+    expect(out.diagnostics).toEqual([]);
+    expect(out.output).toEqual(
+      buildOutput(
+        [
+          'const os_1 = __importDefault(require("os"));',
+          "exports.os = os_1.default;",
+          "let info;",
+          "exports.info = info;",
+          'const pathlib = __importStar(require("path"));',
+          "exports.pathlib = pathlib;"
+        ],
+        { importDefault: true, importStar: true }
+      )
+    );
+    expect(out.declOutput).toEqual(`/// <reference types="node" />
+import os from "os";
+declare let info: os.CpuInfo;
+import * as pathlib from "path";
 `);
   });
 
@@ -940,12 +997,15 @@ declare let m: Map;
     );
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
-      buildOutput([
-        'const tslab = require("tslab");',
-        "exports.tslab = tslab;",
-        "let id = tslab.display.newId();",
-        "exports.id = id;"
-      ])
+      buildOutput(
+        [
+          'const tslab = __importStar(require("tslab"));',
+          "exports.tslab = tslab;",
+          "let id = tslab.display.newId();",
+          "exports.id = id;"
+        ],
+        { importStar: true }
+      )
     );
     expect(out.declOutput).toEqual(
       'import * as tslab from "tslab";\ndeclare let id: string;\n'
@@ -1177,15 +1237,18 @@ describe("esModuleToCommonJSModule", () => {
       "export {os, a, b, c}"
     ].join("\n");
     expect(converter.esModuleToCommonJSModule(src)).toEqual(
-      buildOutput([
-        'const os = require("os");',
-        "exports.os = os;",
-        'const vm_1 = require("vm");',
-        "exports.a = vm_1.a;",
-        "exports.b = vm_1.b;",
-        "let c = vm_1.a() + vm_1.b;",
-        "exports.c = c;"
-      ])
+      buildOutput(
+        [
+          'const os = __importStar(require("os"));',
+          "exports.os = os;",
+          'const vm_1 = require("vm");',
+          "exports.a = vm_1.a;",
+          "exports.b = vm_1.b;",
+          "let c = vm_1.a() + vm_1.b;",
+          "exports.c = c;"
+        ],
+        { importStar: true }
+      )
     );
   });
 });
