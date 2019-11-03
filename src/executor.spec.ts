@@ -142,6 +142,47 @@ describe("execute", () => {
     expect(ex.locals).toEqual({ x: 2, y: "Down", Direction: null });
   });
 
+  it("exports defineProperty", async () => {
+    // Check we can handle defineProperty properly.
+    // defineProperty is used by TypeScript compiler to define __esModule.
+    expect(
+      await ex.execute(
+        [
+          'Object.defineProperty(exports, "__esModule", {value: true});',
+          "let esm0 = exports.__esModule"
+        ].join("\n")
+      )
+    ).toBe(true);
+    expect(
+      await ex.execute(
+        [
+          'Object.defineProperty(exports, "__esModule", {value: false});',
+          "let esm1 = exports.__esModule"
+        ].join("\n")
+      )
+    ).toBe(true);
+
+    expect(ex.locals).toEqual({
+      esm0: true,
+      esm1: false
+    });
+  });
+
+  it("exports re-defineProperty", async () => {
+    // We can not redefine properties.
+    expect(
+      await ex.execute(
+        [
+          'Object.defineProperty(exports, "__esModule", {value: true});',
+          'Object.defineProperty(exports, "__esModule", {value: false});'
+        ].join("\n")
+      )
+    ).toBe(false);
+    expect(consoleErrorCalls).toEqual([
+      [new TypeError("Cannot redefine property: __esModule")]
+    ]);
+  });
+
   it("syntax error", async () => {
     expect(await ex.execute(`let x + y;`)).toBe(false);
     expect(consoleErrorCalls).toEqual([

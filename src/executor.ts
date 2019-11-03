@@ -63,6 +63,7 @@ export function createExecutor(
   console: ConsoleInterface
 ): Executor {
   const locals: { [key: string]: any } = {};
+  let exports: any = null;
   const req = createRequire(rootDir);
   const proxyHandler: ProxyHandler<{ [key: string]: any }> = {
     get: function(_target, prop) {
@@ -70,7 +71,7 @@ export function createExecutor(
         return req;
       }
       if (prop === "exports") {
-        return locals;
+        return exports;
       }
       if (locals.hasOwnProperty(prop)) {
         return locals[prop as any];
@@ -104,6 +105,16 @@ export function createExecutor(
     resetInterruptPromise();
   }
 
+  function createExports(locals: { [key: string]: any }) {
+    const exprts: { [key: string]: any } = {};
+    return new Proxy(exprts, {
+      set: (_target, prop, value) => {
+        locals[prop as any] = value;
+        return true;
+      }
+    });
+  }
+
   async function execute(src: string): Promise<boolean> {
     const converted = conv.convert(prevDecl, src);
     if (converted.diagnostics.length > 0) {
@@ -124,6 +135,7 @@ export function createExecutor(
     try {
       // Wrap code with (function(){...}) to improve the performance (#11)
       // Also, it's necessary to redeclare let and const in tslab.
+      exports = createExports(locals);
       const wrapped = "(function() { " + converted.output + "\n})()";
       vm.runInContext(wrapped, sandbox, {
         breakOnSigint: true

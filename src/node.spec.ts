@@ -1,6 +1,11 @@
+/**
+ * Checks the spec of libraries tslab depends on.
+ * @file
+ */
+
 import vm from "vm";
 
-describe("vmspec", () => {
+describe("vm", () => {
   it("basics", () => {
     const sandbox = {};
     vm.createContext(sandbox);
@@ -57,5 +62,48 @@ describe("vmspec", () => {
     }
     const diff = process.hrtime(start);
     expect(diff[0]).toEqual(0);
+  });
+});
+
+describe("Proxy", () => {
+  it("set", () => {
+    function objStr(obj: any): string {
+      if (obj === undefined) {
+        return "undefined";
+      }
+      if (obj === null) {
+        return "null";
+      }
+      switch (obj) {
+        case obj0:
+          return "obj0";
+        case obj1:
+          return "obj1";
+        case proxy0:
+          return "proxy0";
+        default:
+          return "unknown";
+      }
+    }
+    let messages: string[] = [];
+    let obj0: { [key: string]: any } = {};
+    let proxy0 = new Proxy(obj0, {
+      set: (target, prop, value, receiver) => {
+        messages.push(
+          `target = ${objStr(target)}, prop = ${JSON.stringify(
+            prop
+          )}, value = ${JSON.stringify(value)}, receiver = ${objStr(receiver)}`
+        );
+        return true;
+      }
+    });
+    let obj1: { [key: string]: any } = {};
+    Object.setPrototypeOf(obj1, proxy0);
+
+    obj1.abc = "hello";
+
+    expect(messages).toEqual([
+      'target = obj0, prop = "abc", value = "hello", receiver = obj1'
+    ]);
   });
 });
