@@ -148,23 +148,23 @@ describe("execute", () => {
     expect(
       await ex.execute(
         [
-          'Object.defineProperty(exports, "__esModule", {value: true});',
-          "let esm0 = exports.__esModule"
+          'Object.defineProperty(exports, "myprop", {value: true});',
+          "let prop0 = exports.myprop"
         ].join("\n")
       )
     ).toBe(true);
     expect(
       await ex.execute(
         [
-          'Object.defineProperty(exports, "__esModule", {value: false});',
-          "let esm1 = exports.__esModule"
+          'Object.defineProperty(exports, "myprop", {value: false});',
+          "let prop1 = exports.myprop"
         ].join("\n")
       )
     ).toBe(true);
 
     expect(ex.locals).toEqual({
-      esm0: true,
-      esm1: false
+      prop0: true,
+      prop1: false
     });
   });
 

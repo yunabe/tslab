@@ -63,6 +63,17 @@ describe("vm", () => {
     const diff = process.hrtime(start);
     expect(diff[0]).toEqual(0);
   });
+
+  it("lexical sandbox scope", () => {
+    const ctx0 = { x: 123 };
+    const ctx1 = { x: "abc" };
+    vm.createContext(ctx0);
+    vm.createContext(ctx1);
+    const fn0 = vm.runInContext(`(function(){return x})`, ctx0);
+    const fn1 = vm.runInContext(`(function(){return x})`, ctx1);
+    expect(fn0()).toEqual(123);
+    expect(fn1()).toEqual("abc");
+  });
 });
 
 describe("Proxy", () => {

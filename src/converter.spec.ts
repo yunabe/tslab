@@ -11,6 +11,10 @@ afterAll(() => {
   }
 });
 
+function buildOutput(lines: string[]): string {
+  return lines.join("\n") + "\n";
+}
+
 describe("converter valid", () => {
   it("variables", () => {
     const out = conv.convert(
@@ -25,19 +29,20 @@ let {a, b: c} = obj;
     );
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
-      `let x = 123;
-exports.x = x;
-const y = 'foo';
-exports.y = y;
-var z = true;
-exports.z = z;
-exports.x = x *= 2;
-let obj = { a: 10, b: 'hello' };
-exports.obj = obj;
-let { a, b: c } = obj;
-exports.a = a;
-exports.c = c;
-`
+      buildOutput([
+        "let x = 123;",
+        "exports.x = x;",
+        "const y = 'foo';",
+        "exports.y = y;",
+        "var z = true;",
+        "exports.z = z;",
+        "exports.x = x *= 2;",
+        "let obj = { a: 10, b: 'hello' };",
+        "exports.obj = obj;",
+        "let { a, b: c } = obj;",
+        "exports.a = a;",
+        "exports.c = c;"
+      ])
     );
     expect(out.declOutput).toEqual(
       `declare let x: number;
@@ -73,23 +78,24 @@ declare let a: number, c: string;
     );
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
-      `function sum(x, y) {
-    return x + y;
-}
-exports.sum = sum;
-function* xrange(n) {
-    for (let i = 0; i < n; i++) {
-        yield i;
-    }
-}
-exports.xrange = xrange;
-async function sleep(ms) {
-    return new Promise(resolve => {
-        setTimeout(resolve, ms);
-    });
-}
-exports.sleep = sleep;
-`
+      buildOutput([
+        "function sum(x, y) {",
+        "    return x + y;",
+        "}",
+        "exports.sum = sum;",
+        "function* xrange(n) {",
+        "    for (let i = 0; i < n; i++) {",
+        "        yield i;",
+        "    }",
+        "}",
+        "exports.xrange = xrange;",
+        "async function sleep(ms) {",
+        "    return new Promise(resolve => {",
+        "        setTimeout(resolve, ms);",
+        "    });",
+        "}",
+        "exports.sleep = sleep;"
+      ])
     );
     expect(out.declOutput).toEqual(
       `declare function sum(x: number, y: number): number;
@@ -108,13 +114,16 @@ declare function sleep(ms: number): Promise<never>;
       `
     );
     expect(out.diagnostics).toEqual([]);
-    expect(out.output).toEqual(`let [x, y] = [123, 'hello'];
-exports.x = x;
-exports.y = y;
-let { a, b: c } = { a: 123, b: \"hello\" };
-exports.a = a;
-exports.c = c;
-`);
+    expect(out.output).toEqual(
+      buildOutput([
+        "let [x, y] = [123, 'hello'];",
+        "exports.x = x;",
+        "exports.y = y;",
+        'let { a, b: c } = { a: 123, b: "hello" };',
+        "exports.a = a;",
+        "exports.c = c;"
+      ])
+    );
     expect(out.declOutput).toEqual(`declare let x: number, y: string;
 declare let a: number, c: string;
 `);
@@ -132,16 +141,15 @@ declare let a: number, c: string;
     );
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
-      [
+      buildOutput([
         "var _a, _b;",
         "let obj = null;",
         "exports.obj = obj;",
         "let a = (_b = (_a = obj) === null || _a === void 0 ? void 0 : _a.a) === null || _b === void 0 ? void 0 : _b.b;",
         "exports.a = a;",
         "let b = (a !== null && a !== void 0 ? a : obj);",
-        "exports.b = b;",
-        ""
-      ].join("\n")
+        "exports.b = b;"
+      ])
     );
   });
 
@@ -157,13 +165,14 @@ function increment() {
     );
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
-      `let counter = 0;
-exports.counter = counter;
-function increment() {
-    exports.counter = counter += 1;
-}
-exports.increment = increment;
-`
+      buildOutput([
+        "let counter = 0;",
+        "exports.counter = counter;",
+        "function increment() {",
+        "    exports.counter = counter += 1;",
+        "}",
+        "exports.increment = increment;"
+      ])
     );
     expect(out.declOutput).toEqual(`declare let counter: number;
 declare function increment(): void;
@@ -193,14 +202,17 @@ class SquareImpl implements Square {
 `
     );
     expect(out.diagnostics).toEqual([]);
-    expect(out.output).toEqual(`class SquareImpl {
-    constructor(color, sideLength) {
-        this.color = color;
-        this.sideLength = sideLength;
-    }
-}
-exports.SquareImpl = SquareImpl;
-`);
+    expect(out.output).toEqual(
+      buildOutput([
+        "class SquareImpl {",
+        "    constructor(color, sideLength) {",
+        "        this.color = color;",
+        "        this.sideLength = sideLength;",
+        "    }",
+        "}",
+        "exports.SquareImpl = SquareImpl;"
+      ])
+    );
     expect(out.declOutput).toEqual(`interface Shape {
     color: string;
 }
@@ -232,11 +244,14 @@ function identity<T>(arg: T): T {
 `
     );
     expect(out.diagnostics).toEqual([]);
-    expect(out.output).toEqual(`function identity(arg) {
-    return arg;
-}
-exports.identity = identity;
-`);
+    expect(out.output).toEqual(
+      buildOutput([
+        "function identity(arg) {",
+        "    return arg;",
+        "}",
+        "exports.identity = identity;"
+      ])
+    );
     expect(out.declOutput).toEqual(
       "declare function identity<T>(arg: T): T;\n"
     );
@@ -254,15 +269,18 @@ enum Direction {
 }`
     );
     expect(out.diagnostics).toEqual([]);
-    expect(out.output).toEqual(`var Direction;
-exports.Direction = Direction;
-(function (Direction) {
-    Direction[Direction["Up"] = 1] = "Up";
-    Direction[Direction["Down"] = 2] = "Down";
-    Direction[Direction["Left"] = 3] = "Left";
-    Direction[Direction["Right"] = 4] = "Right";
-})(Direction || (exports.Direction = Direction = {}));
-`);
+    expect(out.output).toEqual(
+      buildOutput([
+        "var Direction;",
+        "exports.Direction = Direction;",
+        "(function (Direction) {",
+        '    Direction[Direction["Up"] = 1] = "Up";',
+        '    Direction[Direction["Down"] = 2] = "Down";',
+        '    Direction[Direction["Left"] = 3] = "Left";',
+        '    Direction[Direction["Right"] = 4] = "Right";',
+        "})(Direction || (exports.Direction = Direction = {}));"
+      ])
+    );
     expect(out.declOutput).toEqual(`declare enum Direction {
     Up = 1,
     Down = 2,
@@ -276,10 +294,7 @@ exports.Direction = Direction;
     // TODO: Revisit how to handle this ambiguity.
     let out = conv.convert("", "{x: 10}");
     expect(out.diagnostics).toEqual([]);
-    expect(out.output).toEqual(`{
-    x: 10;
-}
-`);
+    expect(out.output).toEqual(buildOutput(["{", "    x: 10;", "}"]));
     expect(out.declOutput).toEqual("");
 
     out = conv.convert("", "{x: 3, y: 4}");
@@ -344,13 +359,16 @@ let info: CpuInfo;
 `
     );
     expect(out.diagnostics).toEqual([]);
-    expect(out.output).toEqual(`const os = require(\"os\");
-exports.os = os;
-const os2 = os;
-exports.os2 = os2;
-let info;
-exports.info = info;
-`);
+    expect(out.output).toEqual(
+      buildOutput([
+        'const os = require("os");',
+        "exports.os = os;",
+        "const os2 = os;",
+        "exports.os2 = os2;",
+        "let info;",
+        "exports.info = info;"
+      ])
+    );
     // let info: CpuInfo; in src causes /// reference for some reason.
     // TODO: Understand why /// reference is in the output.
     expect(out.declOutput).toEqual(`/// <reference types="node" />
@@ -396,12 +414,15 @@ declare let info: import(\"os\").UserInfo<string>;
       `
     );
     expect(out.diagnostics).toEqual([]);
-    expect(out.output).toEqual(`let obj = {
-    abc: 123,
-    xyz: \"hello\"
-};
-exports.obj = obj;
-`);
+    expect(out.output).toEqual(
+      buildOutput([
+        "let obj = {",
+        "    abc: 123,",
+        '    xyz: "hello"',
+        "};",
+        "exports.obj = obj;"
+      ])
+    );
     expect(out.declOutput).toEqual(`interface MyInterface {
     abc: number;
 }
@@ -579,12 +600,11 @@ class ShapeImpl implements Shape {}
     expect(out.diagnostics).toEqual([]);
     expect(out.lastExpressionVar).toBe("tsLastExpr");
     expect(out.output).toEqual(
-      [
+      buildOutput([
         "let x = 3 + 4;",
         "exports.x = x;",
-        "exports.tsLastExpr = x * x;",
-        ""
-      ].join("\n")
+        "exports.tsLastExpr = x * x;"
+      ])
     );
 
     out = conv.convert("", "let x = 3 + 4\n;let y = x * x;");
@@ -602,14 +622,13 @@ class ShapeImpl implements Shape {}
     expect(out.diagnostics).toEqual([]);
     expect(out.lastExpressionVar).toEqual("tsLastExpr1");
     expect(out.output).toEqual(
-      [
+      buildOutput([
         "let tsLastExpr = 10;",
         "exports.tsLastExpr = tsLastExpr;",
         "const tsLastExpr0 = 30;",
         "exports.tsLastExpr0 = tsLastExpr0;",
-        "exports.tsLastExpr1 = tsLastExpr + tsLastExpr0;",
-        ""
-      ].join("\n")
+        "exports.tsLastExpr1 = tsLastExpr + tsLastExpr0;"
+      ])
     );
   });
 });
@@ -621,7 +640,9 @@ describe("with prev", () => {
     expect(out0.declOutput).toEqual("declare let x: number;\n");
     const out1 = conv.convert(out0.declOutput, "let y = x * x;");
     expect(out1.diagnostics).toEqual([]);
-    expect(out1.output).toEqual("let y = x * x;\nexports.y = y;\n");
+    expect(out1.output).toEqual(
+      buildOutput(["let y = x * x;", "exports.y = y;"])
+    );
     // TODO: Include let x; into out1.declOutput.
     expect(out1.declOutput).toEqual(
       "declare let y: number;\ndeclare let x: number;\n"
@@ -631,7 +652,9 @@ describe("with prev", () => {
   it("assign to prev", () => {
     const out = conv.convert("declare let x: number\n", "x = x * x;\n");
     expect(out.diagnostics).toEqual([]);
-    expect(out.output).toEqual("exports.tsLastExpr = x = x * x;\n");
+    expect(out.output).toEqual(
+      buildOutput(["exports.tsLastExpr = x = x * x;"])
+    );
     expect(out.declOutput).toEqual("declare let x: number;\n");
   });
 
@@ -678,12 +701,15 @@ describe("with prev", () => {
       "class itype { y: string; }\nlet atype = 123;"
     );
     expect(out.diagnostics).toEqual([]);
-    expect(out.output).toEqual(`class itype {
-}
-exports.itype = itype;
-let atype = 123;
-exports.atype = atype;
-`);
+    expect(out.output).toEqual(
+      buildOutput([
+        "class itype {",
+        "}",
+        "exports.itype = itype;",
+        "let atype = 123;",
+        "exports.atype = atype;"
+      ])
+    );
     expect(out.declOutput).toEqual(`declare class itype {
     y: string;
 }
@@ -695,7 +721,7 @@ type atype = itype | number;
   it("overwrite prev class with value", () => {
     const out = conv.convert("class A {}\nclass B {}\n", "let A = 10;");
     expect(out.diagnostics).toEqual([]);
-    expect(out.output).toEqual("let A = 10;\nexports.A = A;\n");
+    expect(out.output).toEqual(buildOutput(["let A = 10;", "exports.A = A;"]));
     expect(out.declOutput).toEqual("declare let A: number;\nclass B {\n}\n");
   });
 
@@ -728,7 +754,7 @@ let A: any;
       "let A = 10;"
     );
     expect(out.diagnostics).toEqual([]);
-    expect(out.output).toEqual("let A = 10;\nexports.A = A;\n");
+    expect(out.output).toEqual(buildOutput(["let A = 10;", "exports.A = A;"]));
     expect(out.declOutput).toEqual(
       "declare let A: number;\ndeclare enum B {\n    L = 2\n}\n"
     );
@@ -808,7 +834,9 @@ import { CpuInfo } from "os";
   it("overwrite imported namespace with value", () => {
     const out = conv.convert('import * as os from "os";', "let os = 10;");
     expect(out.diagnostics).toEqual([]);
-    expect(out.output).toEqual("let os = 10;\nexports.os = os;\n");
+    expect(out.output).toEqual(
+      buildOutput(["let os = 10;", "exports.os = os;"])
+    );
     expect(out.declOutput).toEqual("declare let os: number;\n");
   });
 
@@ -875,16 +903,17 @@ declare let m: Map;
     let out = conv.convert("", 'import {join} from "path";');
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
-      [
+      buildOutput([
         'const path_1 = require("path");',
-        "exports.join = path_1.join;",
-        ""
-      ].join("\n")
+        "exports.join = path_1.join;"
+      ])
     );
     out = conv.convert(out.declOutput, 'join("a", "b");');
     expect(out.diagnostics).toEqual([]);
     expect(out.declOutput).toEqual('import { join } from "path";\n');
-    expect(out.output).toEqual('exports.tsLastExpr = join("a", "b");\n');
+    expect(out.output).toEqual(
+      buildOutput(['exports.tsLastExpr = join("a", "b");'])
+    );
   });
 
   it("package tslab", () => {
@@ -897,13 +926,12 @@ declare let m: Map;
     );
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
-      [
+      buildOutput([
         'const tslab = require("tslab");',
         "exports.tslab = tslab;",
         "let id = tslab.display.newId();",
-        "exports.id = id;",
-        ""
-      ].join("\n")
+        "exports.id = id;"
+      ])
     );
     expect(out.declOutput).toEqual(
       'import * as tslab from "tslab";\ndeclare let id: string;\n'
@@ -1116,15 +1144,14 @@ describe("esModuleToCommonJSModule", () => {
       "var z = x + y;",
       "export {x, y, z}"
     ].join("\n");
-    const want = [
+    const want = buildOutput([
       "let x = 10;",
       "exports.x = x;",
       "const y = 20;",
       "exports.y = y;",
       "var z = x + y;",
-      "exports.z = z;",
-      ""
-    ].join("\n");
+      "exports.z = z;"
+    ]);
     expect(converter.esModuleToCommonJSModule(src)).toEqual(want);
   });
 
@@ -1136,16 +1163,15 @@ describe("esModuleToCommonJSModule", () => {
       "export {os, a, b, c}"
     ].join("\n");
     expect(converter.esModuleToCommonJSModule(src)).toEqual(
-      [
+      buildOutput([
         'const os = require("os");',
         "exports.os = os;",
         'const vm_1 = require("vm");',
         "exports.a = vm_1.a;",
         "exports.b = vm_1.b;",
         "let c = vm_1.a() + vm_1.b;",
-        "exports.c = c;",
-        ""
-      ].join("\n")
+        "exports.c = c;"
+      ])
     );
   });
 });
