@@ -71,6 +71,13 @@ export function startKernel({
   process.on("SIGINT", () => {
     executor.interrupt();
   });
+  // TODO: Test these handlers.
+  process.on("uncaughtException", err => {
+    console.error("UncaughtException:", err);
+  });
+  process.on("unhandledRejection", reason => {
+    console.error("UnhandledPromiseRejection:", reason);
+  });
   server.init();
 }
 
