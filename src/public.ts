@@ -49,6 +49,14 @@ export namespace display {
     if (!id) {
       id = newId();
     }
+    // TODO: Add a reference of this spec.
+    // TODO: Test this.
+    if (b instanceof Uint8Array) {
+      if (!(b instanceof Buffer)) {
+        b = Buffer.from(b);
+      }
+      b = (b as Buffer).toString("base64");
+    }
     jupyter.lastWriteDisplayData(
       {
         data: {
