@@ -275,6 +275,24 @@ describe("execute", () => {
     expect(consoleErrorCalls).toEqual([["Good Bye async"]]);
   });
 
+  it("top-level await", async () => {
+    let promise = ex.execute(`
+    async function asyncHello() {
+      return "Hello, World!";
+    }
+    let msg = await asyncHello();`);
+    expect(consoleLogCalls).toEqual([]);
+    expect(consoleErrorCalls).toEqual([
+      [
+        "%d:%d - %s",
+        5,
+        15,
+        "'await' expression is only allowed within an async function."
+      ]
+    ]);
+    expect(await promise).toBe(false);
+  });
+
   it("package tslab", async () => {
     expect(
       await ex.execute(`

@@ -660,6 +660,51 @@ class ShapeImpl implements Shape {}
     ]);
   });
 
+  it("top-level await", () => {
+    const out = conv.convert(
+      "",
+      `async function asyncHello() {
+        return "Hello, World!";
+      }
+      let msg = await asyncHello();`
+    );
+    expect(out.diagnostics).toEqual([
+      {
+        category: 1,
+        code: 1308,
+        end: {
+          character: 21,
+          line: 3,
+          offset: 91
+        },
+        messageText:
+          "'await' expression is only allowed within an async function.",
+        start: {
+          character: 16,
+          line: 3,
+          offset: 86
+        }
+      }
+    ]);
+    expect(out.output).toEqual(
+      buildOutput([
+        "async function asyncHello() {",
+        '    return "Hello, World!";',
+        "}",
+        "exports.asyncHello = asyncHello;",
+        "let msg = await asyncHello();",
+        "exports.msg = msg;"
+      ])
+    );
+    expect(out.declOutput).toEqual(
+      [
+        "declare function asyncHello(): Promise<string>;",
+        "declare let msg: string;",
+        ""
+      ].join("\n")
+    );
+  });
+
   it("require is reserved", () => {
     // TODO: Reenable checkCollisionWithRequireExportsInGeneratedCode.
     const out = conv.convert("", "let require = 123;");
