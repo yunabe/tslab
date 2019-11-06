@@ -204,20 +204,9 @@ describe("execute", () => {
     expect(consoleErrorCalls).toEqual([[new Error("my error")]]);
   });
 
-  it("promise resolved", async () => {
-    let ok = await ex.execute(`
-    new Promise(resolve => {
-      resolve('Hello Promise');
-    });
-    `);
-    expect(ok).toBe(true);
-    expect(consoleLogCalls).toEqual([["Hello Promise"]]);
-    expect(consoleErrorCalls).toEqual([]);
-  });
-
-  it("promise resolved", async () => {
+  it("await promise resolved", async () => {
     let promise = ex.execute(`
-    new Promise(resolve => {
+    await new Promise(resolve => {
       resolve('Hello Promise');
     });
     `);
@@ -230,9 +219,9 @@ describe("execute", () => {
     expect(consoleErrorCalls).toEqual([]);
   });
 
-  it("promise rejected", async () => {
+  it("await promise rejected", async () => {
     let promise = ex.execute(`
-    new Promise((_, reject) => {
+    await new Promise((_, reject) => {
       reject('Good Bye Promise');
     });
     `);
@@ -245,11 +234,12 @@ describe("execute", () => {
     expect(consoleErrorCalls).toEqual([["Good Bye Promise"]]);
   });
 
-  it("async resolved", async () => {
+  it("await async resolved", async () => {
     let promise = ex.execute(`
-    (async (msg)=>{
+    async function fn(msg: string) {
       return 'Hello ' + msg;
-    })('async');
+    }
+    await fn('async');
     `);
     // The promise is not resolved yet.
     expect(consoleLogCalls).toEqual([]);
@@ -260,11 +250,12 @@ describe("execute", () => {
     expect(consoleErrorCalls).toEqual([]);
   });
 
-  it("async rejected", async () => {
+  it("await async rejected", async () => {
     let promise = ex.execute(`
-    (async (msg)=>{
+    async function fn(msg: string) {
       throw 'Good Bye async';
-    })();
+    }
+    await fn('async');
     `);
     // The promise is not resolved yet.
     expect(consoleLogCalls).toEqual([]);
@@ -282,15 +273,29 @@ describe("execute", () => {
     }
     let msg = await asyncHello();`);
     expect(consoleLogCalls).toEqual([]);
-    expect(consoleErrorCalls).toEqual([
-      [
-        "%d:%d - %s",
-        5,
-        15,
-        "'await' expression is only allowed within an async function."
-      ]
-    ]);
-    expect(await promise).toBe(false);
+    expect(consoleErrorCalls).toEqual([]);
+    expect(await promise).toBe(true);
+    expect(ex.locals.msg).toEqual("Hello, World!");
+  });
+
+  it("promise rejected immediately", async () => {
+    let promise = ex.execute(`
+    new Promise(() => {
+      throw new Error('rejected immediately');
+    });
+    `);
+    expect(await promise).toBe(true);
+    expect(consoleErrorCalls).toEqual([]);
+    expect(consoleLogCalls.length).toEqual(1);
+    expect(consoleLogCalls[0].length).toEqual(1);
+    // If we don't catch this, another test with Promise fails for some reason.
+    // TODO: Investigate what happens internally.
+    try {
+      await consoleLogCalls[0][0];
+      fail("await above must fail.");
+    } catch (e) {
+      expect(e).toEqual(new Error("rejected immediately"));
+    }
   });
 
   it("package tslab", async () => {
@@ -343,7 +348,8 @@ describe("interrupt", () => {
 
   it("interrupt", async () => {
     // Confirm it does not cause any problem like "UnhandledPromiseRejection".
-    let src = "new Promise(resolve => setTimeout(() => resolve('done'), 10));";
+    let src =
+      "await new Promise(resolve => setTimeout(() => resolve('done'), 10));";
     let promise = ex.execute(src);
     expect(await promise).toBe(true);
     expect(consoleLogCalls).toEqual([["done"]]);

@@ -12,6 +12,10 @@ export interface ConvertResult {
    * This is necessary to fix #11
    */
   lastExpressionVar?: string;
+  /**
+   * If true, the input and the output have top-level await statements.
+   */
+  hasToplevelAwait?: boolean;
 }
 
 export interface DiagnosticPos {
@@ -242,13 +246,16 @@ export function createConverter(options?: ConverterOptions): Converter {
       })
     );
     declOutput += remainingDecls(program.getTypeChecker(), srcFile, declsFile);
+    const converted = convertDiagnostics(
+      srcFile,
+      createOffsetToDiagnosticPos(srcFile, srcPrefix),
+      ts.getPreEmitDiagnostics(program, srcFile)
+    );
     return {
       output: esModuleToCommonJSModule(output),
       declOutput,
-      diagnostics: convertDiagnostics(
-        createOffsetToDiagnosticPos(srcFile, srcPrefix),
-        ts.getPreEmitDiagnostics(program, srcFile)
-      ),
+      diagnostics: converted.diagnostics,
+      hasToplevelAwait: converted.hasToplevelAwait,
       lastExpressionVar
     };
   }
@@ -578,19 +585,65 @@ export function createConverter(options?: ConverterOptions): Converter {
     }
   }
 
+  /**
+   * Check if `d` is a diagnostic from a top-level await.
+   * This is used to allow top-level awaits (#16).
+   */
+  function isTopLevelAwaitDiagnostic(
+    srcFile: ts.SourceFile,
+    d: ts.Diagnostic
+  ): boolean {
+    if (d.code !== 1308) {
+      // https://github.com/microsoft/TypeScript/search?q=await_expression_is_only_allowed_within_an_async_function_1308
+      return false;
+    }
+    const await: ts.Node = ts.tslab.findPrecedingToken(
+      d.start + d.length,
+      srcFile
+    );
+    if (await.kind !== ts.SyntaxKind.AwaitKeyword) {
+      // This must not happen, though.
+      return false;
+    }
+    let isTop = true;
+    let parent = await.parent;
+    while (isTop && parent && parent !== srcFile) {
+      switch (parent.kind) {
+        case ts.SyntaxKind.ArrowFunction:
+        case ts.SyntaxKind.FunctionExpression:
+        case ts.SyntaxKind.FunctionDeclaration:
+        case ts.SyntaxKind.ClassDeclaration:
+        case ts.SyntaxKind.ModuleDeclaration:
+          // await is not top-level. This is invalid in tslab.
+          return false;
+      }
+      parent = parent.parent;
+    }
+    return true;
+  }
+
   function convertDiagnostics(
+    srcFile: ts.SourceFile,
     toDiagnosticPos: (number) => DiagnosticPos,
     input: readonly ts.Diagnostic[]
-  ): Diagnostic[] {
-    const ret: Diagnostic[] = [];
+  ): {
+    diagnostics: Diagnostic[];
+    hasToplevelAwait: boolean;
+  } {
+    let hasToplevelAwait = false;
+    const diagnostics: Diagnostic[] = [];
     for (const d of input) {
       if (!d.file || d.file.fileName !== srcFilename) {
+        continue;
+      }
+      if (isTopLevelAwaitDiagnostic(srcFile, d)) {
+        hasToplevelAwait = true;
         continue;
       }
       const start = toDiagnosticPos(d.start),
         end = toDiagnosticPos(d.start + d.length);
       if (typeof d.messageText === "string") {
-        ret.push({
+        diagnostics.push({
           start,
           end,
           messageText: d.messageText.toString(),
@@ -599,9 +652,9 @@ export function createConverter(options?: ConverterOptions): Converter {
         });
         continue;
       }
-      traverseDiagnosticMessageChain(start, end, d.messageText, ret);
+      traverseDiagnosticMessageChain(start, end, d.messageText, diagnostics);
     }
-    return ret;
+    return { diagnostics, hasToplevelAwait };
   }
 
   function traverseDiagnosticMessageChain(

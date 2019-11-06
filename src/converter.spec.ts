@@ -668,24 +668,7 @@ class ShapeImpl implements Shape {}
       }
       let msg = await asyncHello();`
     );
-    expect(out.diagnostics).toEqual([
-      {
-        category: 1,
-        code: 1308,
-        end: {
-          character: 21,
-          line: 3,
-          offset: 91
-        },
-        messageText:
-          "'await' expression is only allowed within an async function.",
-        start: {
-          character: 16,
-          line: 3,
-          offset: 86
-        }
-      }
-    ]);
+    expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
       buildOutput([
         "async function asyncHello() {",
@@ -746,6 +729,49 @@ class ShapeImpl implements Shape {}
         "exports.tsLastExpr1 = tsLastExpr + tsLastExpr0;"
       ])
     );
+  });
+
+  describe("non-top-level await", () => {
+    const tests = [
+      {
+        name: "function expression",
+        src: "let f = function() { return await asyncHello(); }"
+      },
+      {
+        name: "arrow function",
+        src: "let f = () => { return await asyncHello(); }"
+      },
+      {
+        name: "arrow function w/o block",
+        src: "let f = () => await asyncHello()"
+      },
+      {
+        name: "function declaration",
+        src: "function f() { return await asyncHello(); }"
+      },
+      {
+        name: "class declaration",
+        src: "class Cls { f() { return await asyncHello(); } }"
+      },
+      {
+        name: "namespace",
+        src: "namespace ns { await asyncHello(); }"
+      }
+    ];
+    for (const tt of tests) {
+      it(tt.name, () => {
+        const out = conv.convert(
+          "",
+          `async function asyncHello() {
+          return 'Hello, async!';
+        }
+        ` + tt.src
+        );
+        expect(out.diagnostics.map(e => e.messageText)).toEqual([
+          "'await' expression is only allowed within an async function."
+        ]);
+      });
+    }
   });
 });
 

@@ -81,10 +81,6 @@ export function createExecutor(
   };
   const sandbox = new Proxy(locals, proxyHandler);
   vm.createContext(sandbox);
-  // Get Promise of async functions, which is different from Promise
-  // in sandbox for some reason (See 'async and Promise' in vm.spec.ts).
-  const asyncPromise = vm.runInContext("(async () => {})()", sandbox)
-    .constructor;
 
   let prevDecl = "";
 
@@ -132,17 +128,32 @@ export function createExecutor(
       prevDecl = converted.declOutput || "";
       return true;
     }
+    let promise: Promise<any> = null;
     try {
       // Wrap code with (function(){...}) to improve the performance (#11)
       // Also, it's necessary to redeclare let and const in tslab.
       exports = createExports(locals);
-      const wrapped = "(function() { " + converted.output + "\n})()";
-      vm.runInContext(wrapped, sandbox, {
+      const prefix = converted.hasToplevelAwait
+        ? "(async function() { "
+        : "(function() { ";
+      const wrapped = prefix + converted.output + "\n})()";
+      const ret = vm.runInContext(wrapped, sandbox, {
         breakOnSigint: true
       });
+      if (converted.hasToplevelAwait) {
+        promise = ret;
+      }
     } catch (e) {
       console.error(e);
       return false;
+    }
+    if (promise) {
+      try {
+        await Promise.race([promise, interruptPromise]);
+      } catch (e) {
+        console.error(e);
+        return false;
+      }
     }
     prevDecl = converted.declOutput || "";
     if (
@@ -151,15 +162,6 @@ export function createExecutor(
     ) {
       let ret: any = locals[converted.lastExpressionVar];
       delete locals[converted.lastExpressionVar];
-      if (ret instanceof Promise || ret instanceof asyncPromise) {
-        try {
-          console.log(await Promise.race([ret, interruptPromise]));
-        } catch (e) {
-          console.error(e);
-          return false;
-        }
-        return true;
-      }
       console.log(ret);
     }
     return true;

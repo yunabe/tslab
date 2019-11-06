@@ -10,7 +10,7 @@ Also, `tslab` has `@types/node` as `dependencies`, not `devDependencies`. This i
 
 ## Code executor
 
-### runInContext vs. runInThisContext\*\*
+### runInContext vs. runInThisContext
 
 tslab uses runInContext, not runInThisContext, internally to share variables amoung cells as global variables.
 
