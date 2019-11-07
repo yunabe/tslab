@@ -266,7 +266,7 @@ describe("execute", () => {
     expect(consoleErrorCalls).toEqual([["Good Bye async"]]);
   });
 
-  it("top-level await", async () => {
+  it("assign top-level await", async () => {
     let promise = ex.execute(`
     async function asyncHello() {
       return "Hello, World!";

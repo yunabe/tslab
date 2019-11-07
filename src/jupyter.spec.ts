@@ -42,7 +42,7 @@ describe("JupyterHandlerImpl", () => {
       language_info: {
         file_extension: ".ts",
         mimetype: "",
-        name: "javascript",
+        name: "typescript",
         version: ""
       },
       protocol_version: "5.3"

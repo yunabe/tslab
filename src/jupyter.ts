@@ -453,9 +453,7 @@ export class JupyterHandlerImpl implements JupyterHandler {
   }
 
   handleKernel(): KernelInfoReply {
-    // "typescript" does not work well because CodeMirror does not have 'typscript' mode?
-    // TODO: Figure out the correct way to specify typescript.
-    const lang = "javascript";
+    const lang = this.isJs ? "javascript" : "typescript";
     let implementation = "tslab";
     let extension = ".ts";
     let banner = "TypeScript";
