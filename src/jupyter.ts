@@ -2,6 +2,8 @@ import { createHmac, randomBytes } from "crypto";
 import fs from "fs";
 import { TextDecoder } from "util";
 
+// This zmq must be used only for types.
+// zeromq runtime must be delay loaded in init().
 import * as zmq from "zeromq";
 
 import { Executor } from "./executor";
@@ -751,7 +753,10 @@ export class ZmqServer {
     );
     this.connInfo = cinfo;
 
-    // http://zeromq.github.io/zeromq.js/
+    // https://zeromq.github.io/zeromq.js/index.html
+    // zeromq runtime must be delay loaded so that mutiple instances of
+    // this module can be loaded (e.g. global and local ones).
+    const zmq = await import("zeromq");
     this.iopub = new zmq.Publisher();
     this.shell = new zmq.Router();
     this.control = new zmq.Router();

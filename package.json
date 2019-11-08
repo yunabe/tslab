@@ -27,7 +27,7 @@
     "build": "tsc",
     "prepublishOnly": "tsc",
     "jest": "jest --verbose",
-    "test": "tsc && jest --verbose"
+    "test": "tsc && jest --verbose --runInBand"
   },
   "devDependencies": {
     "@types/glob": "^7.1.1",
