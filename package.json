@@ -20,7 +20,7 @@
     "@types/node": "^12.12.6",
     "@yunabe/typescript-for-tslab": "^3.7.2-tslab.1",
     "commander": "^4.0.0",
-    "zeromq": "^5.1.1"
+    "zeromq": "^6.0.0-beta.2"
   },
   "scripts": {
     "//": "experimental-vm-modules enables https://nodejs.org/docs/latest-v12.x/api/vm.html#vm_class_vm_sourcetextmodule",

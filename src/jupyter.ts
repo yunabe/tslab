@@ -2,7 +2,7 @@ import { createHmac, randomBytes } from "crypto";
 import fs from "fs";
 import { TextDecoder } from "util";
 
-import zmq from "zeromq";
+import * as zmq from "zeromq";
 
 import { Executor } from "./executor";
 import { printQuickInfo } from "./inspect";
@@ -618,21 +618,21 @@ export class ZmqServer {
   connInfo: ConnectionInfo;
 
   // ZMQ sockets
-  iopub: any;
-  shell: any;
-  control: any;
-  stdin: any;
-  hb: any;
+  iopub: zmq.Publisher;
+  shell: zmq.Router;
+  control: zmq.Router;
+  stdin: zmq.Router;
+  hb: zmq.Reply;
 
   constructor(handler: JupyterHandler, configPath: string) {
     this.handler = handler;
     this.configPath = configPath;
   }
 
-  private bindSocket(sock, port: number): void {
+  private async bindSocket(sock: zmq.Socket, port: number): Promise<void> {
     const conn = this.connInfo;
     const addr = `${conn.transport}://${conn.ip}:${port}`;
-    sock.bindSync(addr);
+    await sock.bind(addr);
   }
 
   publishStatus(status: string, parent: ZmqMessage) {
@@ -644,7 +644,7 @@ export class ZmqServer {
     reply.signAndSend(this.connInfo.key, this.iopub);
   }
 
-  async handleShellMessage(sock, ...args: Buffer[]) {
+  async handleShellMessage(sock: zmq.Router, ...args: Buffer[]) {
     const msg = ZmqMessage.fromRaw(this.connInfo.key, args);
     let terminated = false;
     this.publishStatus("busy", msg);
@@ -745,34 +745,45 @@ export class ZmqServer {
     reply.signAndSend(this.connInfo.key, sock);
   }
 
-  init(): void {
+  async init(): Promise<void> {
     const cinfo: ConnectionInfo = JSON.parse(
       fs.readFileSync(this.configPath, "utf-8")
     );
     this.connInfo = cinfo;
 
     // http://zeromq.github.io/zeromq.js/
-    this.iopub = zmq.socket("pub");
-    this.shell = zmq.socket("router");
-    this.shell.on("message", this.handleShellMessage.bind(this, this.shell));
-    this.control = zmq.socket("router");
-    this.control.on(
-      "message",
-      this.handleShellMessage.bind(this, this.control)
-    );
-    this.stdin = zmq.socket("router");
-    this.hb = zmq.socket("rep");
-    this.hb.on("message", (...args) => {
-      // hb is used by `jupyter console`.
-      // TODO: Test this behavior by integration tests.
-      this.hb.send(args);
-    });
+    this.iopub = new zmq.Publisher();
+    this.shell = new zmq.Router();
+    this.control = new zmq.Router();
+    this.stdin = new zmq.Router();
+    this.hb = new zmq.Reply();
 
-    this.bindSocket(this.iopub, cinfo.iopub_port);
-    this.bindSocket(this.shell, cinfo.shell_port);
-    this.bindSocket(this.control, cinfo.control_port);
-    this.bindSocket(this.stdin, cinfo.stdin_port);
-    this.bindSocket(this.hb, cinfo.hb_port);
+    (async () => {
+      // These for-loops exist when sockets are closed.
+      for await (const msgs of this.shell) {
+        this.handleShellMessage(this.shell, ...msgs);
+      }
+    })();
+    (async () => {
+      for await (const msgs of this.control) {
+        this.handleShellMessage(this.control, ...msgs);
+      }
+    })();
+    (async () => {
+      for await (const msgs of this.hb) {
+        // hb is only used by `jupyter console`.
+        // TODO: Test this behavior by integration tests.
+        this.hb.send(msgs);
+      }
+    })();
+
+    await Promise.all([
+      this.bindSocket(this.iopub, cinfo.iopub_port),
+      this.bindSocket(this.shell, cinfo.shell_port),
+      this.bindSocket(this.control, cinfo.control_port),
+      this.bindSocket(this.stdin, cinfo.stdin_port),
+      this.bindSocket(this.hb, cinfo.hb_port)
+    ]);
   }
 
   /** Release internal resources to terminate the process gracefully. */

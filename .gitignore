@@ -66,3 +66,7 @@ dist/
 # Python
 .pyc
 .ipynb_checkpoints/
+
+# Ignore lockfiles becuase this library is designed to be installed with npm.
+package-lock.json
+yarn.lock
