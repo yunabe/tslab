@@ -86,13 +86,24 @@ export function main() {
   program
     .command("install")
     .description("Install tslab to Jupyter")
-    .option("--python [python]", "Which python to install tslab", "python3")
+    .option(
+      "--python [python]",
+      "Which python to install tslab kernel",
+      "python3"
+    )
+    .option("--binary [binary]", "The command to start tslab", "tslab")
     .option(
       "--user",
-      "Install to the per-user kernels registry. Default if not root."
+      "Install to the per-user kernels registry. Default if not root"
     )
-    .option("--sys-prefix", "Which python to install tslab")
-    .option("--prefix [prefix]", "Which python to install tslab")
+    .option(
+      "--sys-prefix",
+      "Install to sys.prefix (e.g. a virtualenv or conda env)"
+    )
+    .option(
+      "--prefix [prefix]",
+      "Kernelspec will be installed in {PREFIX}/share/jupyter/kernels/"
+    )
     .action(function() {
       if (arguments.length != 1) {
         console.error(
@@ -103,8 +114,9 @@ export function main() {
         );
         process.exit(1);
       }
-      let { python, user, sysPrefix, prefix } = arguments[0];
+      let { binary, python, user, sysPrefix, prefix } = arguments[0];
       const args = [path.join(path.dirname(__dirname), "python", "install.py")];
+      args.push(`--tslab=${binary}`);
       if (user) {
         args.push("--user");
       }

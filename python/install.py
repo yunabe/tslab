@@ -13,9 +13,7 @@ except:
     sys.exit(1)
 
 
-def create_kernel_jaon(is_js):
-    bin = os.path.abspath(os.path.join(
-        os.path.dirname(__file__), '..', 'bin', 'tslab'))
+def create_kernel_json(is_js, bin):
     argv = [bin, 'kernel', '--config-path={connection_file}']
     if is_js:
         argv.append('--js')
@@ -26,12 +24,11 @@ def create_kernel_jaon(is_js):
     }
 
 
-def install_kernel_spec(is_js, user, prefix):
-    create_kernel_jaon(True)
+def install_kernel_spec(is_js, bin, user, prefix):
     with TemporaryDirectory() as td:
         os.chmod(td, 0o755)  # Starts off as 700, not user readable
         with open(os.path.join(td, 'kernel.json'), 'w') as f:
-            json.dump(create_kernel_jaon(is_js), f, sort_keys=True)
+            json.dump(create_kernel_json(is_js, bin), f, sort_keys=True)
         # TODO: Copy any resources
         print('Installing {} kernel spec'.format(
             'JavaScript' if is_js else 'TypeScript'))
@@ -50,6 +47,10 @@ def _is_root():
 
 def main(argv=None):
     ap = argparse.ArgumentParser()
+    ap.add_argument(
+        '--tslab',
+        help='The command to start tslab kernel',
+        default='tslab')
     ap.add_argument(
         '--user',
         action='store_true',
@@ -70,7 +71,7 @@ def main(argv=None):
         args.user = True
 
     for is_js in [False, True]:
-        install_kernel_spec(is_js, args.user, args.prefix)
+        install_kernel_spec(is_js, args.tslab, args.user, args.prefix)
 
 
 if __name__ == '__main__':
