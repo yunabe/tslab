@@ -406,15 +406,7 @@ class ZmqMessage {
       hash.update(b);
     }
     heads.push(hash.digest("hex"));
-    const raw = heads.concat(bodies);
-    sock.send(raw);
-
-    // raw[0] = typeof raw[0];
-    fs.writeFileSync(
-      "/tmp/log.txt",
-      JSON.stringify(raw) + "\n#############################\n",
-      { flag: "a" }
-    );
+    sock.send(heads.concat(bodies));
   }
 }
 
