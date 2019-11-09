@@ -82,6 +82,14 @@ export function startKernel({
 }
 
 export function main() {
+  let defaultPy = "python3";
+  let defaultBinary = "tslab";
+  if (process.platform === "win32") {
+    // Windows does not have a convention to install Python3.x as python3.
+    defaultPy = "python";
+    // In Windows, we need to use a batch file created by npm install.
+    defaultBinary = "tslab.cmd";
+  }
   program.version("tslab " + require("../package.json").version);
   program
     .command("install")
@@ -89,9 +97,9 @@ export function main() {
     .option(
       "--python [python]",
       "Which python to install tslab kernel",
-      "python3"
+      defaultPy
     )
-    .option("--binary [binary]", "The command to start tslab", "tslab")
+    .option("--binary [binary]", "The command to start tslab", defaultBinary)
     .option(
       "--user",
       "Install to the per-user kernels registry. Default if not root"

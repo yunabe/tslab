@@ -32,8 +32,8 @@ tslab install --version
 tslab install [--python=python3]
 ```
 
-By default, tslab uses Python3 to install TypeScript and JavaScript kernel.
-To use other versions of Python, set `--python` flag.
+By default, tslab is registered with `python3` in unix-like system and `python` in Windows.
+If Jupyter is installed with a different Python in your system, please specify the python command with `---python` flag.
 
 ## Read more
 
