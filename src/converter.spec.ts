@@ -1061,10 +1061,9 @@ declare let m: Map;
   it("package tslab", () => {
     const out = conv.convert(
       "",
-      [
-        'import * as tslab from "tslab";',
-        "let id = tslab.display.newId();"
-      ].join("\n")
+      ['import * as tslab from "tslab";', "let d = tslab.newDisplay();"].join(
+        "\n"
+      )
     );
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
@@ -1072,14 +1071,14 @@ declare let m: Map;
         [
           'const tslab = __importStar(require("tslab"));',
           "exports.tslab = tslab;",
-          "let id = tslab.display.newId();",
-          "exports.id = id;"
+          "let d = tslab.newDisplay();",
+          "exports.d = d;"
         ],
         { importStar: true }
       )
     );
     expect(out.declOutput).toEqual(
-      'import * as tslab from "tslab";\ndeclare let id: string;\n'
+      'import * as tslab from "tslab";\ndeclare let d: tslab.Display;\n'
     );
   });
 });

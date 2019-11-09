@@ -320,7 +320,7 @@ interface DisplayData {
    * persisted to a notebook or other documents. Intended to live only
    * during a live kernel session.
    */
-  transient: { [key: string]: string };
+  transient: { display_id?: string };
 }
 
 class ZmqMessage {
@@ -696,7 +696,7 @@ export class ZmqServer {
     };
     const writeDisplayData = (data: DisplayData, update: boolean) => {
       const reply = msg.createReply();
-      reply.header.msg_type = "display_data";
+      reply.header.msg_type = update ? "update_display_data" : "display_data";
       reply.content = data;
       reply.signAndSend(this.connInfo.key, this.iopub);
     };

@@ -1,53 +1,77 @@
 import { randomBytes } from "crypto";
 import * as jupyter from "./jupyter";
 
+export interface Display {
+  javascript(s: string): void;
+  html(s: string): void;
+  markdown(s: string): void;
+  latex(s: string): void;
+  svg(s: string): void;
+  png(b: Uint8Array): void;
+  jpeg(b: Uint8Array): void;
+  gif(b: Uint8Array): void;
+  pdf(b: Uint8Array): void;
+  text(s: string): void;
+  raw(contentType: string, b: string | Uint8Array);
+}
+
 /**
- * utility functions to display rich contents
+ * Returns a new `Display` instance which displays and overwrites a single display-entry.
  */
-export namespace display {
-  export function newId(): string {
-    return randomBytes(8).toString("hex");
+export function newDisplay(): Display {
+  return new DisplayImpl(newDisplayId());
+}
+
+function newDisplayId(): string {
+  return randomBytes(8).toString("hex");
+}
+
+class DisplayImpl {
+  id?: string;
+  /**
+   * When `id` is set, `raw` sends `update_display_data` from the second call.
+   * Notes about Jupyter spec:
+   * - `update_display_data` is displayed only when `display_id` matches existing display entries.
+   * - `display_data` adds a new display entry and updates existing display entries.
+   */
+  update?: boolean;
+
+  constructor(id?: string) {
+    this.id = id;
   }
-  export function javascript(s: string, id?: string): void {
-    raw("text/javascript", s, id);
+  javascript(s: string): void {
+    this.raw("text/javascript", s);
   }
-  export function html(s: string, id?: string): void {
-    raw("text/html", s, id);
+  html(s: string): void {
+    this.raw("text/html", s);
   }
-  export function markdown(s: string, id?: string): void {
-    raw("text/markdown", s, id);
+  markdown(s: string): void {
+    this.raw("text/markdown", s);
   }
-  export function latex(s: string, id?: string): void {
-    raw("text/latex", s, id);
+  latex(s: string): void {
+    this.raw("text/latex", s);
   }
-  export function svg(s: string, id?: string): void {
-    raw("image/svg+xml", s, id);
+  svg(s: string): void {
+    this.raw("image/svg+xml", s);
   }
-  export function png(b: Uint8Array, id?: string): void {
-    raw("image/png", b, id);
+  png(b: Uint8Array): void {
+    this.raw("image/png", b);
   }
-  export function jpeg(b: Uint8Array, id?: string): void {
-    raw("image/jpeg", b, id);
+  jpeg(b: Uint8Array): void {
+    this.raw("image/jpeg", b);
   }
-  export function gif(b: Uint8Array, id?: string): void {
-    raw("image/gif", b, id);
+  gif(b: Uint8Array): void {
+    this.raw("image/gif", b);
   }
-  export function pdf(b: Uint8Array, id?: string): void {
-    raw("application/pdf", b, id);
+  pdf(b: Uint8Array): void {
+    this.raw("application/pdf", b);
   }
-  export function text(s: string, id?: string): void {
-    raw("text/plain", s, id);
+  text(s: string): void {
+    this.raw("text/plain", s);
   }
-  export function raw(
-    contentType: string,
-    b: string | Uint8Array,
-    id?: string
-  ): void {
+  raw(contentType: string, b: string | Uint8Array): void {
     if (jupyter.lastWriteDisplayData == null) {
       throw Error("Not ready");
-    }
-    if (!id) {
-      id = newId();
     }
     // TODO: Add a reference of this spec.
     // TODO: Test this.
@@ -57,15 +81,26 @@ export namespace display {
       }
       b = (b as Buffer).toString("base64");
     }
+    const update = this.update;
+    if (this.id) {
+      this.update = true;
+    }
     jupyter.lastWriteDisplayData(
       {
         data: {
           [contentType]: b
         },
         metadata: {},
-        transient: {}
+        transient: {
+          display_id: this.id
+        }
       },
-      true
+      update
     );
   }
 }
+
+/**
+ * Utility functions to display rich contents in tslab.
+ */
+export const display: Display = new DisplayImpl();

@@ -302,10 +302,10 @@ describe("execute", () => {
     expect(
       await ex.execute(`
     import * as tslab from "tslab";
-    let id = tslab.display.newId();
+    let png = tslab.display.png;
     `)
     ).toBe(true);
-    expect(typeof ex.locals.id).toEqual("string");
+    expect(typeof ex.locals.png).toEqual("function");
   });
 
   it("performance", async () => {
