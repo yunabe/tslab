@@ -36,32 +36,33 @@ describe("JupyterHandlerImpl", () => {
 
   it("handleKernel", () => {
     expect(handler.handleKernel()).toEqual({
-      banner: "TypeScript",
+      protocol_version: "5.3",
       implementation: "tslab",
       implementation_version: "1.0.0",
       language_info: {
-        file_extension: ".ts",
-        mimetype: "",
         name: "typescript",
-        version: ""
+        version: "3.7.2",
+        mimetype: "text/typescript",
+        file_extension: ".ts",
+        codemirror_mode: { name: "javascript", typescript: true }
       },
-      protocol_version: "5.3"
+      banner: "TypeScript"
     });
   });
 
   it("handleJsKernel", () => {
     handler = new JupyterHandlerImpl(executor, true);
     expect(handler.handleKernel()).toEqual({
-      banner: "JavaScript",
+      protocol_version: "5.3",
       implementation: "jslab",
       implementation_version: "1.0.0",
       language_info: {
-        file_extension: ".js",
-        mimetype: "",
         name: "javascript",
-        version: ""
+        version: "",
+        mimetype: "text/javascript",
+        file_extension: ".js"
       },
-      protocol_version: "5.3"
+      banner: "JavaScript"
     });
   });
 

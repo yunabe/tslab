@@ -447,27 +447,42 @@ export class JupyterHandlerImpl implements JupyterHandler {
   }
 
   handleKernel(): KernelInfoReply {
-    const lang = this.isJs ? "javascript" : "typescript";
+    let lang = "typescript";
+    let version = "3.7.2";
     let implementation = "tslab";
-    let extension = ".ts";
+    let file_extension = ".ts";
     let banner = "TypeScript";
+    let mimetype = "text/typescript";
     if (this.isJs) {
+      lang = "javascript";
+      version = "";
       implementation = "jslab";
-      extension = ".js";
+      file_extension = ".js";
       banner = "JavaScript";
+      mimetype = "text/javascript";
     }
-    return {
+    const reply: KernelInfoReply = {
       protocol_version: "5.3",
       implementation,
       implementation_version: "1.0.0",
       language_info: {
         name: lang,
-        version: "",
-        mimetype: "",
-        file_extension: extension
+        version,
+        mimetype,
+        file_extension
       },
       banner
     };
+    if (!this.isJs) {
+      // This fix https://github.com/yunabe/tslab/issues/18 in Jupyter notebook.
+      // But this makes JupyterLab uses 'javascript' highlighter for some reason.
+      // TODO: Investigate this bug more. We may need to fix a bug in Jupyter side.
+      reply.language_info.codemirror_mode = {
+        name: "javascript",
+        typescript: true
+      };
+    }
+    return reply;
   }
 
   async handleExecute(
