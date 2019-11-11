@@ -474,10 +474,19 @@ export class JupyterHandlerImpl implements JupyterHandler {
       banner
     };
     if (!this.isJs) {
-      // This fix https://github.com/yunabe/tslab/issues/18 in Jupyter notebook.
-      // But this makes JupyterLab uses 'javascript' highlighter for some reason.
-      // TODO: Investigate this bug more. We may need to fix a bug in Jupyter side.
+      // This fix https://github.com/yunabe/tslab/issues/18 in both Jupyter notebook and JupyterLab magically.
       reply.language_info.codemirror_mode = {
+        // mode is used to enable TypeScript CodeMirror in jupyterlab:
+        // https://github.com/jupyterlab/jupyterlab/blob/1377bd183764860b384bea7c36ea1c52b6095e05/packages/codemirror/src/mode.ts#L133
+        // As we can see in the code, jupyterlab does not pass codemirror_mode to CodeMirror directly.
+        // Thus, `typescript: true` below is not used in jupyterlab.
+        mode: "typescript",
+
+        // name and typescript are used to enable TypeScript CodeMirror in notebook.
+        // We don't fully understand why this combination works magically. It might be related to:
+        // https://github.com/jupyter/notebook/blob/8b21329deb9dd04271b12e3d2790c5be9f1fd51e/notebook/static/notebook/js/notebook.js#L2199
+        // Also, typescript flag is defined in:
+        // https://codemirror.net/mode/javascript/index.html
         name: "javascript",
         typescript: true
       };

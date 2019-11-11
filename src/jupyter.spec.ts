@@ -44,7 +44,11 @@ describe("JupyterHandlerImpl", () => {
         version: "3.7.2",
         mimetype: "text/typescript",
         file_extension: ".ts",
-        codemirror_mode: { name: "javascript", typescript: true }
+        codemirror_mode: {
+          mode: "typescript",
+          name: "javascript",
+          typescript: true
+        }
       },
       banner: "TypeScript"
     });
