@@ -12,7 +12,7 @@ Also, `tslab` has `@types/node` as `dependencies`, not `devDependencies`. This i
 
 ### runInContext vs. runInThisContext
 
-tslab uses runInContext, not runInThisContext, internally to share variables amoung cells as global variables.
+tslab uses runInContext, not runInThisContext, internally to share variables among cells as global variables.
 
 tslab converts the original input like:
 
