@@ -6,6 +6,10 @@ import { createConverter } from "./converter";
 import { createExecutor, createRequire } from "./executor";
 import { JupyterHandlerImpl, ZmqServer } from "./jupyter";
 
+function getVersion(): string {
+  return require("../package.json").version;
+}
+
 function* traverseAncestorDirs(
   dir: string
 ): Generator<{ dir: string; level: number }> {
@@ -50,12 +54,13 @@ function findLocalStartKernel(): typeof startKernel {
 export function startKernel({
   configPath = "",
   enableFindLocal = true,
-  jsKernel = false
+  jsKernel = false,
+  version = ""
 }): void {
   if (enableFindLocal) {
     const local = findLocalStartKernel();
     if (local) {
-      local({ configPath, enableFindLocal: false, jsKernel });
+      local({ configPath, enableFindLocal: false, jsKernel, version });
       return;
     }
   }
@@ -90,7 +95,7 @@ export function main() {
     // In Windows, we need to use a batch file created by npm install.
     defaultBinary = "tslab.cmd";
   }
-  program.version("tslab " + require("../package.json").version);
+  program.version("tslab " + getVersion());
   program
     .command("install")
     .description("Install tslab to Jupyter")
@@ -162,7 +167,7 @@ export function main() {
         process.exit(1);
       }
       let { configPath, js: jsKernel } = arguments[0];
-      startKernel({ configPath, jsKernel });
+      startKernel({ configPath, jsKernel, version: getVersion() });
     });
 
   program.parse(process.argv);

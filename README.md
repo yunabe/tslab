@@ -2,11 +2,14 @@
 
 [![Build Status](https://travis-ci.org/yunabe/tslab.svg?branch=master)](https://travis-ci.org/yunabe/tslab)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/yunabe/tslab-examples/master?filepath=notebooks%2Fgetting_started.ipynb)
-[![npm version](https://badge.fury.io/js/tslab.svg)](https://badge.fury.io/js/tslab)
+[![npm version](https://badge.fury.io/js/tslab.svg)](https://www.npmjs.com/package/tslab)
+
+tslab is an interactive programming environment with Jupyter for JavaScript and TypeScript users.
+You can write and execute JavaScript and TypeScript interactively on browsers and save results as Jupyter notebooks.
 
 ## Features
 
-- Interactive JavaScript and TypeScript programming with Jupyter and Node.js.
+- Interactive JavaScript and TypeScript programming with [Jupyter](https://jupyter.org/) and [Node.js](https://nodejs.org/).
 - The power of types from [TypeScript project](https://www.typescriptlang.org/).
   - Type safety even in JavaScript mode.
   - Rich code completion and code inspection thanks to types.
