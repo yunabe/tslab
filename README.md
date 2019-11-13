@@ -1,7 +1,7 @@
 # tslab
 
 [![Build Status](https://travis-ci.org/yunabe/tslab.svg?branch=master)](https://travis-ci.org/yunabe/tslab)
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/yunabe/tslab-examples/master?filepath=notebooks%2Fbasics.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/yunabe/tslab-examples/master?filepath=notebooks%2Fgetting_started.ipynb)
 [![npm version](https://badge.fury.io/js/tslab.svg)](https://badge.fury.io/js/tslab)
 
 ## Features
@@ -22,16 +22,18 @@
 <div><img src="docs/images/inspect.jpg" width="400" height="160"></div>
 <div><img src="docs/images/complete.jpg" width="400" height="160"></div>
 
-## Example notebooks
-
-https://nbviewer.jupyter.org/github/yunabe/tslab-examples/tree/master/notebooks/
-
 ## Try tslab without installing it
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/yunabe/tslab-examples/master?filepath=notebooks%2Fbasics.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/yunabe/tslab-examples/master?filepath=notebooks%2Fgetting_started.ipynb)
 
 Thanks to [binder (mybinder.org)](https://mybinder.org/), you can try tslab on your browsers without installing it into your system.
 Open a temporary Jupyter Notebook from the button above and enjoy interactive JavaScript and TypeScript programming.
+
+## Example notebooks
+
+- [Getting Started](https://nbviewer.jupyter.org/github/yunabe/tslab-examples/blob/master/notebooks/getting_started.ipynb)
+- [Getting Started for JavaScript user](https://nbviewer.jupyter.org/github/yunabe/tslab-examples/blob/master/notebooks/getting_started_javascript.ipynb)
+- [Deep Learning with TensorFlow.js](https://nbviewer.jupyter.org/github/yunabe/tslab-examples/blob/master/notebooks/tensorflow.ipynb)
 
 ## Installing tslab
 
