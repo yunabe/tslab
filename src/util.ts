@@ -28,6 +28,16 @@ export class TaskQueue {
     this.prev = promise;
     return promise;
   }
+
+  reset(delay?: number): void {
+    if (delay == null) {
+      this.prev = Promise.resolve();
+      return;
+    }
+    setTimeout(() => {
+      this.reset();
+    }, delay);
+  }
 }
 
 export class TaskCanceledError extends Error {

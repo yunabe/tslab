@@ -515,8 +515,15 @@ export class JupyterHandlerImpl implements JupyterHandler {
         status = "error";
         console.error("unexpected error:", e);
       }
-      // TODO: Reset request queued on the Zmq socket.
-      this.execQueue = new TaskQueue();
+      console.log("status:", status, "e", e);
+      if (status === "error") {
+        // Sleep 200ms to abort all pending tasks in ZMQ queue then reset the task queue.
+        // https://github.com/yunabe/tslab/issues/19
+        // We might just need to sleep 1ms here to process all pending requests in ZMQ.
+        // But we wait for 200ms for safety. 200ms is selected from:
+        // https://material.io/design/motion/speed.html#duration
+        this.execQueue.reset(200);
+      }
     }
     return {
       status: status,

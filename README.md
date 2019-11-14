@@ -14,7 +14,7 @@ You can write and execute JavaScript and TypeScript interactively on browsers an
   - Type safety even in JavaScript mode.
   - Rich code completion and code inspection thanks to types.
 - Display non-text contents like images, HTML, JavaScript, SVG, etc...
-- Interactive machine learning programming ([TensorFlow.js](https://www.tensorflow.org/js/guide/nodejs)) and data exploration with JavaScript.
+- Interactive deep neural network machine learning ([TensorFlow.js](https://www.tensorflow.org/js/guide/nodejs)) and data exploration with JavaScript.
 - JavaScript is [40x faster than Python](https://www.google.com/search?hl=en&q=python3+node.js+performance).
 - TypeScript 3.7 support.
   - ["Optional Chaining"](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-7.html#optional-chaining) and ["Nullish Coalescing"](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-7.html#nullish-coalescing) are supported.
@@ -76,10 +76,12 @@ After you register `tslab` to Jupyter, start JupyterLab and Jupyter Notebook as 
 
 ```shell
 # JupyterLab
-jupyter lab [--port=8888]
+# `--port=` to change the port to accept connections.
+# `--ip=0.0.0.0` to accept external connections.
+jupyter lab [--port=8888] [--ip=0.0.0.0]
 
 # Jupyter Notebook
-jupyter notebook [--port=8888]
+jupyter notebook
 ```
 
 In Jupyter, you can complete code by pressing `Tab` and show tooltips by pressing `Shift + Tab`.

@@ -66,4 +66,46 @@ describe("TaskQueue", () => {
       expect(e).toBe(p1Err);
     }
   });
+
+  it("reset", async () => {
+    let queue = new TaskQueue();
+    const lst: string[] = [];
+    let rootErr = new Error("root cause");
+    let p0 = queue.add(async () => {
+      await sleep(10);
+      throw rootErr;
+    });
+    try {
+      await p0;
+      fail("await p0 must fail.");
+    } catch (e) {
+      expect(e).toBe(rootErr);
+    }
+    queue.reset(50);
+    let start = Date.now();
+    let res = null;
+    let abort = 0;
+    while (true) {
+      // It's important to yield to invoke a time in reset.
+      await sleep(0);
+      let p = queue.add(async () => {
+        return "success";
+      });
+      try {
+        res = await p;
+        break;
+      } catch (e) {
+        expect(e).toBeInstanceOf(TaskCanceledError);
+        expect(e.reason).toBe(rootErr);
+        abort++;
+      }
+      if (Date.now() - start > 200) {
+        fail("queue is not reset properly in 10ms");
+        break;
+      }
+    }
+    // Multiple tasks are cancelled before reset is applied.
+    expect(abort).toBeGreaterThan(0);
+    expect(res).toEqual("success");
+  });
 });

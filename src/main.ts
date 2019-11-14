@@ -55,12 +55,12 @@ export function startKernel({
   configPath = "",
   enableFindLocal = true,
   jsKernel = false,
-  version = ""
+  globalVersion = ""
 }): void {
   if (enableFindLocal) {
     const local = findLocalStartKernel();
     if (local) {
-      local({ configPath, enableFindLocal: false, jsKernel, version });
+      local({ configPath, enableFindLocal: false, jsKernel, globalVersion });
       return;
     }
   }
@@ -167,7 +167,7 @@ export function main() {
         process.exit(1);
       }
       let { configPath, js: jsKernel } = arguments[0];
-      startKernel({ configPath, jsKernel, version: getVersion() });
+      startKernel({ configPath, jsKernel, globalVersion: getVersion() });
     });
 
   program.parse(process.argv);

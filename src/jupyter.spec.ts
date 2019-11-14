@@ -3,6 +3,12 @@ import { JupyterHandlerImpl, ExecuteReply } from "./jupyter";
 import { Executor } from "./executor";
 import { TaskCanceledError } from "./util";
 
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => {
+    setTimeout(resolve, ms);
+  });
+}
+
 describe("JupyterHandlerImpl", () => {
   let handler: JupyterHandlerImpl;
   let executor: Executor;
@@ -161,6 +167,28 @@ describe("JupyterHandlerImpl", () => {
       null
     );
     expect(reply).toEqual({ execution_count: undefined, status: "abort" });
+    let abortCount = 0;
+    while (true) {
+      await sleep(10);
+      reply = await handler.handleExecute(
+        {
+          code: "0",
+          silent: false,
+          store_history: false,
+          user_expressions: {}
+        },
+        writeStream,
+        null
+      );
+      if (reply.status === "abort") {
+        abortCount++;
+        continue;
+      }
+      expect(reply).toEqual({ execution_count: 3, status: "ok" });
+      break;
+    }
+    expect(abortCount).toBeGreaterThan(0);
+
     reply = await handler.handleExecute(
       {
         code: "unknown",
