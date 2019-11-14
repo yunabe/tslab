@@ -34,9 +34,17 @@ Open a temporary Jupyter Notebook from the button above and enjoy interactive Ja
 
 ## Example notebooks
 
+To learn what what we can do with JavaScript on Jupyter, view example notebooks in nbviewer.
+
 - [Getting Started](https://nbviewer.jupyter.org/github/yunabe/tslab-examples/blob/master/notebooks/getting_started.ipynb)
 - [Getting Started for JavaScript user](https://nbviewer.jupyter.org/github/yunabe/tslab-examples/blob/master/notebooks/getting_started_javascript.ipynb)
 - [Deep Learning with TensorFlow.js](https://nbviewer.jupyter.org/github/yunabe/tslab-examples/blob/master/notebooks/tensorflow.ipynb)
+
+If nbviewer is down, please view the notebooks on GitHub instead.
+
+- [Getting Started](https://github.com/yunabe/tslab-examples/blob/master/notebooks/getting_started.ipynb)
+- [Getting Started for JavaScript user](https://github.com/yunabe/tslab-examples/blob/master/notebooks/getting_started_javascript.ipynb)
+- [Deep Learning with TensorFlow.js](https://github.com/yunabe/tslab-examples/blob/master/notebooks/tensorflow.ipynb)
 
 ## Installing tslab
 
@@ -103,4 +111,5 @@ tslab does not support code execution on browsers (aka Client-side JavaScript) a
 ## Read more
 
 - [Advanced topics](docs/advanced.md)
+- [Developing tslab](docs/developing.md)
 - [Internal design](docs/internal.md)
