@@ -7,7 +7,7 @@
 ## Registering tslab to Jupyter
 
 ```shell
-./bin/tslab install [--python=python3]
+./bin/tslab install --binary=$(pwd)/bin/tslab [--python=python3]
 ```
 
 ## Building

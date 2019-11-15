@@ -515,7 +515,6 @@ export class JupyterHandlerImpl implements JupyterHandler {
         status = "error";
         console.error("unexpected error:", e);
       }
-      console.log("status:", status, "e", e);
       if (status === "error") {
         // Sleep 200ms to abort all pending tasks in ZMQ queue then reset the task queue.
         // https://github.com/yunabe/tslab/issues/19

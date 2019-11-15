@@ -3,12 +3,9 @@ import child_process from "child_process";
 import path from "path";
 import program from "commander";
 import { createConverter } from "./converter";
+import { getVersion } from "./util";
 import { createExecutor, createRequire } from "./executor";
 import { JupyterHandlerImpl, ZmqServer } from "./jupyter";
-
-function getVersion(): string {
-  return require("../package.json").version;
-}
 
 function* traverseAncestorDirs(
   dir: string

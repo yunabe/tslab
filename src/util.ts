@@ -1,4 +1,22 @@
 /**
+ * @file Lightweight utilities. Don't import other libraries to keep this light because this is imported from main.ts,
+ * which may just invoke locally-installed tslab.
+ */
+
+/** A cache of version read from package.json */
+let versionCache: string = null;
+
+/**
+ * Get the version string of tslab from package.json.
+ */
+export function getVersion(): string {
+  if (versionCache == null) {
+    versionCache = require("../package.json").version;
+  }
+  return versionCache;
+}
+
+/**
  * TaskQueue executes asynchronous tasks sequentially.
  */
 export class TaskQueue {
