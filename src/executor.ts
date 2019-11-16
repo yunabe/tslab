@@ -1,6 +1,6 @@
 import path from "path";
 import vm from "vm";
-import * as ts from "@yunabe/typescript-for-tslab";
+import * as ts from "@tslab/typescript-for-tslab";
 import { Converter, CompletionInfo, IsCompleteResult } from "./converter";
 
 export interface Executor {

@@ -1,4 +1,4 @@
-import * as ts from "@yunabe/typescript-for-tslab";
+import * as ts from "@tslab/typescript-for-tslab";
 import { JupyterHandlerImpl, ExecuteReply } from "./jupyter";
 import { Executor } from "./executor";
 import { TaskCanceledError } from "./util";

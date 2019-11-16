@@ -4,7 +4,7 @@
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/yunabe/tslab-examples/master?filepath=notebooks%2Fgetting_started.ipynb)
 [![npm version](https://badge.fury.io/js/tslab.svg)](https://www.npmjs.com/package/tslab)
 
-tslab is an interactive programming environment with Jupyter for JavaScript and TypeScript users.
+tslab is an interactive programming environment and REPL with Jupyter for JavaScript and TypeScript users.
 You can write and execute JavaScript and TypeScript interactively on browsers and save results as Jupyter notebooks.
 
 ## Features
@@ -19,6 +19,7 @@ You can write and execute JavaScript and TypeScript interactively on browsers an
 - TypeScript 3.7 support.
   - ["Optional Chaining"](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-7.html#optional-chaining) and ["Nullish Coalescing"](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-7.html#nullish-coalescing) are supported.
 - Top-level [`await`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/await) support.
+- REPL console support.
 
 ### Screenshots: Code inspection (Shift-Tab) and completion (Tab)
 

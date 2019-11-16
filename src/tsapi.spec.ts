@@ -2,7 +2,7 @@
  * tsapi.spec.ts checks the specs of TypeScript compiler API.
  */
 
-import * as ts from "@yunabe/typescript-for-tslab";
+import * as ts from "@tslab/typescript-for-tslab";
 
 describe("transpile", () => {
   it("jsfile", () => {

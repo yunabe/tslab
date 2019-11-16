@@ -3,7 +3,7 @@
  * TODO: Use TypeScript or branched TypeScript library instead of copying these functions.
  */
 
-import * as ts from "@yunabe/typescript-for-tslab";
+import * as ts from "@tslab/typescript-for-tslab";
 
 export function printQuickInfo(info: ts.QuickInfo): string {
   let out = [];
