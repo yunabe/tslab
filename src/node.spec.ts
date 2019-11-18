@@ -118,3 +118,111 @@ describe("Proxy", () => {
     ]);
   });
 });
+
+describe("promise", () => {
+  it("async and promise", () => {
+    let p = (async function() {})();
+    // The result of async is an instance of Promise outside of vm.
+    // TODO: Why this is not the case in vm?
+    expect(p.constructor).toBe(Promise);
+    expect(p instanceof Promise).toBe(true);
+  });
+
+  it("order", async () => {
+    function range(n: number) {
+      let out = [];
+      for (let i = 0; i < n; i++) {
+        out.push(i);
+      }
+      return out;
+    }
+
+    let out: number[] = [];
+    let p = new Promise(done => {
+      out.push(0);
+      done("abc");
+    }).then(v => {
+      out.push(2);
+      expect(v).toEqual("abc");
+    });
+    out.push(1);
+    await p;
+    expect(out).toEqual(range(3));
+
+    out = [];
+    p = (async function() {
+      out.push(0);
+      await null;
+      out.push(2);
+    })();
+    out.push(1);
+    await p;
+    expect(out).toEqual(range(3));
+
+    out = [];
+    p = Promise.resolve().then(() => {
+      out.push(1);
+    });
+    out.push(0);
+    await p;
+    expect(out).toEqual(range(2));
+
+    // Advanced. `done('xyz') does not invoke the callback immediately.
+    out = [];
+    p = Promise.resolve({
+      then: done => {
+        out.push(1);
+        done("xyz");
+        out.push(2);
+      }
+    }).then(x => {
+      expect(x).toEqual("xyz");
+      out.push(3);
+    });
+    out.push(0);
+    await p;
+    expect(out).toEqual(range(4));
+
+    // This is very tricky.
+    // The order of operations changes between target = ES2017 and ES2015.
+    // When target is ES2015, the order is [0, 2, 4, 3, 1].
+    out = [];
+    p = (async function() {
+      out.push(0);
+      let x = await ({
+        then: done => {
+          out.push(2);
+          done("xyz");
+          out.push(3);
+        }
+      } as any);
+      expect(x).toEqual("xyz");
+      out.push(4);
+    })();
+    out.push(1);
+    await p;
+    expect(out).toEqual(range(5));
+
+    class CustomPromise<T> extends Promise<T> {
+      then(done): any {
+        out.push(2);
+        done("xyz");
+        out.push(3);
+      }
+    }
+    out = [];
+    p = (async function() {
+      out.push(0);
+      let cp = new CustomPromise(done => {
+        done("abc");
+      });
+      expect(cp).toBeInstanceOf(Promise);
+      let x = await (cp as any);
+      expect(x).toEqual("xyz");
+      out.push(4);
+    })();
+    out.push(1);
+    await p;
+    expect(out).toEqual(range(5));
+  });
+});
