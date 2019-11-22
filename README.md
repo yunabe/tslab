@@ -79,6 +79,15 @@ tslab install [--python=python3]
 By default, tslab is registered with `python3` in unix-like system and `python` in Windows.
 If Jupyter is installed with a different Python in your system, please specify the python command with `--python` flag.
 
+After you run `tslab install`, please check two kernels (jslab and tslab) are installed properly to jupyter.
+
+```shell
+$ jupyter kernelspec list
+Available kernels:
+  jslab      /usr/local/google/home/yunabe/.local/share/jupyter/kernels/jslab
+  tslab      /usr/local/google/home/yunabe/.local/share/jupyter/kernels/tslab
+```
+
 ### Usage: JupyterLab and Jupyter Notebook
 
 After you register `tslab` to Jupyter, start JupyterLab and Jupyter Notebook as usual. You can now create JavaScript and TypeScript notebooks.

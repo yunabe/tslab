@@ -117,6 +117,46 @@ describe("Proxy", () => {
       'target = obj0, prop = "abc", value = "hello", receiver = obj1'
     ]);
   });
+
+  it("breakOnSigint", async () => {
+    const { Worker } = await import("worker_threads");
+    new Worker(
+      `setTimeout(() =>{
+      process.kill(process.pid, "SIGINT");
+    }, 0);`,
+      {
+        eval: true
+      }
+    );
+    try {
+      vm.runInNewContext(`while (true) {}`, undefined, { breakOnSigint: true });
+    } catch (e) {
+      expect(e.toString()).toContain("interrupted");
+    }
+  });
+
+  it("breakOnSigint indirect", async () => {
+    // Confirm breakOnSigint can exit an infinite loop defined outside of the code.
+    const { Worker } = await import("worker_threads");
+    new Worker(
+      `setTimeout(() =>{
+      process.kill(process.pid, "SIGINT");
+    }, 0);`,
+      {
+        eval: true
+      }
+    );
+    const sandbox = {
+      loop: () => {
+        while (true) {}
+      }
+    };
+    try {
+      vm.runInNewContext(`loop()`, sandbox, { breakOnSigint: true });
+    } catch (e) {
+      expect(e.toString()).toContain("interrupted");
+    }
+  });
 });
 
 describe("promise", () => {

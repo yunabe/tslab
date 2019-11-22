@@ -1,4 +1,5 @@
 import pathlib from "path";
+import semver from "semver";
 import * as ts from "@tslab/typescript-for-tslab";
 
 // TODO: Disallow accessing "module" of Node.js.
@@ -79,6 +80,14 @@ export function createConverter(options?: ConverterOptions): Converter {
   const dstFilename = "__tslab__.js";
   const dstDeclFilename = "__tslab__.d.ts";
   const declFilename = "__prev__.d.ts";
+
+  // c.f.
+  // https://github.com/microsoft/TypeScript/wiki/Node-Target-Mapping
+  // https://github.com/microsoft/TypeScript/issues/22306#issuecomment-412266626
+  const traspileTarget =
+    semver.major(process.version) >= 12
+      ? ts.ScriptTarget.ES2019
+      : ts.ScriptTarget.ES2018;
 
   const srcPrefix = "export {};" + ts.sys.newLine;
   let srcContent: string = "";
@@ -163,7 +172,7 @@ export function createConverter(options?: ConverterOptions): Converter {
       module: ts.ModuleKind.ES2015,
       moduleResolution: ts.ModuleResolutionKind.NodeJs,
       esModuleInterop: true,
-      target: ts.ScriptTarget.ES2017,
+      target: traspileTarget,
       declaration: true,
       newLine: ts.NewLineKind.LineFeed,
       // Remove 'use strict' from outputs.
@@ -252,7 +261,7 @@ export function createConverter(options?: ConverterOptions): Converter {
       ts.getPreEmitDiagnostics(program, srcFile)
     );
     return {
-      output: esModuleToCommonJSModule(output),
+      output: esModuleToCommonJSModule(output, traspileTarget),
       declOutput,
       diagnostics: converted.diagnostics,
       hasToplevelAwait: converted.hasToplevelAwait,
@@ -806,13 +815,16 @@ export function createConverter(options?: ConverterOptions): Converter {
 }
 
 /*@internal*/
-export function esModuleToCommonJSModule(js: string): string {
+export function esModuleToCommonJSModule(
+  js: string,
+  target: ts.ScriptTarget
+): string {
   let out = ts.transpileModule(js, {
     fileName: "custom.js",
     compilerOptions: {
       module: ts.ModuleKind.CommonJS,
       esModuleInterop: true,
-      target: ts.ScriptTarget.ES2017,
+      target,
       newLine: ts.NewLineKind.LineFeed,
       // Remove 'use strict' from outputs.
       noImplicitUseStrict: true

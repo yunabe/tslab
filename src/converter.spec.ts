@@ -1153,7 +1153,7 @@ describe("keepNamesInImport", () => {
     const src = ts.createSourceFile(
       "src.ts",
       'import mydefault, {foo, bar as baz} from "mylib";',
-      ts.ScriptTarget.ES2017
+      ts.ScriptTarget.ES2019
     );
     const stmt = src.statements[0];
     if (!ts.isImportDeclaration(stmt)) {
@@ -1170,7 +1170,7 @@ describe("keepNamesInImport", () => {
     const src = ts.createSourceFile(
       "src.ts",
       'import mydefault, {foo, bar as baz} from "mylib";',
-      ts.ScriptTarget.ES2017
+      ts.ScriptTarget.ES2019
     );
     const stmt = src.statements[0];
     if (!ts.isImportDeclaration(stmt)) {
@@ -1189,7 +1189,7 @@ describe("keepNamesInImport", () => {
     const src = ts.createSourceFile(
       "src.ts",
       'import mydefault, {foo, bar as baz} from "mylib";',
-      ts.ScriptTarget.ES2017
+      ts.ScriptTarget.ES2019
     );
     const stmt = src.statements[0];
     if (!ts.isImportDeclaration(stmt)) {
@@ -1206,7 +1206,7 @@ describe("keepNamesInImport", () => {
     const src = ts.createSourceFile(
       "src.ts",
       'import mydefault, {foo, bar as baz} from "mylib";',
-      ts.ScriptTarget.ES2017
+      ts.ScriptTarget.ES2019
     );
     const stmt = src.statements[0];
     if (!ts.isImportDeclaration(stmt)) {
@@ -1225,7 +1225,7 @@ describe("keepNamesInImport", () => {
     const src = ts.createSourceFile(
       "src.ts",
       'import mydefault, * as ns from "mylib";',
-      ts.ScriptTarget.ES2017
+      ts.ScriptTarget.ES2019
     );
     const stmt = src.statements[0];
     if (!ts.isImportDeclaration(stmt)) {
@@ -1242,7 +1242,7 @@ describe("keepNamesInImport", () => {
     const src = ts.createSourceFile(
       "src.ts",
       'import mydefault, * as ns from "mylib";',
-      ts.ScriptTarget.ES2017
+      ts.ScriptTarget.ES2019
     );
     const stmt = src.statements[0];
     if (!ts.isImportDeclaration(stmt)) {
@@ -1259,7 +1259,7 @@ describe("keepNamesInImport", () => {
     const src = ts.createSourceFile(
       "src.ts",
       'import mydefault, * as ns from "mylib";',
-      ts.ScriptTarget.ES2017
+      ts.ScriptTarget.ES2019
     );
     const stmt = src.statements[0];
     if (!ts.isImportDeclaration(stmt)) {
@@ -1278,7 +1278,9 @@ describe("keepNamesInImport", () => {
 
 describe("esModuleToCommonJSModule", () => {
   it("empty", () => {
-    expect(converter.esModuleToCommonJSModule("")).toEqual("");
+    expect(
+      converter.esModuleToCommonJSModule("", ts.ScriptTarget.ES2019)
+    ).toEqual("");
   });
 
   it("variables", () => {
@@ -1296,7 +1298,9 @@ describe("esModuleToCommonJSModule", () => {
       "var z = x + y;",
       "exports.z = z;"
     ]);
-    expect(converter.esModuleToCommonJSModule(src)).toEqual(want);
+    expect(
+      converter.esModuleToCommonJSModule(src, ts.ScriptTarget.ES2019)
+    ).toEqual(want);
   });
 
   it("import", () => {
@@ -1306,7 +1310,9 @@ describe("esModuleToCommonJSModule", () => {
       "let c = a() + b;",
       "export {os, a, b, c}"
     ].join("\n");
-    expect(converter.esModuleToCommonJSModule(src)).toEqual(
+    expect(
+      converter.esModuleToCommonJSModule(src, ts.ScriptTarget.ES2019)
+    ).toEqual(
       buildOutput(
         [
           'const os = __importStar(require("os"));',

@@ -18,9 +18,9 @@
   ],
   "dependencies": {
     "@tslab/typescript-for-tslab": "^3.7.2-tslab.1",
-
-    "@types/node": "^12.12.6",
+    "@types/node": "^12.12.11",
     "commander": "^4.0.0",
+    "semver": "^6.3.0",
     "zeromq": "^6.0.0-beta.2"
   },
   "scripts": {
@@ -33,8 +33,9 @@
   "devDependencies": {
     "@types/glob": "^7.1.1",
     "@types/jest": "^24.0.22",
+    "@types/semver": "^6.2.0",
     "jest": "^24.9.0",
-    "ts-jest": "^24.0.2",
+    "ts-jest": "^24.2.0",
     "typescript": "^3.7.2"
   }
 }
