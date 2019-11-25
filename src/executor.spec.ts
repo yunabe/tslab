@@ -112,14 +112,16 @@ describe("execute", () => {
     expect(ex.locals.alice).toEqual("Person(alice, 123)");
   });
 
-  for (const star of [true, false]) {
-    it("import " + (star ? "star" : "default"), async () => {
-      const imprt = star
-        ? 'import * as crypto from "crypto";'
-        : 'import crypto from "crypto";';
+  for (const tc of [
+    { name: "import start", import: 'import * as crypto from "crypto";' },
+    { name: "import default", import: 'import crypto from "crypto";' },
+    { name: "dynamic import", import: 'const crypto = await import("crypto")' }
+  ]) {
+    // Note: For some reason, dynamic import is way slower than others.
+    it(tc.name, async () => {
       let ok = await ex.execute(
         [
-          imprt,
+          tc.import,
           'const message = "Hello TypeScript!";',
           'const hash = crypto.createHash("sha256").update(message).digest("hex");'
         ].join("\n")

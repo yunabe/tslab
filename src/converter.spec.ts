@@ -451,6 +451,7 @@ import * as pathlib from "path";
   });
 
   it("indirect import", () => {
+    // UserInfo<string> is imported indirectly.
     const out = conv.convert(
       "",
       `
@@ -462,6 +463,34 @@ let info = userInfo();
     expect(out.declOutput).toEqual(
       `/// <reference types="node" />
 import { userInfo } from \"os\";
+declare let info: import(\"os\").UserInfo<string>;
+`
+    );
+  });
+
+  it("dynamic import", async () => {
+    const out = conv.convert(
+      "",
+      `
+const {userInfo} = await import("os");
+let info = userInfo();
+`
+    );
+    expect(out.diagnostics).toEqual([]);
+    expect(out.output).toEqual(
+      buildOutput(
+        [
+          'const { userInfo } = await Promise.resolve().then(() => __importStar(require("os")));',
+          "exports.userInfo = userInfo;",
+          "let info = userInfo();",
+          "exports.info = info;"
+        ],
+        { importStar: true }
+      )
+    );
+    expect(out.declOutput).toEqual(
+      `/// <reference types="node" />
+declare const userInfo: typeof import("os").userInfo;
 declare let info: import(\"os\").UserInfo<string>;
 `
     );

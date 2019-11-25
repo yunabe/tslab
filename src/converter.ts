@@ -169,7 +169,8 @@ export function createConverter(options?: ConverterOptions): Converter {
   const host = ts.createWatchCompilerHost(
     [declFilename, srcFilename],
     {
-      module: ts.ModuleKind.ES2015,
+      // module is ESNext, not ES2015, to support dynamic import.
+      module: ts.ModuleKind.ESNext,
       moduleResolution: ts.ModuleResolutionKind.NodeJs,
       esModuleInterop: true,
       target: traspileTarget,
