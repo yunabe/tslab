@@ -1,16 +1,19 @@
 import { randomBytes } from "crypto";
 import * as jupyter from "./jupyter";
 import { getVersion } from "./util";
+import * as ts from "@tslab/typescript-for-tslab";
 
 /** This is defined to make the docstring of `versions` shorter */
 interface Versions {
   tslab: string;
+  typescript: string;
   node: string;
 }
 
 /** The version strings of tslab and its dependencies. */
 export const versions: Versions = {
   tslab: getVersion(),
+  typescript: ts.version,
   node: process.version
 };
 
