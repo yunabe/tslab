@@ -323,6 +323,16 @@ interface DisplayData {
   transient: { display_id?: string };
 }
 
+interface CommInfoRequest {
+  /** Optional, the target name */
+  target_name?: string;
+}
+
+interface CommInfoReply {
+  /** A dictionary of the comms, indexed by uuids. */
+  comms: {};
+}
+
 class ZmqMessage {
   // identity must not string because jupyter sends non-string identity since 5.3 prototocol.
   // TODO: Check this is an intentional change in Jupyter.
@@ -689,6 +699,10 @@ export class ZmqServer {
         case "complete_request":
           this.handleComplete(sock, msg);
           break;
+        case "comm_info_request":
+          // This is sent for ipywidgets with content = { target_name: 'jupyter.widget' }.
+          this.handleCommInfoRequest(sock, msg);
+          break;
         case "shutdown_request":
           this.handleShutdown(sock, msg);
           terminated = true;
@@ -759,6 +773,14 @@ export class ZmqServer {
     const reply = msg.createReply();
     reply.header.msg_type = "complete_reply";
     reply.content = this.handler.handleComplete(msg.content as CompleteRequest);
+    reply.signAndSend(this.connInfo.key, sock);
+  }
+
+  handleCommInfoRequest(sock: zmq.Router, msg: ZmqMessage) {
+    const reply = msg.createReply();
+    reply.header.msg_type = "complete_reply";
+    // comm is not supported in tslab now. Returns an empty comms.
+    (reply.content as CommInfoReply) = { comms: {} };
     reply.signAndSend(this.connInfo.key, sock);
   }
 
