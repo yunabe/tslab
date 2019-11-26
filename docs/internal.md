@@ -40,7 +40,7 @@ To execute them correctly, we need to run them with `runInContext` with a custom
 
 - `exports` is defined as a [`Proxy`](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Proxy)
 - It forwards assigned variables to `locals` to share exported variables among cells.
-- We don't expose `locals` as `exports` directly because inversible operations (e.g. `Object.defineProperty(exports, "__esModule", { value: true });`) can be applied to `exports` but we don't want to share the results of inverted operations among cells.
+- We don't expose `locals` as `exports` directly because irreversible operations (e.g. `Object.defineProperty(exports, "__esModule", { value: true });`) can be applied to `exports` but we don't want to share the results of irreversible operations among cells.
 
 ## Registeration to Jupyter
 

@@ -1,5 +1,11 @@
 # Developing tslab
 
+## Repository
+
+```shell
+git clone https://github.com/yunabe/tslab.git
+```
+
 ## How to get started
 
 - Read [internal.md](internal.md)
@@ -39,3 +45,8 @@ yarn jest [--watch]
 - `yarn test && npm publish`.
 - Set git tag: `git tag -a v1.0.3 -m 'Release version 1.0.3'`
 - `git push --tags`
+
+## Related repositories
+
+- https://github.com/yunabe/TypeScriptForTslab - A branch of TypeScript used in tslab.
+- https://github.com/yunabe/tslab-examples - Example notebooks of tslab.
