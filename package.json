@@ -1,6 +1,6 @@
 {
   "name": "tslab",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Jupyter for JavaScript and TypeScript",
   "main": "dist/public.js",
   "types": "dist/public.d.ts",
