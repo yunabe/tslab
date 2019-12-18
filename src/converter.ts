@@ -76,10 +76,16 @@ const cancellationToken: ts.CancellationToken = {
 };
 
 export function createConverter(options?: ConverterOptions): Converter {
-  const srcFilename = options && options.isJS ? "__tslab__.js" : "__tslab__.ts";
-  const dstFilename = "__tslab__.js";
-  const dstDeclFilename = "__tslab__.d.ts";
-  const declFilename = "__prev__.d.ts";
+  const cwd = ts.sys.getCurrentDirectory();
+  const srcFilename = pathlib.join(
+    cwd,
+    options && options.isJS ? "__tslab__.js" : "__tslab__.ts"
+  );
+  const declFilename = pathlib.join(cwd, "__prev__.d.ts");
+
+  const outDir = "outDir";
+  const dstFilename = pathlib.join(outDir, "__tslab__.js");
+  const dstDeclFilename = pathlib.join(outDir, "__tslab__.d.ts");
 
   // c.f.
   // https://github.com/microsoft/TypeScript/wiki/Node-Target-Mapping
@@ -96,7 +102,6 @@ export function createConverter(options?: ConverterOptions): Converter {
 
   const sys = Object.create(ts.sys) as ts.System;
   let rebuildTimer: RebuildTimer = null;
-  const cwd = ts.sys.getCurrentDirectory();
   sys.getCurrentDirectory = function() {
     return cwd;
   };
@@ -182,7 +187,9 @@ export function createConverter(options?: ConverterOptions): Converter {
       // allowJs, checkJs and outDir are necessary to transpile .js files.
       allowJs: true,
       checkJs: true,
-      outDir: "outDir"
+      // rootDir is necessary to fix the paths of output files.
+      rootDir: cwd,
+      outDir
     },
     sys,
     null,
@@ -242,7 +249,6 @@ export function createConverter(options?: ConverterOptions): Converter {
     builder.emit(
       srcFile,
       (fileName: string, data: string) => {
-        fileName = pathlib.basename(fileName);
         if (fileName === dstFilename) {
           output = data;
         } else if (fileName === dstDeclFilename) {
