@@ -7,6 +7,9 @@ import * as ts from "@tslab/typescript-for-tslab";
 export interface ConvertResult {
   output?: string;
   declOutput?: string;
+  /**
+   * When diagnostics is not empty, other fields are not set.
+   */
   diagnostics: Diagnostic[];
   /**
    * The variable name to store the last expression if exists.
@@ -242,6 +245,16 @@ export function createConverter(options?: ConverterOptions): Converter {
       srcFile = builder.getSourceFile(srcFilename);
     }
     srcFile.parent = declsFile;
+    const diag = convertDiagnostics(
+      srcFile,
+      createOffsetToDiagnosticPos(srcFile, srcPrefix),
+      ts.getPreEmitDiagnostics(program, srcFile)
+    );
+    if (diag.diagnostics.length > 0) {
+      return {
+        diagnostics: diag.diagnostics
+      };
+    }
 
     let output: string;
     let declOutput: string;
@@ -262,16 +275,11 @@ export function createConverter(options?: ConverterOptions): Converter {
       })
     );
     declOutput += remainingDecls(program.getTypeChecker(), srcFile, declsFile);
-    const converted = convertDiagnostics(
-      srcFile,
-      createOffsetToDiagnosticPos(srcFile, srcPrefix),
-      ts.getPreEmitDiagnostics(program, srcFile)
-    );
     return {
       output: esModuleToCommonJSModule(output, traspileTarget),
       declOutput,
-      diagnostics: converted.diagnostics,
-      hasToplevelAwait: converted.hasToplevelAwait,
+      diagnostics: diag.diagnostics,
+      hasToplevelAwait: diag.hasToplevelAwait,
       lastExpressionVar
     };
   }
