@@ -1,6 +1,10 @@
 import * as executor from "./executor";
 import { createConverter, Converter } from "./converter";
 import { createHash } from "crypto";
+import { runInTmpAsync } from "./testutil";
+
+import fs from "fs";
+import pathlib from "path";
 
 let ex: executor.Executor;
 let conv: Converter;
@@ -364,5 +368,29 @@ describe("interrupt", () => {
     expect(consoleErrorCalls).toEqual([
       [new Error("Interrupted asynchronously")]
     ]);
+  });
+});
+
+describe("externalFiles", () => {
+  it("dependencies", async () => {
+    await runInTmpAsync("pkg", async dir => {
+      fs.writeFileSync(
+        pathlib.join(dir, "a.ts"),
+        'export const aVal: string = "AAA";'
+      );
+      fs.mkdirSync(pathlib.join(dir, "b"));
+      fs.writeFileSync(
+        pathlib.join(dir, "b/c.ts"),
+        'import {aVal} from "../a";\nexport const bVal = "BBB" + aVal;'
+      );
+
+      let promise = ex.execute(
+        [`import {bVal} from "./${dir}/b/c";`].join("\n")
+      );
+      expect(await promise).toBe(true);
+      expect(consoleLogCalls).toEqual([]);
+      expect(consoleErrorCalls).toEqual([]);
+      expect(ex.locals).toEqual({ bVal: "BBBAAA" });
+    });
   });
 });

@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import vm from "vm";
-import modulelib from "module";
+import Module from "module";
 import * as ts from "@tslab/typescript-for-tslab";
 import {
   Converter,
@@ -47,10 +47,13 @@ export interface ConsoleInterface {
  */
 export function createRequire(rootDir: string): NodeRequire {
   // createRequire is added in Node v12. createRequireFromPath is deprecated.
-  const create = modulelib.createRequire || modulelib.createRequireFromPath;
+  const create = Module.createRequire || Module.createRequireFromPath;
   return create(path.join(rootDir, "src.js"));
 }
 
+/**
+ * Wrap `require` to hook import of tslab and imports from sideOutputs.
+ */
 function wrapRequire(
   req: NodeRequireFunction,
   dirname: string,
@@ -69,11 +72,12 @@ function wrapRequire(
     if (!sideOutputs.has(filename)) {
       return null;
     }
-    const Module = module.constructor as any;
-    const mod: NodeModule = new Module(filename, module);
-    // https://github.com/nodejs/node/blob/c30ef3cbd2e42ac1d600f6bd78a601a5496b0877/lib/internal/modules/cjs/loader.js#L624
+    const mod = new Module(filename, module);
+    // Emulate load of Module:
+    // https://github.com/nodejs/node/blob/118b28abed73f82f0d6aab33031edfc78934d90f/lib/internal/modules/cjs/loader.js#L1033
     mod.filename = filename;
-    mod.paths = Module._nodeModulePaths(path.dirname(filename));
+    mod.paths = Module["_nodeModulePaths"](path.dirname(filename));
+    // Wrap require to hook tslab and imports from sideOutputs.
     mod.require = wrapRequire(
       mod.require,
       path.dirname(filename),
