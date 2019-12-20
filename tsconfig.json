@@ -8,6 +8,5 @@
     "newLine": "LF",
     "declaration": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["**/*.spec.ts"]
+  "include": ["src/main.ts", "src/public.ts"]
 }

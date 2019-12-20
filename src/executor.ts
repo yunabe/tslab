@@ -1,7 +1,14 @@
+import fs from "fs";
 import path from "path";
 import vm from "vm";
+import modulelib from "module";
 import * as ts from "@tslab/typescript-for-tslab";
-import { Converter, CompletionInfo, IsCompleteResult } from "./converter";
+import {
+  Converter,
+  CompletionInfo,
+  IsCompleteResult,
+  SideOutput
+} from "./converter";
 
 export interface Executor {
   /**
@@ -37,20 +44,61 @@ export interface ConsoleInterface {
 
 /**
  * createRequire creates `require` which resolves modules from `rootDir`.
- * @param rootDir
  */
 export function createRequire(rootDir: string): NodeRequire {
-  // TODO: Write integration tests to test this behavior.
-  const module = require("module");
   // createRequire is added in Node v12. createRequireFromPath is deprecated.
-  const create = module.createRequire || module.createRequireFromPath;
-  const req = create(path.join(rootDir, "tslabSrc.js"));
-  return new Proxy(req, {
-    // Hook require('tslab').
+  const create = modulelib.createRequire || modulelib.createRequireFromPath;
+  return create(path.join(rootDir, "src.js"));
+}
+
+function wrapRequire(
+  req: NodeRequireFunction,
+  dirname: string,
+  sideOutputs: Map<string, string>,
+  sideModules: Map<string, NodeModule>
+): NodeRequireFunction {
+  function requireFromSideOutputs(id: string): any {
+    let filename = path.join(dirname, id);
+    if (path.extname(filename) === "") {
+      filename += ".js";
+    }
+    const cached = sideModules.get(filename);
+    if (cached) {
+      return cached.exports;
+    }
+    if (!sideOutputs.has(filename)) {
+      return null;
+    }
+    const Module = module.constructor as any;
+    const mod: NodeModule = new Module(filename, module);
+    // https://github.com/nodejs/node/blob/c30ef3cbd2e42ac1d600f6bd78a601a5496b0877/lib/internal/modules/cjs/loader.js#L624
+    mod.filename = filename;
+    mod.paths = Module._nodeModulePaths(path.dirname(filename));
+    mod.require = wrapRequire(
+      mod.require,
+      path.dirname(filename),
+      sideOutputs,
+      sideModules
+    );
+    (mod as any)._compile(sideOutputs.get(filename), filename);
+    sideModules.set(filename, mod);
+    return mod.exports;
+  }
+
+  return new Proxy<NodeRequireFunction>(req, {
     // TODO: Test this behavior.
-    apply: (target: object, thisArg: any, argArray?: any): any => {
-      if (argArray.length == 1 && argArray[0] === "tslab") {
+    apply: (_target: object, thisArg: any, argArray?: any): any => {
+      if (argArray.length !== 1) {
+        return req.apply(thisArg, argArray);
+      }
+      const arg = argArray[0];
+      if (arg === "tslab") {
+        // Hook require('tslab').
         return require("..");
+      }
+      const mod = requireFromSideOutputs(arg);
+      if (mod) {
+        return mod;
       }
       return req.apply(thisArg, argArray);
     }
@@ -63,8 +111,25 @@ export function createExecutor(
   console: ConsoleInterface
 ): Executor {
   const locals: { [key: string]: any } = {};
+
+  const sideOutputs = new Map<string, string>();
+  const sideModules = new Map<string, NodeModule>();
+  function updateSideOutputs(outs: SideOutput[]): void {
+    for (const out of outs) {
+      if (!sideModules.has(out.path)) {
+        sideModules.delete(out.path);
+      }
+      sideOutputs.set(out.path, out.data);
+    }
+  }
+
   let exports: any = null;
-  const req = createRequire(rootDir);
+  const req = wrapRequire(
+    createRequire(rootDir),
+    rootDir,
+    sideOutputs,
+    sideModules
+  );
   const proxyHandler: ProxyHandler<{ [key: string]: any }> = {
     get: function(_target, prop) {
       if (prop === "require") {
@@ -113,6 +178,9 @@ export function createExecutor(
 
   async function execute(src: string): Promise<boolean> {
     const converted = conv.convert(prevDecl, src);
+    if (converted.sideOutputs) {
+      updateSideOutputs(converted.sideOutputs);
+    }
     if (converted.diagnostics.length > 0) {
       for (const diag of converted.diagnostics) {
         console.error(

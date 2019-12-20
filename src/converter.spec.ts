@@ -1,8 +1,8 @@
 import * as converter from "./converter";
 import * as ts from "@tslab/typescript-for-tslab";
+import { runInTmp } from "./testutil";
 import fs from "fs";
 import pathlib from "path";
-import { randomBytes } from "crypto";
 
 let conv: converter.Converter;
 beforeAll(() => {
@@ -1153,32 +1153,56 @@ describe("repeated inputs", () => {
 
 describe("externalFiles", () => {
   it("sideOutputs", () => {
-    const pkg = "pkg" + randomBytes(8).toString("hex");
-    const dir = pathlib.join("tmp", pkg);
-    fs.mkdirSync(dir, {
-      recursive: true
-    });
-    try {
+    runInTmp("pkg", dir => {
       fs.writeFileSync(
         pathlib.join(dir, "hello.ts"),
         'export const message: string = "Hello tslab in hello.ts!";'
       );
       const output = conv.convert(
         "",
-        [`import {message} from "./tmp/${pkg}/hello";`].join("\n")
+        `import {message} from "./${dir}/hello";`
       );
       expect(output.diagnostics).toEqual([]);
       expect(output.sideOutputs).toEqual([
         {
-          path: pathlib.join(process.cwd(), `tmp/${pkg}/hello.js`),
+          path: pathlib.join(process.cwd(), `${dir}/hello.js`),
           data: buildOutput(['exports.message = "Hello tslab in hello.ts!";'])
         }
       ]);
-    } finally {
-      fs.rmdirSync(dir, {
-        recursive: true
-      });
-    }
+    });
+  });
+
+  it("dependencies", () => {
+    runInTmp("pkg", dir => {
+      // Confirm b.js is output to sideOutputs though c.js is not.
+      fs.writeFileSync(
+        pathlib.join(dir, "a.ts"),
+        'export const aVal: string = "AAA";'
+      );
+      fs.writeFileSync(
+        pathlib.join(dir, "b.ts"),
+        'export const bVal: string = "BBB";'
+      );
+      fs.writeFileSync(
+        pathlib.join(dir, "c.ts"),
+        'import {aVal} from "./a";\nexport const cVal = aVal + "CCC";'
+      );
+      const output = conv.convert("", `import {cVal} from "./${dir}/c";`);
+      expect(output.diagnostics).toEqual([]);
+      expect(output.sideOutputs).toEqual([
+        {
+          path: pathlib.join(process.cwd(), `${dir}/a.js`),
+          data: buildOutput(['exports.aVal = "AAA";'])
+        },
+        {
+          path: pathlib.join(process.cwd(), `${dir}/c.js`),
+          data: buildOutput([
+            'const a_1 = require("./a");',
+            'exports.cVal = a_1.aVal + "CCC";'
+          ])
+        }
+      ]);
+    });
   });
 });
 
