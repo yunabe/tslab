@@ -63,6 +63,9 @@ typings/
 # TypeScript output dir
 dist/
 
+# Temporary files from tests
+tmp/
+
 # Python
 .pyc
 .ipynb_checkpoints/

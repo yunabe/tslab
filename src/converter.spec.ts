@@ -1,5 +1,8 @@
 import * as converter from "./converter";
 import * as ts from "@tslab/typescript-for-tslab";
+import fs from "fs";
+import pathlib from "path";
+import { randomBytes } from "crypto";
 
 let conv: converter.Converter;
 beforeAll(() => {
@@ -1109,6 +1112,73 @@ declare let m: Map;
     expect(out.declOutput).toEqual(
       'import * as tslab from "tslab";\ndeclare let d: tslab.Display;\n'
     );
+  });
+});
+
+describe("repeated inputs", () => {
+  it("expressions", () => {
+    // builder.emit does not emit JS for duplicated inputs when they only include
+    // expressions for some reason. This test checks convert does not handle such a case.
+    const src = "'x'";
+    const want = {
+      output: buildOutput(["exports.tsLastExpr = 'x';"]),
+      declOutput: "",
+      diagnostics: [],
+      hasToplevelAwait: false,
+      lastExpressionVar: "tsLastExpr"
+    };
+    let out = conv.convert("", src);
+    expect(out).toEqual(want);
+    out = conv.convert("", src);
+    expect(out).toEqual(want);
+  });
+
+  it("invalid", () => {
+    // Check the error from src is generated even when the valid src gets invalid
+    // due to the change of prevDecl.
+    const src = "x++";
+    expect(conv.convert("declare let x: number;", src).diagnostics).toEqual([]);
+    expect(conv.convert("declare let x: string;", src).diagnostics).toEqual([
+      {
+        start: { offset: 0, line: 0, character: 0 },
+        end: { offset: 1, line: 0, character: 1 },
+        messageText:
+          "An arithmetic operand must be of type 'any', 'number', 'bigint' or an enum type.",
+        category: 1,
+        code: 2356
+      }
+    ]);
+  });
+});
+
+describe("externalFiles", () => {
+  it("sideOutputs", () => {
+    const pkg = "pkg" + randomBytes(8).toString("hex");
+    const dir = pathlib.join("tmp", pkg);
+    fs.mkdirSync(dir, {
+      recursive: true
+    });
+    try {
+      fs.writeFileSync(
+        pathlib.join(dir, "hello.ts"),
+        'export const message: string = "Hello tslab in hello.ts!";'
+      );
+      const output = conv.convert(
+        "",
+        [`import {message} from "./tmp/${pkg}/hello";`].join("\n")
+      );
+      expect(output.diagnostics).toEqual([]);
+      expect(output.sideOutputs).toEqual([
+        {
+          path: pathlib.join(process.cwd(), `tmp/${pkg}/hello.js`),
+          data: buildOutput(['exports.message = "Hello tslab in hello.ts!";'])
+        }
+      ]);
+    } finally {
+      fs.rmdirSync(dir, {
+        recursive: true
+      });
+    }
   });
 });
 

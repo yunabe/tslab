@@ -4,6 +4,11 @@ import * as ts from "@tslab/typescript-for-tslab";
 
 // TODO: Disallow accessing "module" of Node.js.
 
+export interface SideOutput {
+  path: string;
+  data: string;
+}
+
 export interface ConvertResult {
   output?: string;
   declOutput?: string;
@@ -20,6 +25,10 @@ export interface ConvertResult {
    * If true, the input and the output have top-level await statements.
    */
   hasToplevelAwait?: boolean;
+  /**
+   * JavaScript outputs from external files in the root dir.
+   */
+  sideOutputs?: SideOutput[];
 }
 
 export interface DiagnosticPos {
@@ -259,27 +268,54 @@ export function createConverter(options?: ConverterOptions): Converter {
     let output: string;
     let declOutput: string;
     let lastExpressionVar: string;
-    builder.emit(
-      srcFile,
-      (fileName: string, data: string) => {
-        if (fileName === dstFilename) {
-          output = data;
-        } else if (fileName === dstDeclFilename) {
-          declOutput = data;
-        }
-      },
-      undefined,
-      undefined,
-      getCustomTransformers(keys, (name: string) => {
-        lastExpressionVar = name;
-      })
-    );
+    let sideOutputs: SideOutput[];
+    for (const target of [undefined, srcFile]) {
+      // When the first arg of emit is undefined, emit outputs all affected files.
+      // Thus, it might not emit a JS for srcFile when srcFile is not updated.
+      // (This happens at least when src includes only expressions.)
+      if (output != null) {
+        break;
+      }
+      builder.emit(
+        target,
+        (fileName: string, data: string) => {
+          if (fileName === dstFilename) {
+            output = data;
+            return;
+          }
+          if (fileName === dstDeclFilename) {
+            declOutput = data;
+            return;
+          }
+          if (!fileName.endsWith(".js")) {
+            return;
+          }
+          const rel = pathlib.relative(outDir, fileName);
+          if (rel.startsWith("..")) {
+            throw new Error("unexpected emit path: " + fileName);
+          }
+          if (!sideOutputs) {
+            sideOutputs = [];
+          }
+          sideOutputs.push({
+            path: pathlib.join(cwd, rel),
+            data: esModuleToCommonJSModule(data, traspileTarget)
+          });
+        },
+        undefined,
+        undefined,
+        getCustomTransformers(keys, (name: string) => {
+          lastExpressionVar = name;
+        })
+      );
+    }
     declOutput += remainingDecls(program.getTypeChecker(), srcFile, declsFile);
     return {
       output: esModuleToCommonJSModule(output, traspileTarget),
       declOutput,
       diagnostics: diag.diagnostics,
       hasToplevelAwait: diag.hasToplevelAwait,
+      sideOutputs,
       lastExpressionVar
     };
   }

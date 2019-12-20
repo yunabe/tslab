@@ -26,9 +26,10 @@
   "scripts": {
     "//": "experimental-vm-modules enables https://nodejs.org/docs/latest-v12.x/api/vm.html#vm_class_vm_sourcetextmodule",
     "build": "tsc",
-    "prepublishOnly": "tsc",
+    "prepublishOnly": "rm -rf dist && tsc",
     "jest": "jest --verbose",
-    "test": "tsc && jest --verbose --runInBand"
+    "test": "tsc && jest --verbose --runInBand",
+    "clean": "rm -rf dist tmp"
   },
   "devDependencies": {
     "@types/jest": "^24.0.22",
