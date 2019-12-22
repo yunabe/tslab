@@ -188,7 +188,8 @@ export function createExecutor(
     if (converted.diagnostics.length > 0) {
       for (const diag of converted.diagnostics) {
         console.error(
-          "%d:%d - %s",
+          "%s%d:%d - %s",
+          diag.fileName ? diag.fileName + " " : "",
           diag.start.line + 1,
           diag.start.character + 1,
           diag.messageText

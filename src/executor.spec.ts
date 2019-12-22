@@ -199,8 +199,8 @@ describe("execute", () => {
   it("syntax error", async () => {
     expect(await ex.execute(`let x + y;`)).toBe(false);
     expect(consoleErrorCalls).toEqual([
-      ["%d:%d - %s", 1, 7, "',' expected."],
-      ["%d:%d - %s", 1, 9, "Cannot find name 'y'."]
+      ["%s%d:%d - %s", "", 1, 7, "',' expected."],
+      ["%s%d:%d - %s", "", 1, 9, "Cannot find name 'y'."]
     ]);
   });
 
@@ -391,6 +391,27 @@ describe("externalFiles", () => {
       expect(consoleLogCalls).toEqual([]);
       expect(consoleErrorCalls).toEqual([]);
       expect(ex.locals).toEqual({ bVal: "BBBAAA" });
+    });
+  });
+
+  it("errors", async () => {
+    await runInTmpAsync("pkg", async dir => {
+      fs.writeFileSync(
+        pathlib.join(dir, "a.ts"),
+        'export const aVal: number = "AAA";'
+      );
+      let promise = ex.execute(`import {aVal} from "./${dir}/a";`);
+      expect(await promise).toBe(false);
+      expect(consoleLogCalls).toEqual([]);
+      expect(consoleErrorCalls).toEqual([
+        [
+          "%s%d:%d - %s",
+          `${dir}/a.ts `,
+          1,
+          3,
+          "Type '\"AAA\"' is not assignable to type 'number'."
+        ]
+      ]);
     });
   });
 });

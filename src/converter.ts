@@ -46,6 +46,7 @@ export interface Diagnostic {
   messageText: string;
   category: number;
   code: number;
+  fileName?: string;
 }
 
 export interface CompletionInfo {
@@ -233,7 +234,6 @@ export function createConverter(options?: ConverterOptions): Converter {
 
   function convert(prevDecl: string, src: string): ConvertResult {
     updateContent(prevDecl, src);
-    let program = builder.getProgram();
     let declsFile = builder.getSourceFile(declFilename);
     let srcFile = builder.getSourceFile(srcFilename);
 
@@ -249,7 +249,6 @@ export function createConverter(options?: ConverterOptions): Converter {
       // TODO: Disallow "export" in the input.
       const suffix = "\nexport {" + Array.from(keys).join(", ") + "}";
       updateContent(prevDecl, src + suffix);
-      program = builder.getProgram();
       declsFile = builder.getSourceFile(declFilename);
       srcFile = builder.getSourceFile(srcFilename);
     }
@@ -257,7 +256,7 @@ export function createConverter(options?: ConverterOptions): Converter {
     const diag = convertDiagnostics(
       srcFile,
       createOffsetToDiagnosticPos(srcFile, srcPrefix),
-      ts.getPreEmitDiagnostics(program, srcFile)
+      getPreEmitDiagnosticsWithDependencies(builder, srcFile)
     );
     if (diag.diagnostics.length > 0) {
       return {
@@ -309,7 +308,11 @@ export function createConverter(options?: ConverterOptions): Converter {
         })
       );
     }
-    declOutput += remainingDecls(program.getTypeChecker(), srcFile, declsFile);
+    declOutput += remainingDecls(
+      builder.getProgram().getTypeChecker(),
+      srcFile,
+      declsFile
+    );
     return {
       output: esModuleToCommonJSModule(output, traspileTarget),
       declOutput,
@@ -693,26 +696,44 @@ export function createConverter(options?: ConverterOptions): Converter {
     let hasToplevelAwait = false;
     const diagnostics: Diagnostic[] = [];
     for (const d of input) {
-      if (!d.file || d.file.fileName !== srcFilename) {
+      if (!d.file) {
         continue;
       }
-      if (isTopLevelAwaitDiagnostic(srcFile, d)) {
+      if (
+        d.file.fileName === srcFilename &&
+        isTopLevelAwaitDiagnostic(srcFile, d)
+      ) {
         hasToplevelAwait = true;
         continue;
       }
-      const start = toDiagnosticPos(d.start),
-        end = toDiagnosticPos(d.start + d.length);
+      let fileName: string;
+      if (d.file.fileName !== srcFilename) {
+        const rel = pathlib.relative(cwd, d.file.fileName);
+        if (rel.startsWith("..")) {
+          continue;
+        }
+        fileName = rel;
+      }
+      const start = toDiagnosticPos(d.start);
+      const end = toDiagnosticPos(d.start + d.length);
       if (typeof d.messageText === "string") {
         diagnostics.push({
           start,
           end,
           messageText: d.messageText.toString(),
           category: d.category,
-          code: d.code
+          code: d.code,
+          fileName
         });
         continue;
       }
-      traverseDiagnosticMessageChain(start, end, d.messageText, diagnostics);
+      traverseDiagnosticMessageChain(
+        start,
+        end,
+        d.messageText,
+        diagnostics,
+        fileName
+      );
     }
     return { diagnostics, hasToplevelAwait };
   }
@@ -721,7 +742,8 @@ export function createConverter(options?: ConverterOptions): Converter {
     start: DiagnosticPos,
     end: DiagnosticPos,
     msg: ts.DiagnosticMessageChain,
-    out: Diagnostic[]
+    out: Diagnostic[],
+    fileName?: string
   ) {
     out.push({
       start,
@@ -967,4 +989,21 @@ function forwardTslabPath(cwd: string, path: string): string {
     return path;
   }
   return pathlib.join(pathlib.dirname(__dirname), rel);
+}
+
+function getPreEmitDiagnosticsWithDependencies(
+  builder: ts.BuilderProgram,
+  sourceFile: ts.SourceFile
+): readonly ts.Diagnostic[] {
+  const files = [sourceFile];
+  for (const dep of builder.getAllDependencies(sourceFile)) {
+    if (
+      dep.endsWith(".ts") &&
+      !dep.endsWith(".d.ts") &&
+      dep !== sourceFile.fileName
+    ) {
+      files.push(builder.getSourceFile(dep));
+    }
+  }
+  return ts.getPreEmitDiagnosticsOfFiles(builder.getProgram(), files);
 }

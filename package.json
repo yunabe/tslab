@@ -17,10 +17,10 @@
     "/python/**/*.py"
   ],
   "dependencies": {
-    "@tslab/typescript-for-tslab": "3.7.3-tslab.1",
-    "@types/node": "^12.12.11",
+    "@tslab/typescript-for-tslab": "3.7.3-tslab.2",
+    "@types/node": "^12.12.21",
     "commander": "^4.0.0",
-    "semver": "^6.3.0",
+    "semver": "^7.1.1",
     "zeromq": "^6.0.0-beta.5"
   },
   "scripts": {
@@ -32,10 +32,10 @@
     "clean": "rm -rf dist tmp"
   },
   "devDependencies": {
-    "@types/jest": "^24.0.22",
+    "@types/jest": "^24.0.24",
     "@types/semver": "^6.2.0",
     "jest": "^24.9.0",
     "ts-jest": "^24.2.0",
-    "typescript": "^3.7.3"
+    "typescript": "^3.7.4"
   }
 }

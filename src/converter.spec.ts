@@ -1204,6 +1204,36 @@ describe("externalFiles", () => {
       ]);
     });
   });
+
+  it("errors", () => {
+    runInTmp("pkg", dir => {
+      fs.writeFileSync(
+        pathlib.join(dir, "a.ts"),
+        'export const aVal: number = "AAA";\nlet x = await new Promise(resolve => resolve(1));'
+      );
+      const output = conv.convert("", `import {aVal} from "./${dir}/a";`);
+      expect(output.diagnostics).toEqual([
+        {
+          start: { offset: 2, line: 0, character: 2 },
+          end: { offset: 6, line: 0, character: 6 },
+          messageText: "Type '\"AAA\"' is not assignable to type 'number'.",
+          category: 1,
+          code: 2322,
+          fileName: `${dir}/a.ts`
+        },
+        // Top-level await is not allowed in external files.
+        {
+          start: { offset: 32, line: 0, character: 32 },
+          end: { offset: 37, line: 0, character: 37 },
+          messageText:
+            "'await' expression is only allowed within an async function.",
+          category: 1,
+          code: 1308,
+          fileName: `${dir}/a.ts`
+        }
+      ]);
+    });
+  });
 });
 
 describe("isCompleteCode", () => {
