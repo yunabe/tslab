@@ -1,10 +1,5 @@
 import { TaskQueue, TaskCanceledError } from "./util";
-
-function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => {
-    setTimeout(resolve, ms);
-  });
-}
+import { sleep } from "./testutil";
 
 describe("TaskQueue", () => {
   it("sequential", async () => {

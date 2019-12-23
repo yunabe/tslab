@@ -68,6 +68,8 @@ export interface IsCompleteResult {
 export interface ConverterOptions {
   /** If true, JavaScript mode. TypeSceript mode otherwise */
   isJS?: boolean;
+  /** Only for testing. File changes are forwarded to this handler. */
+  _fileWatcher?: ts.FileWatcherCallback;
 }
 
 export interface Converter {
@@ -92,7 +94,7 @@ export function createConverter(options?: ConverterOptions): Converter {
   const cwd = ts.sys.getCurrentDirectory();
   const srcFilename = pathlib.join(
     cwd,
-    options && options.isJS ? "__tslab__.js" : "__tslab__.ts"
+    options?.isJS ? "__tslab__.js" : "__tslab__.ts"
   );
   const declFilename = pathlib.join(cwd, "__prev__.d.ts");
 
@@ -174,15 +176,27 @@ export function createConverter(options?: ConverterOptions): Converter {
   };
   let notifyUpdateSrc: ts.FileWatcherCallback = null;
   let notifyUpdateDecls: ts.FileWatcherCallback = null;
-  sys.watchFile = (path, callback) => {
+  sys.watchFile = (path, callback, pollingInterval?: number) => {
+    if (options?._fileWatcher) {
+      const original = callback;
+      callback = (fileName, eventKind) => {
+        original(fileName, eventKind);
+        options._fileWatcher(fileName, eventKind);
+      };
+    }
     if (path === srcFilename) {
       notifyUpdateSrc = callback;
-    } else if (path === declFilename) {
-      notifyUpdateDecls = callback;
+      return {
+        close: () => {}
+      };
     }
-    return {
-      close: () => {}
-    };
+    if (path === declFilename) {
+      notifyUpdateDecls = callback;
+      return {
+        close: () => {}
+      };
+    }
+    return ts.sys.watchFile(path, callback, pollingInterval);
   };
   const host = ts.createWatchCompilerHost(
     [declFilename, srcFilename],

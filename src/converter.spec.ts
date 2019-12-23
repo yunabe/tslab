@@ -1,18 +1,41 @@
 import * as converter from "./converter";
 import * as ts from "@tslab/typescript-for-tslab";
-import { runInTmp } from "./testutil";
-import fs from "fs";
+import { runInTmp, runInTmpAsync, sleep } from "./testutil";
+import fs, { watch } from "fs";
 import pathlib from "path";
 
 let conv: converter.Converter;
 beforeAll(() => {
-  conv = converter.createConverter();
+  conv = converter.createConverter({
+    _fileWatcher: (fileName, eventKind) => {
+      fileWathchers.forEach(cb => cb(fileName, eventKind));
+    }
+  });
 });
 afterAll(() => {
   if (conv) {
     conv.close();
   }
 });
+
+let fileWathchers = new Set<ts.FileWatcherCallback>();
+function waitFileEvent(
+  fileName?: string,
+  eventKind?: ts.FileWatcherEventKind
+): Promise<{ fileName: string; eventKind: ts.FileWatcherEventKind }> {
+  return new Promise(done => {
+    const cb = (fn, ek) => {
+      if (
+        (fileName == null || fileName === fn) &&
+        (eventKind == null || eventKind === ek)
+      ) {
+        fileWathchers.delete(cb);
+        done({ fileName: fn, eventKind: ek });
+      }
+    };
+    fileWathchers.add(cb);
+  });
+}
 
 function buildOutput(
   lines: string[],
@@ -1230,6 +1253,34 @@ describe("externalFiles", () => {
           category: 1,
           code: 1308,
           fileName: `${dir}/a.ts`
+        }
+      ]);
+    });
+  });
+
+  it("changed", async () => {
+    await runInTmpAsync("pkg", async dir => {
+      const srcPath = pathlib.resolve(pathlib.join(dir, "a.ts"));
+      fs.writeFileSync(srcPath, 'export const aVal: string = "ABC";');
+      let output = conv.convert("", `import {aVal} from "./${dir}/a";`);
+      expect(output.diagnostics).toEqual([]);
+      expect(output.sideOutputs).toEqual([
+        {
+          path: pathlib.join(process.cwd(), `${dir}/a.js`),
+          data: buildOutput(['exports.aVal = "ABC";'])
+        }
+      ]);
+
+      fs.writeFileSync(srcPath, 'export const aVal: string = "XYZ";');
+      await waitFileEvent(srcPath, ts.FileWatcherEventKind.Changed);
+      // yield to TyeScript compiler just for safety.
+      await sleep(0);
+      output = conv.convert("", `import {aVal} from "./${dir}/a";`);
+      expect(output.diagnostics).toEqual([]);
+      expect(output.sideOutputs).toEqual([
+        {
+          path: pathlib.join(process.cwd(), `${dir}/a.js`),
+          data: buildOutput(['exports.aVal = "XYZ";'])
         }
       ]);
     });

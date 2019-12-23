@@ -2,12 +2,7 @@ import * as ts from "@tslab/typescript-for-tslab";
 import { JupyterHandlerImpl, ExecuteReply } from "./jupyter";
 import { Executor } from "./executor";
 import { TaskCanceledError } from "./util";
-
-function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => {
-    setTimeout(resolve, ms);
-  });
-}
+import { sleep } from "./testutil";
 
 describe("JupyterHandlerImpl", () => {
   let handler: JupyterHandlerImpl;
