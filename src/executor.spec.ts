@@ -1,19 +1,26 @@
-import * as executor from "./executor";
-import { createConverter, Converter } from "./converter";
 import { createHash } from "crypto";
-import { runInTmpAsync } from "./testutil";
-
 import fs from "fs";
 import pathlib from "path";
 
+import * as executor from "./executor";
+import { createConverter, Converter } from "./converter";
+import {
+  runInTmpAsync,
+  WaitFileEventFunc,
+  createConverterWithFileWatcher,
+  sleep
+} from "./testutil";
+import ts from "@tslab/typescript-for-tslab";
+
 let ex: executor.Executor;
 let conv: Converter;
+let waitFileEvent: WaitFileEventFunc;
 
 let consoleLogCalls = [];
 let consoleErrorCalls = [];
 
 beforeAll(() => {
-  conv = createConverter();
+  ({ converter: conv, waitFileEvent } = createConverterWithFileWatcher());
   let exconsole = {
     log: function(...args) {
       consoleLogCalls.push(args);
@@ -412,6 +419,28 @@ describe("externalFiles", () => {
           "Type '\"AAA\"' is not assignable to type 'number'."
         ]
       ]);
+    });
+  });
+
+  it("changed", async () => {
+    await runInTmpAsync("pkg", async dir => {
+      const srcPath = pathlib.resolve(pathlib.join(dir, "a.ts"));
+      fs.writeFileSync(srcPath, 'export const aVal = "ABC";');
+      let promise = ex.execute(`import {aVal} from "./${dir}/a";`);
+      expect(await promise).toBe(true);
+      expect(consoleLogCalls).toEqual([]);
+      expect(consoleErrorCalls).toEqual([]);
+      expect(ex.locals.aVal).toEqual("ABC");
+
+      fs.writeFileSync(srcPath, 'export const aVal = "XYZ";');
+      await waitFileEvent(srcPath, ts.FileWatcherEventKind.Changed);
+      // yield to TyeScript compiler just for safety.
+      await sleep(0);
+      promise = ex.execute(`import {aVal} from "./${dir}/a";`);
+      expect(await promise).toBe(true);
+      expect(consoleLogCalls).toEqual([]);
+      expect(consoleErrorCalls).toEqual([]);
+      expect(ex.locals.aVal).toEqual("XYZ");
     });
   });
 });

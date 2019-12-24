@@ -1,41 +1,25 @@
 import * as converter from "./converter";
 import * as ts from "@tslab/typescript-for-tslab";
-import { runInTmp, runInTmpAsync, sleep } from "./testutil";
+import {
+  runInTmp,
+  runInTmpAsync,
+  sleep,
+  WaitFileEventFunc,
+  createConverterWithFileWatcher
+} from "./testutil";
 import fs, { watch } from "fs";
 import pathlib from "path";
 
 let conv: converter.Converter;
+let waitFileEvent: WaitFileEventFunc;
 beforeAll(() => {
-  conv = converter.createConverter({
-    _fileWatcher: (fileName, eventKind) => {
-      fileWathchers.forEach(cb => cb(fileName, eventKind));
-    }
-  });
+  ({ converter: conv, waitFileEvent } = createConverterWithFileWatcher());
 });
 afterAll(() => {
   if (conv) {
     conv.close();
   }
 });
-
-let fileWathchers = new Set<ts.FileWatcherCallback>();
-function waitFileEvent(
-  fileName?: string,
-  eventKind?: ts.FileWatcherEventKind
-): Promise<{ fileName: string; eventKind: ts.FileWatcherEventKind }> {
-  return new Promise(done => {
-    const cb = (fn, ek) => {
-      if (
-        (fileName == null || fileName === fn) &&
-        (eventKind == null || eventKind === ek)
-      ) {
-        fileWathchers.delete(cb);
-        done({ fileName: fn, eventKind: ek });
-      }
-    };
-    fileWathchers.add(cb);
-  });
-}
 
 function buildOutput(
   lines: string[],

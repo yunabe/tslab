@@ -120,7 +120,7 @@ export function createExecutor(
   const sideModules = new Map<string, NodeModule>();
   function updateSideOutputs(outs: SideOutput[]): void {
     for (const out of outs) {
-      if (!sideModules.has(out.path)) {
+      if (sideModules.has(out.path)) {
         sideModules.delete(out.path);
       }
       sideOutputs.set(out.path, out.data);
