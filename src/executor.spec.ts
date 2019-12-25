@@ -422,6 +422,26 @@ describe("externalFiles", () => {
     });
   });
 
+  it("cache module", async () => {
+    await runInTmpAsync("pkg", async dir => {
+      fs.writeFileSync(
+        pathlib.join(dir, "rand.ts"),
+        [
+          'import { randomBytes } from "crypto";',
+          'export const uid = randomBytes(8).toString("hex");'
+        ].join("\n")
+      );
+      let promise = ex.execute(`import {uid} from "./${dir}/rand";`);
+      expect(await promise).toBe(true);
+      const uid = ex.locals.uid;
+      expect(typeof uid).toBe("string");
+      promise = ex.execute(`import {uid} from "./${dir}/rand";`);
+      expect(await promise).toBe(true);
+      const uid2 = ex.locals.uid;
+      expect(uid2).toEqual(uid);
+    });
+  });
+
   it("changed", async () => {
     await runInTmpAsync("pkg", async dir => {
       const srcPath = pathlib.resolve(pathlib.join(dir, "a.ts"));
