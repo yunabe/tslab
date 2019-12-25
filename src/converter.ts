@@ -113,6 +113,8 @@ export function createConverter(options?: ConverterOptions): Converter {
   const srcPrefix = "export {};" + ts.sys.newLine;
   let srcContent: string = "";
   let declContent: string = "";
+  /** Check if external .ts files are converted. */
+  const sideInputsConverted = new Set<string>();
   let builder: ts.BuilderProgram = null;
 
   const sys = Object.create(ts.sys) as ts.System;
@@ -177,13 +179,6 @@ export function createConverter(options?: ConverterOptions): Converter {
   let notifyUpdateSrc: ts.FileWatcherCallback = null;
   let notifyUpdateDecls: ts.FileWatcherCallback = null;
   sys.watchFile = (path, callback, pollingInterval?: number) => {
-    if (options?._fileWatcher) {
-      const original = callback;
-      callback = (fileName, eventKind) => {
-        original(fileName, eventKind);
-        options._fileWatcher(fileName, eventKind);
-      };
-    }
     if (path === srcFilename) {
       notifyUpdateSrc = callback;
       return {
@@ -196,7 +191,17 @@ export function createConverter(options?: ConverterOptions): Converter {
         close: () => {}
       };
     }
-    return ts.sys.watchFile(path, callback, pollingInterval);
+    return ts.sys.watchFile(
+      path,
+      (fileName, eventKind) => {
+        sideInputsConverted.delete(fileName);
+        callback(fileName, eventKind);
+        if (options?._fileWatcher) {
+          options._fileWatcher(fileName, eventKind);
+        }
+      },
+      pollingInterval
+    );
   };
   const host = ts.createWatchCompilerHost(
     [declFilename, srcFilename],
@@ -282,15 +287,15 @@ export function createConverter(options?: ConverterOptions): Converter {
     let declOutput: string;
     let lastExpressionVar: string;
     let sideOutputs: SideOutput[];
-    for (const target of [undefined, srcFile]) {
-      // When the first arg of emit is undefined, emit outputs all affected files.
-      // Thus, it might not emit a JS for srcFile when srcFile is not updated.
-      // (This happens at least when src includes only expressions.)
-      if (output != null) {
-        break;
+    for (const dep of getAllSrcDependencies(builder, srcFile)) {
+      if (sideInputsConverted.has(dep)) {
+        continue;
+      }
+      if (dep !== srcFilename) {
+        sideInputsConverted.add(dep);
       }
       builder.emit(
-        target,
+        builder.getSourceFile(dep),
         (fileName: string, data: string) => {
           if (fileName === dstFilename) {
             output = data;
@@ -321,6 +326,9 @@ export function createConverter(options?: ConverterOptions): Converter {
           lastExpressionVar = name;
         })
       );
+    }
+    if (sideOutputs) {
+      sideOutputs.sort((a, b) => a.path.localeCompare(b.path));
     }
     declOutput += remainingDecls(
       builder.getProgram().getTypeChecker(),
@@ -1010,14 +1018,25 @@ function getPreEmitDiagnosticsWithDependencies(
   sourceFile: ts.SourceFile
 ): readonly ts.Diagnostic[] {
   const files = [sourceFile];
-  for (const dep of builder.getAllDependencies(sourceFile)) {
-    if (
-      dep.endsWith(".ts") &&
-      !dep.endsWith(".d.ts") &&
-      dep !== sourceFile.fileName
-    ) {
+  for (const dep of getAllSrcDependencies(builder, sourceFile)) {
+    if (dep !== sourceFile.fileName) {
       files.push(builder.getSourceFile(dep));
     }
   }
   return ts.getPreEmitDiagnosticsOfFiles(builder.getProgram(), files);
+}
+
+/**
+ * Get a list of all .ts and .js file dependencies (including `sourceFile`) of `sourceFile`.
+ */
+function getAllSrcDependencies(
+  builder: ts.BuilderProgram,
+  sourceFile: ts.SourceFile
+): string[] {
+  return builder
+    .getAllDependencies(sourceFile)
+    .filter(
+      dep =>
+        dep.endsWith(".js") || (dep.endsWith(".ts") && !dep.endsWith(".d.ts"))
+    );
 }
