@@ -219,7 +219,10 @@ export function createConverter(options?: ConverterOptions): Converter {
       // allowJs, checkJs and outDir are necessary to transpile .js files.
       allowJs: true,
       checkJs: true,
-      // rootDir is necessary to fix the paths of output files.
+      // tslab does not show error messages in d.ts (e.g. files in @types).
+      // This may improve the compile performance slightly.
+      skipLibCheck: true,
+      // rootDir is necessary to stabilize the paths of output files.
       rootDir: cwd,
       outDir
     },
