@@ -7,7 +7,7 @@ import {
   WaitFileEventFunc,
   createConverterWithFileWatcher
 } from "./testutil";
-import fs, { watch } from "fs";
+import fs from "fs";
 import pathlib from "path";
 
 let conv: converter.Converter;
@@ -1221,8 +1221,8 @@ describe("externalFiles", () => {
       const output = conv.convert("", `import {aVal} from "./${dir}/a";`);
       expect(output.diagnostics).toEqual([
         {
-          start: { offset: 2, line: 0, character: 2 },
-          end: { offset: 6, line: 0, character: 6 },
+          start: { offset: 13, line: 0, character: 13 },
+          end: { offset: 17, line: 0, character: 17 },
           messageText: "Type '\"AAA\"' is not assignable to type 'number'.",
           category: 1,
           code: 2322,
@@ -1230,8 +1230,8 @@ describe("externalFiles", () => {
         },
         // Top-level await is not allowed in external files.
         {
-          start: { offset: 32, line: 0, character: 32 },
-          end: { offset: 37, line: 0, character: 37 },
+          start: { offset: 43, line: 1, character: 8 },
+          end: { offset: 48, line: 1, character: 13 },
           messageText:
             "'await' expression is only allowed within an async function.",
           category: 1,

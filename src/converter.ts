@@ -111,6 +111,12 @@ export function createConverter(options?: ConverterOptions): Converter {
       : ts.ScriptTarget.ES2018;
 
   const srcPrefix = "export {};" + ts.sys.newLine;
+  /** Used in adjustSrcFileOffset */
+  const srcPrefixOffsets = {
+    offset: srcPrefix.length,
+    line: (srcPrefix.match(/\n/g) || []).length,
+    char: srcPrefix.length - (srcPrefix.lastIndexOf("\n") + 1)
+  };
   let srcContent: string = "";
   let declContent: string = "";
   /** Check if external .ts files are converted. */
@@ -276,8 +282,6 @@ export function createConverter(options?: ConverterOptions): Converter {
     }
     srcFile.parent = declsFile;
     const diag = convertDiagnostics(
-      srcFile,
-      createOffsetToDiagnosticPos(srcFile, srcPrefix),
       getPreEmitDiagnosticsWithDependencies(builder, srcFile)
     );
     if (diag.diagnostics.length > 0) {
@@ -681,7 +685,7 @@ export function createConverter(options?: ConverterOptions): Converter {
     srcFile: ts.SourceFile,
     d: ts.Diagnostic
   ): boolean {
-    if (d.code !== 1308) {
+    if (d.code !== 1308 || srcFile == null) {
       // https://github.com/microsoft/TypeScript/search?q=await_expression_is_only_allowed_within_an_async_function_1308
       return false;
     }
@@ -710,9 +714,28 @@ export function createConverter(options?: ConverterOptions): Converter {
     return true;
   }
 
+  function adjustSrcFileOffset(
+    fileName: string,
+    offset: number
+  ): DiagnosticPos {
+    const lineChar = ts.getLineAndCharacterOfPosition(
+      builder.getSourceFile(fileName),
+      offset
+    );
+    const pos = {
+      offset: offset,
+      line: lineChar.line,
+      character: lineChar.character
+    };
+    if (fileName === srcFilename) {
+      pos.offset -= srcPrefixOffsets.offset;
+      pos.line -= srcPrefixOffsets.line;
+      pos.character -= srcPrefixOffsets.char;
+    }
+    return pos;
+  }
+
   function convertDiagnostics(
-    srcFile: ts.SourceFile,
-    toDiagnosticPos: (number) => DiagnosticPos,
     input: readonly ts.Diagnostic[]
   ): {
     diagnostics: Diagnostic[];
@@ -720,6 +743,7 @@ export function createConverter(options?: ConverterOptions): Converter {
   } {
     let hasToplevelAwait = false;
     const diagnostics: Diagnostic[] = [];
+    const srcFile = builder.getSourceFile(srcFilename);
     for (const d of input) {
       if (!d.file) {
         continue;
@@ -739,8 +763,8 @@ export function createConverter(options?: ConverterOptions): Converter {
         }
         fileName = rel;
       }
-      const start = toDiagnosticPos(d.start);
-      const end = toDiagnosticPos(d.start + d.length);
+      const start = adjustSrcFileOffset(d.file.fileName, d.start);
+      const end = adjustSrcFileOffset(d.file.fileName, d.start + d.length);
       if (typeof d.messageText === "string") {
         diagnostics.push({
           start,
@@ -965,24 +989,6 @@ export function keepNamesInImport(
   if (!imc.name && !imc.namedBindings) {
     throw new Error("no symbol is included in names");
   }
-}
-
-/** @internal */
-function createOffsetToDiagnosticPos(
-  src: ts.SourceFile,
-  prefix: string
-): (offset: number) => DiagnosticPos {
-  const offsetPrefix = prefix.length;
-  const linePrefix = (prefix.match(/\n/g) || []).length;
-  const charPrefix = prefix.length - (prefix.lastIndexOf("\n") + 1);
-  return function(offset: number) {
-    const lineChar = ts.getLineAndCharacterOfPosition(src, offset);
-    return {
-      offset: offset - offsetPrefix,
-      line: lineChar.line - linePrefix,
-      character: lineChar.character - charPrefix
-    };
-  };
 }
 
 function getCompletionsAtPosition(

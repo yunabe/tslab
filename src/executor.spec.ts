@@ -415,7 +415,7 @@ describe("externalFiles", () => {
           "%s%d:%d - %s",
           `${dir}/a.ts `,
           1,
-          3,
+          14,
           "Type '\"AAA\"' is not assignable to type 'number'."
         ]
       ]);
