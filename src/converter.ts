@@ -1,6 +1,7 @@
 import pathlib from "path";
 import semver from "semver";
 import * as ts from "@tslab/typescript-for-tslab";
+import { isValidModuleName } from "./util";
 
 // TODO: Disallow accessing "module" of Node.js.
 
@@ -79,6 +80,8 @@ export interface Converter {
   isCompleteCode(src: string): IsCompleteResult;
   /** Release internal resources to terminate the process gracefully. */
   close(): void;
+  /** Defines a in-memory module */
+  addModule(name: string, content: string): Diagnostic[];
 }
 
 interface RebuildTimer {
@@ -97,7 +100,7 @@ export function createConverter(options?: ConverterOptions): Converter {
     options?.isJS ? "__tslab__.js" : "__tslab__.ts"
   );
   const declFilename = pathlib.join(cwd, "__prev__.d.ts");
-
+  const rootFiles = new Set<string>([declFilename, srcFilename]);
   const outDir = "outDir";
   const dstFilename = pathlib.join(outDir, "__tslab__.js");
   const dstDeclFilename = pathlib.join(outDir, "__tslab__.d.ts");
@@ -149,6 +152,9 @@ export function createConverter(options?: ConverterOptions): Converter {
     if (path === declFilename) {
       return srcPrefix + declContent;
     }
+    if (virtualFiles.has(path)) {
+      return virtualFiles.get(path);
+    }
     return ts.sys.readFile(forwardTslabPath(cwd, path), encoding);
   };
   sys.directoryExists = function(path: string): boolean {
@@ -162,7 +168,10 @@ export function createConverter(options?: ConverterOptions): Converter {
     return pathlib.join(cwd, "node_modules") === path;
   };
   sys.fileExists = function(path: string): boolean {
-    return ts.sys.fileExists(forwardTslabPath(cwd, path));
+    if (ts.sys.fileExists(forwardTslabPath(cwd, path))) {
+      return true;
+    }
+    return virtualFiles.has(path);
   };
   sys.readDirectory = function(
     path: string,
@@ -184,6 +193,9 @@ export function createConverter(options?: ConverterOptions): Converter {
   };
   let notifyUpdateSrc: ts.FileWatcherCallback = null;
   let notifyUpdateDecls: ts.FileWatcherCallback = null;
+  /** files for modules in memory */
+  const virtualFiles = new Map<string, string>();
+  const fileWatchers = new Map<string, ts.FileWatcherCallback>();
   sys.watchFile = (path, callback, pollingInterval?: number) => {
     if (path === srcFilename) {
       notifyUpdateSrc = callback;
@@ -197,20 +209,26 @@ export function createConverter(options?: ConverterOptions): Converter {
         close: () => {}
       };
     }
-    return ts.sys.watchFile(
-      path,
-      (fileName, eventKind) => {
-        sideInputsConverted.delete(fileName);
-        callback(fileName, eventKind);
-        if (options?._fileWatcher) {
-          options._fileWatcher(fileName, eventKind);
-        }
-      },
-      pollingInterval
-    );
+    // Note: File watchers for real files and virtual files are mixed here.
+    // This implementation is not 100% precise, though it causes a minor performance issue.
+    const cb = (fileName, eventKind) => {
+      sideInputsConverted.delete(fileName);
+      callback(fileName, eventKind);
+      if (options?._fileWatcher) {
+        options._fileWatcher(fileName, eventKind);
+      }
+    };
+    fileWatchers.set(path, cb);
+    const watcher = ts.sys.watchFile(path, cb, pollingInterval);
+    return {
+      close: () => {
+        fileWatchers.delete(path);
+        watcher.close();
+      }
+    };
   };
   const host = ts.createWatchCompilerHost(
-    [declFilename, srcFilename],
+    Array.from(rootFiles),
     {
       // module is ESNext, not ES2015, to support dynamic import.
       module: ts.ModuleKind.ESNext,
@@ -253,7 +271,8 @@ export function createConverter(options?: ConverterOptions): Converter {
     convert,
     inspect,
     complete,
-    isCompleteCode
+    isCompleteCode,
+    addModule
   };
 
   function close() {
@@ -933,6 +952,30 @@ export function createConverter(options?: ConverterOptions): Converter {
       return current + "  ";
     }
     return current;
+  }
+
+  function addModule(name: string, content: string): Diagnostic[] {
+    if (!isValidModuleName(name)) {
+      throw new Error("invalid module name: " + JSON.stringify(name));
+    }
+    const ext = options?.isJS ? ".js" : ".ts";
+    const path = pathlib.join(cwd, name + ext);
+    virtualFiles.set(path, content);
+    if (fileWatchers.has(path)) {
+      fileWatchers.get(path)(path, ts.FileWatcherEventKind.Changed);
+    }
+    builder = null;
+    rootFiles.add(path);
+    watch.updateRootFileNames(Array.from(rootFiles));
+    if (!rebuildTimer) {
+      throw new Error("rebuildTimer is not set properly");
+    }
+    rebuildTimer.callback();
+    rebuildTimer = null;
+    const file = builder.getSourceFile(path);
+
+    const diags = ts.getPreEmitDiagnostics(builder.getProgram(), file);
+    return convertDiagnostics(diags).diagnostics;
   }
 }
 

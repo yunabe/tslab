@@ -1,4 +1,4 @@
-import { TaskQueue, TaskCanceledError } from "./util";
+import { TaskQueue, TaskCanceledError, isValidModuleName } from "./util";
 import { sleep } from "./testutil";
 
 describe("TaskQueue", () => {
@@ -103,4 +103,15 @@ describe("TaskQueue", () => {
     expect(abort).toBeGreaterThan(0);
     expect(res).toEqual("success");
   });
+});
+
+it("isValidModuleName", () => {
+  expect(isValidModuleName("abc")).toBeTruthy();
+  expect(isValidModuleName("ABC")).toBeTruthy();
+  expect(isValidModuleName("012")).toBeTruthy();
+
+  expect(isValidModuleName("")).toBeFalsy();
+  expect(isValidModuleName("  ")).toBeFalsy();
+  expect(isValidModuleName(" abc")).toBeFalsy();
+  expect(isValidModuleName("a/b")).toBeFalsy();
 });

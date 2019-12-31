@@ -1122,6 +1122,54 @@ declare let m: Map;
   });
 });
 
+describe("module", () => {
+  it("updated", () => {
+    expect(conv.addModule("mylib", `export const abc = "ABC";`)).toEqual([]);
+    let out = conv.convert(
+      "",
+      'import {abc} from "./mylib";\nconst xyz = abc;'
+    );
+    expect(out.diagnostics).toEqual([]);
+    expect(out.output).toEqual(
+      buildOutput([
+        'const mylib_1 = require("./mylib");',
+        "exports.abc = mylib_1.abc;",
+        "const xyz = mylib_1.abc;",
+        "exports.xyz = xyz;"
+      ])
+    );
+    expect(out.declOutput).toEqual(
+      'import { abc } from "./mylib";\ndeclare const xyz = "ABC";\n'
+    );
+
+    // update mylib.
+    expect(conv.addModule("mylib", `export const abc = 1234;`)).toEqual([]);
+    out = conv.convert("", 'import {abc} from "./mylib";\nconst xyz = abc;');
+    expect(out.diagnostics).toEqual([]);
+    expect(out.declOutput).toEqual(
+      'import { abc } from "./mylib";\ndeclare const xyz = 1234;\n'
+    );
+  });
+
+  it("errors", () => {
+    const want = [
+      {
+        start: { offset: 13, line: 0, character: 13 },
+        end: { offset: 16, line: 0, character: 16 },
+        messageText: `Type '"ABC"' is not assignable to type 'number'.`,
+        category: 1,
+        code: 2322,
+        fileName: "mylib.ts"
+      }
+    ];
+    expect(
+      conv.addModule("mylib", `export const abc: number = "ABC";`)
+    ).toEqual(want);
+    const out = conv.convert("", 'import * as mylib from "./mylib";');
+    expect(out.diagnostics).toEqual(want);
+  });
+});
+
 describe("repeated inputs", () => {
   it("expressions", () => {
     // builder.emit does not emit JS for duplicated inputs when they only include

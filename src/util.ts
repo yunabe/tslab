@@ -16,6 +16,10 @@ export function getVersion(): string {
   return versionCache;
 }
 
+export function isValidModuleName(name: string): boolean {
+  return /^\w+$/.test(name);
+}
+
 /**
  * TaskQueue executes asynchronous tasks sequentially.
  */
