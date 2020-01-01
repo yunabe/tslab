@@ -47,7 +47,7 @@ export interface ConsoleInterface {
 /**
  * createRequire creates `require` which resolves modules from `rootDir`.
  */
-export function createRequire(rootDir: string): NodeRequire {
+export function createRequire(rootDir: string): NodeJS.Require {
   // createRequire is added in Node v12. createRequireFromPath is deprecated.
   const create = Module.createRequire || Module.createRequireFromPath;
   return create(path.join(rootDir, "src.js"));
@@ -57,11 +57,11 @@ export function createRequire(rootDir: string): NodeRequire {
  * Wrap `require` to hook import of tslab and imports from sideOutputs.
  */
 function wrapRequire(
-  req: NodeRequireFunction,
+  req: NodeJS.Require,
   dirname: string,
   sideOutputs: Map<string, string>,
   sideModules: Map<string, NodeModule>
-): NodeRequireFunction {
+): NodeJS.Require {
   function requireFromSideOutputs(id: string): any {
     let filename = path.join(dirname, id);
     if (path.extname(filename) === "") {
@@ -91,7 +91,7 @@ function wrapRequire(
     return mod.exports;
   }
 
-  return new Proxy<NodeRequireFunction>(req, {
+  return new Proxy<NodeJS.Require>(req, {
     // TODO: Test this behavior.
     apply: (_target: object, thisArg: any, argArray?: any): any => {
       if (argArray.length !== 1) {
