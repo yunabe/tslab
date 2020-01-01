@@ -7,8 +7,10 @@ import {
   Converter,
   CompletionInfo,
   IsCompleteResult,
-  SideOutput
+  SideOutput,
+  Diagnostic
 } from "./converter";
+import { isValidModuleName } from "./util";
 
 export interface Executor {
   /**
@@ -180,21 +182,31 @@ export function createExecutor(
     });
   }
 
+  function printDiagnostics(diagnostics: Diagnostic[]) {
+    for (const diag of diagnostics) {
+      console.error(
+        "%s%d:%d - %s",
+        diag.fileName ? diag.fileName + " " : "",
+        diag.start.line + 1,
+        diag.start.character + 1,
+        diag.messageText
+      );
+    }
+  }
+
   async function execute(src: string): Promise<boolean> {
+    const metadata = getCodeMetadata(src);
+    if (metadata.module) {
+      printDiagnostics(conv.addModule(metadata.module, src));
+      // Always returns true because modules are registered regardless of errors in src.
+      return true;
+    }
     const converted = conv.convert(prevDecl, src);
     if (converted.sideOutputs) {
       updateSideOutputs(converted.sideOutputs);
     }
     if (converted.diagnostics.length > 0) {
-      for (const diag of converted.diagnostics) {
-        console.error(
-          "%s%d:%d - %s",
-          diag.fileName ? diag.fileName + " " : "",
-          diag.start.line + 1,
-          diag.start.character + 1,
-          diag.messageText
-        );
-      }
+      printDiagnostics(converted.diagnostics);
       return false;
     }
     if (!converted.output) {
@@ -273,4 +285,54 @@ export function createExecutor(
     isCompleteCode,
     close
   };
+}
+
+interface CodeMetadata {
+  module?: string;
+}
+
+/** @internal */
+export function getCodeMetadata(src: string): CodeMetadata {
+  const scanner = ts.createScanner(
+    ts.ScriptTarget.Latest,
+    /* skipTrivia */ false
+  );
+  scanner.setLanguageVariant(ts.LanguageVariant.Standard);
+  scanner.setText(src);
+  const out: CodeMetadata = {};
+  while (true) {
+    const kind = scanner.scan();
+    if (
+      kind < ts.SyntaxKind.FirstTriviaToken ||
+      kind > ts.SyntaxKind.LastTriviaToken
+    ) {
+      break;
+    }
+    if (kind !== ts.SyntaxKind.MultiLineCommentTrivia) {
+      // Skip trivia tokens.
+      continue;
+    }
+    const text = scanner.getTokenText();
+    const ret = (ts as any).parseIsolatedJSDocComment(text);
+    if (!ret) {
+      // Not JSDoc (e.g. /* comment */)
+      continue;
+    }
+    if (ret.diagnostics?.length) {
+      continue;
+    }
+    const jsDoc = ret.jsDoc;
+    if (!jsDoc || !jsDoc.tags) {
+      continue;
+    }
+    for (const tag of jsDoc.tags as ts.JSDocTag[]) {
+      if (
+        tag.tagName.escapedText === "module" &&
+        isValidModuleName(tag.comment)
+      ) {
+        out.module = tag.comment;
+      }
+    }
+  }
+  return out;
 }

@@ -1122,7 +1122,7 @@ declare let m: Map;
   });
 });
 
-describe("module", () => {
+describe("modules", () => {
   it("updated", () => {
     expect(conv.addModule("mylib", `export const abc = "ABC";`)).toEqual([]);
     let out = conv.convert(
@@ -1167,6 +1167,23 @@ describe("module", () => {
     ).toEqual(want);
     const out = conv.convert("", 'import * as mylib from "./mylib";');
     expect(out.diagnostics).toEqual(want);
+  });
+
+  it("notExternalModule", () => {
+    // Though the content of the module does not contain either `export` or `import`,
+    // tslab handles it as a module. Thus, this does not define a global variable `abc`.
+    // c.f. https://www.typescriptlang.org/docs/handbook/modules.html#introduction
+    expect(conv.addModule("mylib", `const abc = "ABC";`)).toEqual([]);
+    expect(conv.convert("", "const xyz = abc;").diagnostics).toEqual([
+      {
+        start: { offset: 12, line: 0, character: 12 },
+        end: { offset: 15, line: 0, character: 15 },
+        messageText: "Cannot find name 'abc'.",
+        category: 1,
+        code: 2304,
+        fileName: undefined
+      }
+    ]);
   });
 });
 

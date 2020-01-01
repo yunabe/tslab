@@ -112,7 +112,11 @@ export function createConverter(options?: ConverterOptions): Converter {
     semver.major(process.version) >= 12
       ? ts.ScriptTarget.ES2019
       : ts.ScriptTarget.ES2018;
-
+  /**
+   * A prefix to sources to handle sources as external modules
+   * > any file containing a top-level import or export is considered a module.
+   * > https://www.typescriptlang.org/docs/handbook/modules.html#introduction
+   */
   const srcPrefix = "export {};" + ts.sys.newLine;
   /** Used in adjustSrcFileOffset */
   const srcPrefixOffsets = {
@@ -193,7 +197,7 @@ export function createConverter(options?: ConverterOptions): Converter {
   };
   let notifyUpdateSrc: ts.FileWatcherCallback = null;
   let notifyUpdateDecls: ts.FileWatcherCallback = null;
-  /** files for modules in memory */
+  /** files for modules in memory. `srcPrefix` is prepended to values of virtualFiles. */
   const virtualFiles = new Map<string, string>();
   const fileWatchers = new Map<string, ts.FileWatcherCallback>();
   sys.watchFile = (path, callback, pollingInterval?: number) => {
@@ -746,7 +750,7 @@ export function createConverter(options?: ConverterOptions): Converter {
       line: lineChar.line,
       character: lineChar.character
     };
-    if (fileName === srcFilename) {
+    if (fileName === srcFilename || virtualFiles.has(fileName)) {
       pos.offset -= srcPrefixOffsets.offset;
       pos.line -= srcPrefixOffsets.line;
       pos.character -= srcPrefixOffsets.char;
@@ -958,6 +962,7 @@ export function createConverter(options?: ConverterOptions): Converter {
     if (!isValidModuleName(name)) {
       throw new Error("invalid module name: " + JSON.stringify(name));
     }
+    content = srcPrefix + content;
     const ext = options?.isJS ? ".js" : ".ts";
     const path = pathlib.join(cwd, name + ext);
     virtualFiles.set(path, content);

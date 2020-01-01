@@ -378,6 +378,41 @@ describe("interrupt", () => {
   });
 });
 
+describe("modules", () => {
+  it("updated", async () => {
+    expect(
+      await ex.execute(`
+/**
+ * @module mylib
+ */
+export const a = 'AAA';`)
+    ).toBe(true);
+    expect(
+      await ex.execute(
+        'import * as mylib from "./mylib";\nconst b = mylib.a + "BBB";'
+      )
+    ).toBe(true);
+    expect(ex.locals.b).toEqual("AAABBB");
+
+    expect(
+      await ex.execute(`
+/**
+ * @module mylib
+ */
+export let a = 'XXX';`)
+    ).toBe(true);
+    expect(
+      await ex.execute(
+        'import * as mylib from "./mylib";\nconst b = mylib.a + "BBB";'
+      )
+    ).toBe(true);
+    expect(ex.locals.b).toEqual("XXXBBB");
+
+    expect(consoleLogCalls).toEqual([]);
+    expect(consoleErrorCalls).toEqual([]);
+  });
+});
+
 describe("externalFiles", () => {
   it("dependencies", async () => {
     await runInTmpAsync("pkg", async dir => {
@@ -462,5 +497,15 @@ describe("externalFiles", () => {
       expect(consoleErrorCalls).toEqual([]);
       expect(ex.locals.aVal).toEqual("XYZ");
     });
+  });
+});
+
+describe("getCodeMetadata", () => {
+  it("module", () => {
+    const ret = executor.getCodeMetadata(`/**
+ * hello
+ * @module mylib
+ */`);
+    expect(ret).toEqual({ module: "mylib" });
   });
 });
