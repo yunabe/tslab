@@ -243,6 +243,7 @@ export function createConverter(options?: ConverterOptions): Converter {
       newLine: ts.NewLineKind.LineFeed,
       // Remove 'use strict' from outputs.
       noImplicitUseStrict: true,
+      experimentalDecorators: true,
       typeRoots: getTypeRoots(),
       // allowJs, checkJs and outDir are necessary to transpile .js files.
       allowJs: true,

@@ -542,6 +542,23 @@ interface MyInterface {
 declare let obj: MyInterface;
 `);
   });
+
+  it("decorators", () => {
+    const out = conv.convert(
+      "",
+      `
+      function sealed(constructor: Function) {
+        Object.seal(constructor);
+        Object.seal(constructor.prototype);
+      }
+
+      @sealed
+      class Greeter {}
+      `
+    );
+    expect(out.diagnostics).toEqual([]);
+    expect(out.output).toContain("Greeter = __decorate([");
+  });
 });
 
 describe("converter diagnostics", () => {
