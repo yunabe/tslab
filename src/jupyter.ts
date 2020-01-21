@@ -6,6 +6,7 @@ import { TextDecoder } from "util";
 // zeromq runtime must be delay loaded in init().
 import * as zmq from "zeromq";
 
+import { isCompleteCode } from "./converter";
 import { Executor } from "./executor";
 import { printQuickInfo } from "./inspect";
 import { TaskQueue, TaskCanceledError } from "./util";
@@ -589,7 +590,7 @@ export class JupyterHandlerImpl implements JupyterHandler {
   }
 
   handleIsComplete(req: IsCompleteRequest): IsCompleteReply {
-    const res = this.executor.isCompleteCode(req.code);
+    const res = isCompleteCode(req.code);
     if (res.completed) {
       return {
         status: "complete"

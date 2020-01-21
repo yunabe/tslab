@@ -1355,65 +1355,79 @@ describe("externalFiles", () => {
 
 describe("isCompleteCode", () => {
   it("force complete", () => {
-    expect(conv.isCompleteCode("function f() {")).toEqual({
+    expect(converter.isCompleteCode("function f() {")).toEqual({
       completed: false,
       indent: "  "
     });
-    expect(conv.isCompleteCode("function f() {\n")).toEqual({
+    expect(converter.isCompleteCode("function f() {\n")).toEqual({
       completed: false,
       indent: ""
     });
-    expect(conv.isCompleteCode("function f() {\n\n")).toEqual({
+    expect(converter.isCompleteCode("function f() {\n\n")).toEqual({
       completed: true
     });
-    expect(conv.isCompleteCode("function f() {\n  \n\t")).toEqual({
+    expect(converter.isCompleteCode("function f() {\n  \n\t")).toEqual({
       completed: true
     });
-    expect(conv.isCompleteCode("function f() {\r\n  \r\n\t")).toEqual({
+    expect(converter.isCompleteCode("function f() {\r\n  \r\n\t")).toEqual({
       completed: true
     });
-    expect(conv.isCompleteCode("  \n  ")).toEqual({
+    expect(converter.isCompleteCode("  \n  ")).toEqual({
       completed: true
     });
   });
 
   it("completed", () => {
-    expect(conv.isCompleteCode("let x = 10")).toEqual({ completed: true });
-    expect(conv.isCompleteCode("function f() {\n}")).toEqual({
+    expect(converter.isCompleteCode("let x = 10")).toEqual({ completed: true });
+    expect(converter.isCompleteCode("function f() {\n}")).toEqual({
       completed: true
     });
-    expect(conv.isCompleteCode("class C {\n}")).toEqual({
+    expect(converter.isCompleteCode("class C {\n}")).toEqual({
+      completed: true
+    });
+    expect(converter.isCompleteCode("let x-+10")).toEqual({
+      completed: true
+    });
+    expect(converter.isCompleteCode("<div></div>")).toEqual({
       completed: true
     });
   });
 
   it("incompleted", () => {
-    expect(conv.isCompleteCode("function f() {\n  f()")).toEqual({
+    expect(converter.isCompleteCode("function f() {\n  f()")).toEqual({
       completed: false,
       indent: "  "
     });
-    expect(conv.isCompleteCode("while (true) {\n\tlet x = 10;")).toEqual({
+    expect(converter.isCompleteCode("while (true) {\n\tlet x = 10;")).toEqual({
       completed: false,
       indent: "\t"
     });
-    expect(conv.isCompleteCode("fn(x,\n   y")).toEqual({
+    expect(converter.isCompleteCode("fn(x,\n   y")).toEqual({
       completed: false,
       indent: "   "
     });
-    expect(conv.isCompleteCode("let x = y +")).toEqual({
+    expect(converter.isCompleteCode("let x = y +")).toEqual({
       completed: false,
       indent: ""
     });
 
     // increase indnet
-    expect(conv.isCompleteCode("  function f() {")).toEqual({
+    expect(converter.isCompleteCode("  function f() {")).toEqual({
       completed: false,
       indent: "    "
     });
     // decrease indent
-    expect(conv.isCompleteCode("function f() {\n  if (x) {\n    }")).toEqual({
+    expect(
+      converter.isCompleteCode("function f() {\n  if (x) {\n    }")
+    ).toEqual({
       completed: false,
       indent: "  "
+    });
+    // JSX/TSX
+    expect(converter.isCompleteCode("<div>")).toEqual({
+      completed: false,
+      // TODO: Autoindent JSX.
+      indent: ""
     });
   });
 });

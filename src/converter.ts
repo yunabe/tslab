@@ -77,7 +77,6 @@ export interface Converter {
   convert(prevDecl: string, src: string): ConvertResult;
   inspect(prevDecl: string, src: string, position: number): ts.QuickInfo;
   complete(prevDecl: string, src: string, position: number): CompletionInfo;
-  isCompleteCode(src: string): IsCompleteResult;
   /** Release internal resources to terminate the process gracefully. */
   close(): void;
   /** Defines a in-memory module */
@@ -231,6 +230,7 @@ export function createConverter(options?: ConverterOptions): Converter {
       }
     };
   };
+  // This takes several hundreds millisecs.
   const host = ts.createWatchCompilerHost(
     Array.from(rootFiles),
     {
@@ -276,7 +276,6 @@ export function createConverter(options?: ConverterOptions): Converter {
     convert,
     inspect,
     complete,
-    isCompleteCode,
     addModule
   };
 
@@ -911,54 +910,6 @@ export function createConverter(options?: ConverterOptions): Converter {
     }
   }
 
-  function isCompleteCode(src: string): IsCompleteResult {
-    if (/(^|\n)\s*\n\s*$/.test(src)) {
-      // Force to process src if it ends with two white-space lines.
-      return { completed: true };
-    }
-    updateContent("", src);
-    const program = builder.getProgram();
-    const srcFile = builder.getSourceFile(srcFilename);
-    const end = src.length + srcPrefix.length;
-    for (const diag of program.getSyntacticDiagnostics(srcFile)) {
-      if (diag.start !== end || diag.length !== 0) {
-        continue;
-      }
-      if (typeof diag.messageText !== "string") {
-        continue;
-      }
-      if (diag.messageText.endsWith(" expected.")) {
-        const indent = indentOnEnter(src);
-        return { completed: false, indent };
-      }
-    }
-    return { completed: true };
-  }
-
-  function indentOnEnter(src: string): string {
-    // References:
-    // https://code.visualstudio.com/api/language-extensions/language-configuration-guide#indentation-rules
-    // https://github.com/microsoft/vscode/blob/master/extensions/typescript-language-features/src/features/languageConfiguration.ts
-    let line = src.match(/[^\n]*$/)[0];
-    let current = line.match(/^\s*/)[0];
-    if (/^((?!.*?\/\*).*\*\/)?\s*[\}\]].*$/.test(line)) {
-      // decrease indent
-      // TODO: Look into the indent of the previous line.
-      if (current.endsWith("  ")) {
-        return current.substring(0, current.length - 2);
-      }
-      if (current.endsWith("\t") || current.endsWith(" ")) {
-        return current.substring(0, current.length - 1);
-      }
-      return current;
-    }
-    if (/^((?!\/\/).)*(\{[^}"'`]*|\([^)"'`]*|\[[^\]"'`]*)$/.test(line)) {
-      // increase indent
-      return current + "  ";
-    }
-    return current;
-  }
-
   function addModule(name: string, content: string): Diagnostic[] {
     if (!isValidModuleName(name)) {
       throw new Error("invalid module name: " + JSON.stringify(name));
@@ -983,6 +934,62 @@ export function createConverter(options?: ConverterOptions): Converter {
     const diags = ts.getPreEmitDiagnostics(builder.getProgram(), file);
     return convertDiagnostics(diags).diagnostics;
   }
+}
+
+export function isCompleteCode(content: string): IsCompleteResult {
+  if (/(^|\n)\s*\n\s*$/.test(content)) {
+    // Force to process src if it ends with two white-space lines.
+    return { completed: true };
+  }
+  const src = ts.createSourceFile(
+    "tmp.ts",
+    content,
+    ts.ScriptTarget.Latest,
+    undefined,
+    ts.ScriptKind.TSX
+  );
+  const diags: ts.DiagnosticWithLocation[] = (src as any).parseDiagnostics;
+  if (!diags) {
+    return { completed: true };
+  }
+  const end = content.length;
+  for (const diag of diags) {
+    if (diag.start !== end || diag.length !== 0) {
+      continue;
+    }
+    if (typeof diag.messageText !== "string") {
+      continue;
+    }
+    if (diag.messageText.endsWith(" expected.")) {
+      const indent = indentOnEnter(content);
+      return { completed: false, indent };
+    }
+  }
+  return { completed: true };
+}
+
+function indentOnEnter(src: string): string {
+  // References:
+  // https://code.visualstudio.com/api/language-extensions/language-configuration-guide#indentation-rules
+  // https://github.com/microsoft/vscode/blob/master/extensions/typescript-language-features/src/features/languageConfiguration.ts
+  let line = src.match(/[^\n]*$/)[0];
+  let current = line.match(/^\s*/)[0];
+  if (/^((?!.*?\/\*).*\*\/)?\s*[\}\]].*$/.test(line)) {
+    // decrease indent
+    // TODO: Look into the indent of the previous line.
+    if (current.endsWith("  ")) {
+      return current.substring(0, current.length - 2);
+    }
+    if (current.endsWith("\t") || current.endsWith(" ")) {
+      return current.substring(0, current.length - 1);
+    }
+    return current;
+  }
+  if (/^((?!\/\/).)*(\{[^}"'`]*|\([^)"'`]*|\[[^\]"'`]*)$/.test(line)) {
+    // increase indent
+    return current + "  ";
+  }
+  return current;
 }
 
 /*@internal*/
