@@ -29,7 +29,7 @@ beforeAll(() => {
       consoleErrorCalls.push(args);
     }
   };
-  ex = executor.createExecutor(process.cwd(), conv, exconsole);
+  ex = executor.createExecutor(process.cwd(), { node: conv }, exconsole);
 });
 afterAll(() => {
   if (conv) {

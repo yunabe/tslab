@@ -365,13 +365,7 @@ describe("complete", () => {
     expect(info).toEqual({
       start: 0,
       end: 0,
-      candidates: [
-        "__dirname",
-        "__filename",
-        "AbortController",
-        "AbortSignal",
-        "AbstractRange"
-      ],
+      candidates: ["__dirname", "__filename", "afterAll", "afterEach", "any"],
       original: {
         isGlobalCompletion: true,
         isMemberCompletion: false,
@@ -408,13 +402,7 @@ describe("complete", () => {
     expect(info).toEqual({
       start,
       end: start,
-      candidates: [
-        "__dirname",
-        "__filename",
-        "AbortController",
-        "AbortSignal",
-        "AbstractRange"
-      ],
+      candidates: ["__dirname", "__filename", "afterAll", "afterEach", "any"],
       original: {
         isGlobalCompletion: true,
         isMemberCompletion: false,
@@ -462,7 +450,7 @@ describe("complete", () => {
     expect(info).toEqual({
       start: 0,
       end: 4,
-      candidates: ["setTimeout", "DOMSettableTokenList"],
+      candidates: ["setTimeout"],
       original: {
         isGlobalCompletion: true,
         isMemberCompletion: false,
@@ -510,7 +498,7 @@ describe("complete", () => {
     expect(info).toEqual({
       start: 0,
       end: 4,
-      candidates: ["setTimeout", "DOMSettableTokenList"],
+      candidates: ["setTimeout"],
       original: {
         isGlobalCompletion: true,
         isMemberCompletion: false,

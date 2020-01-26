@@ -2,6 +2,7 @@ import pathlib from "path";
 import semver from "semver";
 import * as ts from "@tslab/typescript-for-tslab";
 import { isValidModuleName } from "./util";
+import { bundle as bundleFn } from "./bundle";
 
 // TODO: Disallow accessing "module" of Node.js.
 
@@ -69,6 +70,8 @@ export interface IsCompleteResult {
 export interface ConverterOptions {
   /** If true, JavaScript mode. TypeSceript mode otherwise */
   isJS?: boolean;
+  /** If true, creates a converter for browser mode. Otherwise, Node.js */
+  isBrowser?: boolean;
   /** Only for testing. File changes are forwarded to this handler. */
   _fileWatcher?: ts.FileWatcherCallback;
 }
@@ -81,6 +84,9 @@ export interface Converter {
   close(): void;
   /** Defines a in-memory module */
   addModule(name: string, content: string): Diagnostic[];
+  bundle(
+    content: string
+  ): Promise<{ diagnostics?: Diagnostic[]; output?: string }>;
 }
 
 interface RebuildTimer {
@@ -107,10 +113,18 @@ export function createConverter(options?: ConverterOptions): Converter {
   // c.f.
   // https://github.com/microsoft/TypeScript/wiki/Node-Target-Mapping
   // https://github.com/microsoft/TypeScript/issues/22306#issuecomment-412266626
-  const traspileTarget =
+  const transpileTarget =
     semver.major(process.version) >= 12
       ? ts.ScriptTarget.ES2019
       : ts.ScriptTarget.ES2018;
+  // References:
+  // https://github.com/microsoft/TypeScript/blob/master/src/lib/es2019.full.d.ts
+  const transpileLib =
+    transpileTarget === ts.ScriptTarget.ES2019 ? ["es2019"] : ["es2018"];
+  if (options?.isBrowser) {
+    transpileLib.push("dom");
+    transpileLib.push("dom.iterable");
+  }
   /**
    * A prefix to sources to handle sources as external modules
    * > any file containing a top-level import or export is considered a module.
@@ -238,7 +252,13 @@ export function createConverter(options?: ConverterOptions): Converter {
       module: ts.ModuleKind.ESNext,
       moduleResolution: ts.ModuleResolutionKind.NodeJs,
       esModuleInterop: true,
-      target: traspileTarget,
+      jsx: ts.JsxEmit.React,
+      target: transpileTarget,
+      // We need to wrap entries with lib.*.d.ts before passing `lib` though it's not documented clearly.
+      // c.f.
+      // https://github.com/microsoft/TypeScript/blob/master/src/testRunner/unittests/config/commandLineParsing.ts
+      // https://github.com/microsoft/TypeScript/blob/master/src/compiler/commandLineParser.ts
+      lib: transpileLib.map(lib => `lib.${lib}.d.ts`),
       declaration: true,
       newLine: ts.NewLineKind.LineFeed,
       // Remove 'use strict' from outputs.
@@ -276,6 +296,7 @@ export function createConverter(options?: ConverterOptions): Converter {
     convert,
     inspect,
     complete,
+    bundle,
     addModule
   };
 
@@ -347,7 +368,7 @@ export function createConverter(options?: ConverterOptions): Converter {
           }
           sideOutputs.push({
             path: pathlib.join(cwd, rel),
-            data: esModuleToCommonJSModule(data, traspileTarget)
+            data: esModuleToCommonJSModule(data, transpileTarget)
           });
         },
         undefined,
@@ -366,7 +387,7 @@ export function createConverter(options?: ConverterOptions): Converter {
       declsFile
     );
     return {
-      output: esModuleToCommonJSModule(output, traspileTarget),
+      output: esModuleToCommonJSModule(output, transpileTarget),
       declOutput,
       diagnostics: diag.diagnostics,
       hasToplevelAwait: diag.hasToplevelAwait,
@@ -934,6 +955,48 @@ export function createConverter(options?: ConverterOptions): Converter {
     const diags = ts.getPreEmitDiagnostics(builder.getProgram(), file);
     return convertDiagnostics(diags).diagnostics;
   }
+
+  async function bundle(
+    content: string
+  ): Promise<{ diagnostics?: Diagnostic[]; output?: string }> {
+    const diagnostics = addModule("__bundle__", content);
+    if (diagnostics.length > 0) {
+      return { diagnostics };
+    }
+    const ext = options?.isJS ? ".js" : ".ts";
+    const entry = pathlib.join(cwd, "__bundle__" + ext);
+    const outputs: SideOutput[] = [];
+    // TODO: Dedup this and code in convert.
+    for (const dep of getAllSrcDependencies(
+      builder,
+      builder.getSourceFile(entry)
+    )) {
+      console.log("dep:", dep);
+      builder.emit(
+        builder.getSourceFile(dep),
+        (fileName: string, data: string) => {
+          if (!fileName.endsWith(".js")) {
+            return;
+          }
+          const rel = pathlib.relative(outDir, fileName);
+          if (rel.startsWith("..")) {
+            throw new Error("unexpected emit path: " + fileName);
+          }
+          outputs.push({
+            path: pathlib.join(cwd, rel),
+            data: esModuleToCommonJSModule(data, transpileTarget)
+          });
+        }
+      );
+    }
+    console.log("bundle input:", outputs);
+    return {
+      output: await bundleFn(
+        pathlib.join(cwd, "__bundle__.js"),
+        new Map(outputs.map(e => [e.path, e.data]))
+      )
+    };
+  }
 }
 
 export function isCompleteCode(content: string): IsCompleteResult {
@@ -1102,6 +1165,9 @@ function getAllSrcDependencies(
     .getAllDependencies(sourceFile)
     .filter(
       dep =>
-        dep.endsWith(".js") || (dep.endsWith(".ts") && !dep.endsWith(".d.ts"))
+        dep.endsWith("tsx") ||
+        dep.endsWith("jsx") ||
+        dep.endsWith(".js") ||
+        (dep.endsWith(".ts") && !dep.endsWith(".d.ts"))
     );
 }

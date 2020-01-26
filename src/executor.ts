@@ -3,14 +3,17 @@ import path from "path";
 import vm from "vm";
 import Module from "module";
 import * as ts from "@tslab/typescript-for-tslab";
-import {
-  Converter,
-  CompletionInfo,
-  IsCompleteResult,
-  SideOutput,
-  Diagnostic
-} from "./converter";
+import { Converter, CompletionInfo, SideOutput, Diagnostic } from "./converter";
+import { display } from "./public";
 import { isValidModuleName } from "./util";
+
+export interface ConverterSet {
+  /** The converter for Node.js code */
+  node: Converter;
+  /** The converter for browser code */
+  browser: Converter;
+  close: () => void;
+}
 
 export interface Executor {
   /**
@@ -112,7 +115,7 @@ function wrapRequire(
 
 export function createExecutor(
   rootDir: string,
-  conv: Converter,
+  convs: ConverterSet,
   console: ConsoleInterface
 ): Executor {
   const locals: { [key: string]: any } = {};
@@ -194,13 +197,26 @@ export function createExecutor(
   }
 
   async function execute(src: string): Promise<boolean> {
-    const metadata = getCodeMetadata(src);
-    if (metadata.module) {
-      printDiagnostics(conv.addModule(metadata.module, src));
+    const meta = getCodeMetadata(src);
+    if (meta.module) {
+      const conv = meta.mode === "browser" ? convs.browser : convs.node;
+      printDiagnostics(conv.addModule(meta.module, src));
       // Always returns true because modules are registered regardless of errors in src.
       return true;
     }
-    const converted = conv.convert(prevDecl, src);
+    if (meta.mode === "browser") {
+      const { diagnostics, output } = await convs.browser.bundle(src);
+      if (diagnostics && diagnostics.length > 0) {
+        printDiagnostics(diagnostics);
+        return false;
+      }
+      const html = `<script type="module">${output}</script>`;
+      const b64 =
+        "data:text/html;base64," + Buffer.from(html).toString("base64");
+      display.html(`hoge<iframe src="${b64}"></iframe>foo`);
+      return true;
+    }
+    const converted = convs.node.convert(prevDecl, src);
     if (converted.sideOutputs) {
       updateSideOutputs(converted.sideOutputs);
     }
@@ -252,11 +268,11 @@ export function createExecutor(
   }
 
   function inspect(src: string, position: number): ts.QuickInfo {
-    return conv.inspect(prevDecl, src, position);
+    return convs.node.inspect(prevDecl, src, position);
   }
 
   function complete(src: string, position: number): CompletionInfo {
-    return conv.complete(prevDecl, src, position);
+    return convs.node.complete(prevDecl, src, position);
   }
 
   function reset(): void {
@@ -267,7 +283,7 @@ export function createExecutor(
   }
 
   function close(): void {
-    conv.close();
+    convs.close();
   }
 
   return {
@@ -283,6 +299,7 @@ export function createExecutor(
 
 interface CodeMetadata {
   module?: string;
+  mode?: "node" | "browser";
 }
 
 /** @internal */
@@ -325,6 +342,10 @@ export function getCodeMetadata(src: string): CodeMetadata {
         isValidModuleName(tag.comment)
       ) {
         out.module = tag.comment;
+      } else if (tag.tagName.escapedText === "node") {
+        out.mode = "node";
+      } else if (tag.tagName.escapedText === "browser") {
+        out.mode = "browser";
       }
     }
   }
