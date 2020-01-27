@@ -604,6 +604,21 @@ describe("converter diagnostics", () => {
     ]);
   });
 
+  it("disallow browser api", () => {
+    // https://github.com/yunabe/tslab/issues/27
+    const out = conv.convert("", `let div = document.createElement('div');`);
+    expect(out.diagnostics).toEqual([
+      {
+        start: { offset: 10, line: 0, character: 10 },
+        end: { offset: 18, line: 0, character: 18 },
+        messageText:
+          "Cannot find name 'document'. Do you need to change your target library? Try changing the `lib` compiler option to include 'dom'.",
+        category: 1,
+        code: 2584
+      }
+    ]);
+  });
+
   it("redeclare variable", () => {
     const out = conv.convert("", `let x = 3; let x = 4;`);
     expect(out.diagnostics).toEqual([

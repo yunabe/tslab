@@ -107,10 +107,14 @@ export function createConverter(options?: ConverterOptions): Converter {
   // c.f.
   // https://github.com/microsoft/TypeScript/wiki/Node-Target-Mapping
   // https://github.com/microsoft/TypeScript/issues/22306#issuecomment-412266626
-  const traspileTarget =
+  const transpileTarget =
     semver.major(process.version) >= 12
       ? ts.ScriptTarget.ES2019
       : ts.ScriptTarget.ES2018;
+  // References:
+  // https://github.com/microsoft/TypeScript/blob/master/src/lib/es2019.full.d.ts
+  const transpileLib =
+    transpileTarget === ts.ScriptTarget.ES2019 ? ["es2019"] : ["es2018"];
   /**
    * A prefix to sources to handle sources as external modules
    * > any file containing a top-level import or export is considered a module.
@@ -238,7 +242,12 @@ export function createConverter(options?: ConverterOptions): Converter {
       module: ts.ModuleKind.ESNext,
       moduleResolution: ts.ModuleResolutionKind.NodeJs,
       esModuleInterop: true,
-      target: traspileTarget,
+      target: transpileTarget,
+      // We need to wrap entries with lib.*.d.ts before passing `lib` though it's not documented clearly.
+      // c.f.
+      // https://github.com/microsoft/TypeScript/blob/master/src/testRunner/unittests/config/commandLineParsing.ts
+      // https://github.com/microsoft/TypeScript/blob/master/src/compiler/commandLineParser.ts
+      lib: transpileLib.map(lib => `lib.${lib}.d.ts`),
       declaration: true,
       newLine: ts.NewLineKind.LineFeed,
       // Remove 'use strict' from outputs.
@@ -347,7 +356,7 @@ export function createConverter(options?: ConverterOptions): Converter {
           }
           sideOutputs.push({
             path: pathlib.join(cwd, rel),
-            data: esModuleToCommonJSModule(data, traspileTarget)
+            data: esModuleToCommonJSModule(data, transpileTarget)
           });
         },
         undefined,
@@ -366,7 +375,7 @@ export function createConverter(options?: ConverterOptions): Converter {
       declsFile
     );
     return {
-      output: esModuleToCommonJSModule(output, traspileTarget),
+      output: esModuleToCommonJSModule(output, transpileTarget),
       declOutput,
       diagnostics: diag.diagnostics,
       hasToplevelAwait: diag.hasToplevelAwait,
