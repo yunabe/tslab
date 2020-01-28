@@ -2,6 +2,7 @@ import pathlib from "path";
 import semver from "semver";
 import * as ts from "@tslab/typescript-for-tslab";
 import { isValidModuleName } from "./util";
+import { CodeMetadata } from "./metadata";
 
 // TODO: Disallow accessing "module" of Node.js.
 
@@ -82,7 +83,7 @@ export interface Converter {
   /** Release internal resources to terminate the process gracefully. */
   close(): void;
   /** Defines a in-memory module */
-  addModule(name: string, content: string): Diagnostic[];
+  addModule(name: string, content: string, meta?: CodeMetadata): Diagnostic[];
 }
 
 interface RebuildTimer {
@@ -259,6 +260,7 @@ export function createConverter(options?: ConverterOptions): Converter {
       // Remove 'use strict' from outputs.
       noImplicitUseStrict: true,
       experimentalDecorators: true,
+      jsx: ts.JsxEmit.React,
       typeRoots: getTypeRoots(),
       // allowJs, checkJs and outDir are necessary to transpile .js files.
       allowJs: true,
@@ -925,13 +927,27 @@ export function createConverter(options?: ConverterOptions): Converter {
     }
   }
 
-  function addModule(name: string, content: string): Diagnostic[] {
+  function getModuleFilePath(name: string, meta?: CodeMetadata): string {
     if (!isValidModuleName(name)) {
       throw new Error("invalid module name: " + JSON.stringify(name));
     }
+    let ext = options?.isJS ? ".js" : ".ts";
+    if (meta?.jsx) {
+      ext += "x";
+    }
+    return pathlib.join(cwd, name + ext);
+  }
+
+  function addModule(
+    name: string,
+    content: string,
+    meta?: CodeMetadata
+  ): Diagnostic[] {
+    return addModuleWithPath(getModuleFilePath(name, meta), content);
+  }
+
+  function addModuleWithPath(path: string, content: string): Diagnostic[] {
     content = srcPrefix + content;
-    const ext = options?.isJS ? ".js" : ".ts";
-    const path = pathlib.join(cwd, name + ext);
     virtualFiles.set(path, content);
     if (fileWatchers.has(path)) {
       fileWatchers.get(path)(path, ts.FileWatcherEventKind.Changed);

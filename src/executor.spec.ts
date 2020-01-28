@@ -417,6 +417,16 @@ export let a = 'XXX';`)
     expect(consoleLogCalls).toEqual([]);
     expect(consoleErrorCalls).toEqual([]);
   });
+
+  it("jsx", async () => {
+    expect(
+      await ex.execute(
+        `/** @jsx @module mylib */ let React: any; let x = <div></div>`
+      )
+    );
+    expect(consoleLogCalls).toEqual([]);
+    expect(consoleErrorCalls).toEqual([]);
+  });
 });
 
 describe("externalFiles", () => {
@@ -542,22 +552,5 @@ describe("browswer", () => {
       tags: undefined,
       textSpan: { length: 8, start: 43 }
     });
-  });
-});
-
-describe("getCodeMetadata", () => {
-  it("module", () => {
-    const ret = executor.getCodeMetadata(`/**
- * hello
- * @module mylib
- */`);
-    expect(ret).toEqual({ module: "mylib" });
-  });
-
-  it("browser", () => {
-    const ret = executor.getCodeMetadata(`/**
- * @jsx @browser
- */`);
-    expect(ret).toEqual({ mode: "browser", jsx: true });
   });
 });
