@@ -3,14 +3,16 @@ import path from "path";
 import vm from "vm";
 import Module from "module";
 import * as ts from "@tslab/typescript-for-tslab";
-import {
-  Converter,
-  CompletionInfo,
-  IsCompleteResult,
-  SideOutput,
-  Diagnostic
-} from "./converter";
+import { Converter, CompletionInfo, SideOutput, Diagnostic } from "./converter";
 import { isValidModuleName } from "./util";
+
+export interface ConverterSet {
+  /** The converter for Node.js code */
+  node: Converter;
+  /** The converter for browser code */
+  browser: Converter;
+  close: () => void;
+}
 
 export interface Executor {
   /**
@@ -112,7 +114,7 @@ function wrapRequire(
 
 export function createExecutor(
   rootDir: string,
-  conv: Converter,
+  convs: ConverterSet,
   console: ConsoleInterface
 ): Executor {
   const locals: { [key: string]: any } = {};
@@ -194,13 +196,18 @@ export function createExecutor(
   }
 
   async function execute(src: string): Promise<boolean> {
-    const metadata = getCodeMetadata(src);
-    if (metadata.module) {
-      printDiagnostics(conv.addModule(metadata.module, src));
+    const meta = getCodeMetadata(src);
+    if (meta.module) {
+      const conv = meta.mode === "browser" ? convs.browser : convs.node;
+      printDiagnostics(conv.addModule(meta.module, src));
       // Always returns true because modules are registered regardless of errors in src.
       return true;
     }
-    const converted = conv.convert(prevDecl, src);
+    if (meta.mode === "browser") {
+      // TODO: Bundle and display browser JS
+      return true;
+    }
+    const converted = convs.node.convert(prevDecl, src);
     if (converted.sideOutputs) {
       updateSideOutputs(converted.sideOutputs);
     }
@@ -252,10 +259,14 @@ export function createExecutor(
   }
 
   function inspect(src: string, position: number): ts.QuickInfo {
+    const conv =
+      getCodeMetadata(src).mode === "browser" ? convs.browser : convs.node;
     return conv.inspect(prevDecl, src, position);
   }
 
   function complete(src: string, position: number): CompletionInfo {
+    const conv =
+      getCodeMetadata(src).mode === "browser" ? convs.browser : convs.node;
     return conv.complete(prevDecl, src, position);
   }
 
@@ -267,7 +278,7 @@ export function createExecutor(
   }
 
   function close(): void {
-    conv.close();
+    convs.close();
   }
 
   return {
@@ -282,7 +293,9 @@ export function createExecutor(
 }
 
 interface CodeMetadata {
+  mode?: "node" | "browser";
   module?: string;
+  jsx?: true;
 }
 
 /** @internal */
@@ -320,11 +333,15 @@ export function getCodeMetadata(src: string): CodeMetadata {
       continue;
     }
     for (const tag of jsDoc.tags as ts.JSDocTag[]) {
-      if (
-        tag.tagName.escapedText === "module" &&
-        isValidModuleName(tag.comment)
-      ) {
+      const tagName = tag.tagName.escapedText;
+      if (tagName === "module" && isValidModuleName(tag.comment)) {
         out.module = tag.comment;
+      } else if (tagName === "jsx") {
+        out.jsx = true;
+      } else if (tagName === "node") {
+        out.mode = "node";
+      } else if (tagName === "browser") {
+        out.mode = "browser";
       }
     }
   }

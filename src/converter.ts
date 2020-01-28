@@ -69,6 +69,8 @@ export interface IsCompleteResult {
 export interface ConverterOptions {
   /** If true, JavaScript mode. TypeSceript mode otherwise */
   isJS?: boolean;
+  /** If true, creates a converter for browser mode. Otherwise, Node.js */
+  isBrowser?: boolean;
   /** Only for testing. File changes are forwarded to this handler. */
   _fileWatcher?: ts.FileWatcherCallback;
 }
@@ -115,6 +117,10 @@ export function createConverter(options?: ConverterOptions): Converter {
   // https://github.com/microsoft/TypeScript/blob/master/src/lib/es2019.full.d.ts
   const transpileLib =
     transpileTarget === ts.ScriptTarget.ES2019 ? ["es2019"] : ["es2018"];
+  if (options?.isBrowser) {
+    transpileLib.push("dom");
+    transpileLib.push("dom.iterable");
+  }
   /**
    * A prefix to sources to handle sources as external modules
    * > any file containing a top-level import or export is considered a module.

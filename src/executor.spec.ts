@@ -3,7 +3,7 @@ import fs from "fs";
 import pathlib from "path";
 
 import * as executor from "./executor";
-import { createConverter, Converter } from "./converter";
+import { createConverter } from "./converter";
 import {
   runInTmpAsync,
   WaitFileEventFunc,
@@ -13,14 +13,19 @@ import {
 import ts from "@tslab/typescript-for-tslab";
 
 let ex: executor.Executor;
-let conv: Converter;
 let waitFileEvent: WaitFileEventFunc;
 
 let consoleLogCalls = [];
 let consoleErrorCalls = [];
 
 beforeAll(() => {
-  ({ converter: conv, waitFileEvent } = createConverterWithFileWatcher());
+  let node = createConverterWithFileWatcher();
+  waitFileEvent = node.waitFileEvent;
+  let browserConv = createConverter({ isBrowser: true });
+  let close = () => {
+    node.converter.close();
+    browserConv.close();
+  };
   let exconsole = {
     log: function(...args) {
       consoleLogCalls.push(args);
@@ -29,11 +34,12 @@ beforeAll(() => {
       consoleErrorCalls.push(args);
     }
   };
-  ex = executor.createExecutor(process.cwd(), conv, exconsole);
+  const convs = { node: node.converter, browser: browserConv, close };
+  ex = executor.createExecutor(process.cwd(), convs, exconsole);
 });
 afterAll(() => {
-  if (conv) {
-    conv.close();
+  if (ex) {
+    ex.close();
   }
 });
 
@@ -500,6 +506,45 @@ describe("externalFiles", () => {
   });
 });
 
+describe("browswer", () => {
+  it("module", async () => {
+    expect(
+      await ex.execute(
+        `/**  @browser @module mylib */
+        const div = document.createElement('div');`
+      )
+    ).toBe(true);
+    expect(consoleLogCalls).toEqual([]);
+    expect(consoleErrorCalls).toEqual([]);
+  });
+
+  it("complete", async () => {
+    const src = `/**  @browser @module mylib */ const div = document.querySe[cur]`;
+    const info = ex.complete(src.replace("[cur]", ""), src.indexOf("[cur]"));
+    expect(info.candidates).toEqual(["querySelector", "querySelectorAll"]);
+  });
+
+  it("inspect", async () => {
+    const src = `/**  @browser @module mylib */ const div = document.createElement('div');`;
+    const info = ex.inspect(src, src.indexOf("document."));
+    expect(info).toEqual({
+      displayParts: [
+        { kind: "keyword", text: "var" },
+        { kind: "space", text: " " },
+        { kind: "localName", text: "document" },
+        { kind: "punctuation", text: ":" },
+        { kind: "space", text: " " },
+        { kind: "localName", text: "Document" }
+      ],
+      documentation: [],
+      kind: "var",
+      kindModifiers: "declare",
+      tags: undefined,
+      textSpan: { length: 8, start: 43 }
+    });
+  });
+});
+
 describe("getCodeMetadata", () => {
   it("module", () => {
     const ret = executor.getCodeMetadata(`/**
@@ -507,5 +552,12 @@ describe("getCodeMetadata", () => {
  * @module mylib
  */`);
     expect(ret).toEqual({ module: "mylib" });
+  });
+
+  it("browser", () => {
+    const ret = executor.getCodeMetadata(`/**
+ * @jsx @browser
+ */`);
+    expect(ret).toEqual({ mode: "browser", jsx: true });
   });
 });

@@ -2,10 +2,40 @@ import fs from "fs";
 import child_process from "child_process";
 import path from "path";
 import program from "commander";
-import { createConverter } from "./converter";
+import { Converter, createConverter } from "./converter";
 import { getVersion } from "./util";
-import { createExecutor, createRequire } from "./executor";
+import { ConverterSet, createExecutor, createRequire } from "./executor";
 import { JupyterHandlerImpl, ZmqServer } from "./jupyter";
+
+class ConverterSetImpl implements ConverterSet {
+  private jsKernel: boolean;
+  private _node: Converter;
+  private _browser: Converter;
+
+  constructor(jsKernel: boolean) {
+    this.jsKernel = jsKernel;
+  }
+  get node(): Converter {
+    if (!this._node) {
+      this._node = createConverter({ isJS: this.jsKernel, isBrowser: false });
+    }
+    return this._node;
+  }
+  get browser(): Converter {
+    if (!this._browser) {
+      this._browser = createConverter({ isJS: this.jsKernel, isBrowser: true });
+    }
+    return this._browser;
+  }
+  close(): void {
+    if (this._node) {
+      this._node.close();
+    }
+    if (this._browser) {
+      this._browser.close();
+    }
+  }
+}
 
 function* traverseAncestorDirs(
   dir: string
@@ -61,8 +91,9 @@ export function startKernel({
       return;
     }
   }
-  const converter = createConverter({ isJS: jsKernel });
-  const executor = createExecutor(process.cwd(), converter, {
+  const convs = new ConverterSetImpl(jsKernel);
+  convs.node; // Warm the converter for Node.js
+  const executor = createExecutor(process.cwd(), convs, {
     log: console.log,
     error: console.error
   });
