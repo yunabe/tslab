@@ -72,3 +72,28 @@ export class TaskCanceledError extends Error {
     this.reason = reason;
   }
 }
+
+export function escapeHTML(s: string): string {
+  /*`&`, "&amp;",
+	`'`, "&#39;", // "&#39;" is shorter than "&apos;" and apos was not in HTML until HTML5.
+	`<`, "&lt;",
+	`>`, "&gt;",
+  `"`, "&#34;",
+  */
+  return s.replace(/[&'<>"]/g, m => {
+    switch (m) {
+      case "&":
+        return "&amp;";
+      case "'":
+        return "&#39;";
+      case "<":
+        return "&lt;";
+      case ">":
+        return "&gt;";
+      case '"':
+        return "&#34;";
+    }
+    // must not happen
+    return m;
+  });
+}

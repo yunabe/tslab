@@ -1,4 +1,9 @@
-import { TaskQueue, TaskCanceledError, isValidModuleName } from "./util";
+import {
+  TaskQueue,
+  TaskCanceledError,
+  isValidModuleName,
+  escapeHTML
+} from "./util";
 import { sleep } from "./testutil";
 
 describe("TaskQueue", () => {
@@ -114,4 +119,13 @@ it("isValidModuleName", () => {
   expect(isValidModuleName("  ")).toBeFalsy();
   expect(isValidModuleName(" abc")).toBeFalsy();
   expect(isValidModuleName("a/b")).toBeFalsy();
+});
+
+it("escapeHTML", () => {
+  expect(escapeHTML("&")).toEqual("&amp;");
+  expect(escapeHTML("'")).toEqual("&#39;");
+  expect(escapeHTML("<")).toEqual("&lt;");
+  expect(escapeHTML(">")).toEqual("&gt;");
+  expect(escapeHTML('"')).toEqual("&#34;");
+  expect(escapeHTML("<&>")).toEqual("&lt;&amp;&gt;");
 });
