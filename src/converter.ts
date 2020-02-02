@@ -3,6 +3,7 @@ import semver from "semver";
 import * as ts from "@tslab/typescript-for-tslab";
 import { isValidModuleName } from "./util";
 import { CodeMetadata } from "./metadata";
+import { normalizeJoin } from "./tspath";
 
 // TODO: Disallow accessing "module" of Node.js.
 
@@ -97,15 +98,15 @@ const cancellationToken: ts.CancellationToken = {
 
 export function createConverter(options?: ConverterOptions): Converter {
   const cwd = ts.sys.getCurrentDirectory();
-  const srcFilename = pathlib.join(
+  const srcFilename = normalizeJoin(
     cwd,
     options?.isJS ? "__tslab__.js" : "__tslab__.ts"
   );
-  const declFilename = pathlib.join(cwd, "__prev__.d.ts");
+  const declFilename = normalizeJoin(cwd, "__prev__.d.ts");
   const rootFiles = new Set<string>([declFilename, srcFilename]);
   const outDir = "outDir";
-  const dstFilename = pathlib.join(outDir, "__tslab__.js");
-  const dstDeclFilename = pathlib.join(outDir, "__tslab__.d.ts");
+  const dstFilename = normalizeJoin(outDir, "__tslab__.js");
+  const dstDeclFilename = normalizeJoin(outDir, "__tslab__.d.ts");
 
   // c.f.
   // https://github.com/microsoft/TypeScript/wiki/Node-Target-Mapping
@@ -179,7 +180,7 @@ export function createConverter(options?: ConverterOptions): Converter {
     // to import `tslab` when `node_modules` does not exist in `cwd`.
     // See forwardTslabPath for details.
     // TODO: Test this behavior.
-    return pathlib.join(cwd, "node_modules") === path;
+    return normalizeJoin(cwd, "node_modules") === path;
   };
   sys.fileExists = function(path: string): boolean {
     if (ts.sys.fileExists(forwardTslabPath(cwd, path))) {
@@ -363,7 +364,7 @@ export function createConverter(options?: ConverterOptions): Converter {
             sideOutputs = [];
           }
           sideOutputs.push({
-            path: pathlib.join(cwd, rel),
+            path: normalizeJoin(cwd, rel),
             data: esModuleToCommonJSModule(data, transpileTarget)
           });
         },
@@ -401,11 +402,11 @@ export function createConverter(options?: ConverterOptions): Converter {
         directoryExists: sys.directoryExists
       }) || [];
     for (const root of typeRoots) {
-      if (ts.sys.fileExists(pathlib.join(root, "node", "package.json"))) {
+      if (ts.sys.fileExists(normalizeJoin(root, "node", "package.json"))) {
         return typeRoots;
       }
     }
-    typeRoots.push(pathlib.join(__dirname, "..", "node_modules", "@types"));
+    typeRoots.push(normalizeJoin(__dirname, "..", "node_modules", "@types"));
     return typeRoots;
   }
 
@@ -935,7 +936,7 @@ export function createConverter(options?: ConverterOptions): Converter {
     if (meta?.jsx) {
       ext += "x";
     }
-    return pathlib.join(cwd, name + ext);
+    return normalizeJoin(cwd, name + ext);
   }
 
   function addModule(
@@ -1100,13 +1101,13 @@ function getCompletionsAtPosition(
 
 function forwardTslabPath(cwd: string, path: string): string {
   const rel = pathlib.relative(
-    pathlib.join(cwd, "node_modules", "tslab"),
+    normalizeJoin(cwd, "node_modules", "tslab"),
     path
   );
   if (rel.startsWith("..")) {
     return path;
   }
-  return pathlib.join(pathlib.dirname(__dirname), rel);
+  return normalizeJoin(pathlib.dirname(__dirname), rel);
 }
 
 function getPreEmitDiagnosticsWithDependencies(

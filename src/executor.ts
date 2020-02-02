@@ -4,6 +4,7 @@ import Module from "module";
 import * as ts from "@tslab/typescript-for-tslab";
 import { getCodeMetadata } from "./metadata";
 import { Converter, CompletionInfo, SideOutput, Diagnostic } from "./converter";
+import { normalizeJoin } from "./tspath";
 
 export interface ConverterSet {
   /** The converter for Node.js code */
@@ -50,7 +51,7 @@ export interface ConsoleInterface {
 export function createRequire(rootDir: string): NodeJS.Require {
   // createRequire is added in Node v12. createRequireFromPath is deprecated.
   const create = Module.createRequire || Module.createRequireFromPath;
-  return create(path.join(rootDir, "src.js"));
+  return create(normalizeJoin(rootDir, "src.js"));
 }
 
 /**
@@ -63,7 +64,7 @@ function wrapRequire(
   sideModules: Map<string, NodeModule>
 ): NodeJS.Require {
   function requireFromSideOutputs(id: string): any {
-    let filename = path.join(dirname, id);
+    let filename = normalizeJoin(dirname, id);
     if (path.extname(filename) === "") {
       filename += ".js";
     }
