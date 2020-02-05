@@ -1461,7 +1461,7 @@ describe("keepNamesInImport", () => {
     }
     const names = new Set(["foo"]);
     converter.keepNamesInImport(stmt, names as Set<ts.__String>);
-    let printer = ts.createPrinter();
+    let printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
     expect(printer.printFile(src)).toEqual('import { foo } from "mylib";\n');
   });
 
@@ -1478,7 +1478,7 @@ describe("keepNamesInImport", () => {
     }
     const names = new Set(["baz"]);
     converter.keepNamesInImport(stmt, names as Set<ts.__String>);
-    let printer = ts.createPrinter();
+    let printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
     expect(printer.printFile(src)).toEqual(
       'import { bar as baz } from "mylib";\n'
     );
@@ -1497,7 +1497,7 @@ describe("keepNamesInImport", () => {
     }
     const names = new Set(["mydefault"]);
     converter.keepNamesInImport(stmt, names as Set<ts.__String>);
-    let printer = ts.createPrinter();
+    let printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
     expect(printer.printFile(src)).toEqual('import mydefault from "mylib";\n');
   });
 
@@ -1514,7 +1514,7 @@ describe("keepNamesInImport", () => {
     }
     const names = new Set(["mydefault", "baz"]);
     converter.keepNamesInImport(stmt, names as Set<ts.__String>);
-    let printer = ts.createPrinter();
+    let printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
     expect(printer.printFile(src)).toEqual(
       'import mydefault, { bar as baz } from "mylib";\n'
     );
@@ -1533,7 +1533,7 @@ describe("keepNamesInImport", () => {
     }
     const names = new Set(["ns"]);
     converter.keepNamesInImport(stmt, names as Set<ts.__String>);
-    let printer = ts.createPrinter();
+    let printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
     expect(printer.printFile(src)).toEqual('import * as ns from "mylib";\n');
   });
 
@@ -1550,7 +1550,7 @@ describe("keepNamesInImport", () => {
     }
     const names = new Set(["mydefault"]);
     converter.keepNamesInImport(stmt, names as Set<ts.__String>);
-    let printer = ts.createPrinter();
+    let printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
     expect(printer.printFile(src)).toEqual('import mydefault from "mylib";\n');
   });
 

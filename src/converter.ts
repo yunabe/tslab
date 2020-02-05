@@ -638,7 +638,7 @@ export function createConverter(options?: ConverterOptions): Converter {
         // TODO: Support more kinds.
         // console.log(
         //   ts.SyntaxKind[node.kind],
-        //   ts.createPrinter().printNode(ts.EmitHint.Unspecified, node, declsSF)
+        //   ts.createPrinter({newLine: ts.NewLineKind.LineFeed}).printNode(ts.EmitHint.Unspecified, node, declsSF)
         // );
       });
     });
@@ -672,7 +672,8 @@ export function createConverter(options?: ConverterOptions): Converter {
       // - InterfaceDeclaration (ditto)
     });
     declsSF.statements = ts.createNodeArray(statements);
-    let printer = ts.createPrinter();
+    let printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
+
     let anyVarsDecls: string[] = [];
     anyVars.forEach(name => {
       anyVarsDecls.push(`let ${name}: any;\n`);
