@@ -9,6 +9,7 @@ import {
 } from "./testutil";
 import fs from "fs";
 import pathlib from "path";
+import { normalizeJoin } from "./tspath";
 
 let conv: converter.Converter;
 let waitFileEvent: WaitFileEventFunc;
@@ -1269,7 +1270,7 @@ describe("externalFiles", () => {
       expect(output.diagnostics).toEqual([]);
       expect(output.sideOutputs).toEqual([
         {
-          path: pathlib.join(process.cwd(), `${dir}/hello.js`),
+          path: normalizeJoin(process.cwd(), `${dir}/hello.js`),
           data: buildOutput(['exports.message = "Hello tslab in hello.ts!";'])
         }
       ]);
@@ -1295,11 +1296,11 @@ describe("externalFiles", () => {
       expect(output.diagnostics).toEqual([]);
       expect(output.sideOutputs).toEqual([
         {
-          path: pathlib.join(process.cwd(), `${dir}/a.js`),
+          path: normalizeJoin(process.cwd(), `${dir}/a.js`),
           data: buildOutput(['exports.aVal = "AAA";'])
         },
         {
-          path: pathlib.join(process.cwd(), `${dir}/c.js`),
+          path: normalizeJoin(process.cwd(), `${dir}/c.js`),
           data: buildOutput([
             'const a_1 = require("./a");',
             'exports.cVal = a_1.aVal + "CCC";'
@@ -1323,7 +1324,7 @@ describe("externalFiles", () => {
           messageText: "Type '\"AAA\"' is not assignable to type 'number'.",
           category: 1,
           code: 2322,
-          fileName: `${dir}/a.ts`
+          fileName: pathlib.normalize(`${dir}/a.ts`)
         },
         // Top-level await is not allowed in external files.
         {
@@ -1333,7 +1334,7 @@ describe("externalFiles", () => {
             "'await' expression is only allowed within an async function.",
           category: 1,
           code: 1308,
-          fileName: `${dir}/a.ts`
+          fileName: pathlib.normalize(`${dir}/a.ts`)
         }
       ]);
     });
@@ -1341,13 +1342,14 @@ describe("externalFiles", () => {
 
   it("changed", async () => {
     await runInTmpAsync("pkg", async dir => {
-      const srcPath = pathlib.resolve(pathlib.join(dir, "a.ts"));
+      // const srcPath = pathlib.resolve(pathlib.join(dir, "a.ts"));
+      const srcPath = normalizeJoin(process.cwd(), dir, 'a.ts');
       fs.writeFileSync(srcPath, 'export const aVal: string = "ABC";');
       let output = conv.convert("", `import {aVal} from "./${dir}/a";`);
       expect(output.diagnostics).toEqual([]);
       expect(output.sideOutputs).toEqual([
         {
-          path: pathlib.join(process.cwd(), `${dir}/a.js`),
+          path: normalizeJoin(process.cwd(), `${dir}/a.js`),
           data: buildOutput(['exports.aVal = "ABC";'])
         }
       ]);
@@ -1360,7 +1362,7 @@ describe("externalFiles", () => {
       expect(output.diagnostics).toEqual([]);
       expect(output.sideOutputs).toEqual([
         {
-          path: pathlib.join(process.cwd(), `${dir}/a.js`),
+          path: normalizeJoin(process.cwd(), `${dir}/a.js`),
           data: buildOutput(['exports.aVal = "XYZ";'])
         }
       ]);

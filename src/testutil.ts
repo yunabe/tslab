@@ -3,10 +3,11 @@ import { randomBytes } from "crypto";
 import path from "path";
 import ts from "@tslab/typescript-for-tslab";
 import * as converter from "./converter";
+import { normalizeJoin } from "./tspath";
 
 export function runInTmp(prefix: string, fn: (dir: string) => void): void {
   const name = prefix + randomBytes(8).toString("hex");
-  const dir = path.join("tmp", name);
+  const dir = normalizeJoin("tmp", name);
   fs.mkdirSync(dir, {
     recursive: true
   });
@@ -24,7 +25,7 @@ export async function runInTmpAsync(
   fn: (dir: string) => Promise<void>
 ): Promise<void> {
   const name = prefix + randomBytes(8).toString("hex");
-  const dir = path.join("tmp", name);
+  const dir = normalizeJoin("tmp", name);
   fs.mkdirSync(dir, {
     recursive: true
   });
