@@ -119,6 +119,10 @@ describe("Proxy", () => {
   });
 
   it("breakOnSigint", async () => {
+    if (process.platform === "win32") {
+      // process.kill is not properly implemented on Windows.
+      return;
+    }
     const { Worker } = await import("worker_threads");
     new Worker(
       `setTimeout(() =>{
@@ -136,6 +140,10 @@ describe("Proxy", () => {
   });
 
   it("breakOnSigint indirect", async () => {
+    if (process.platform === "win32") {
+      // process.kill is not properly implemented on Windows.
+      return;
+    }
     // Confirm breakOnSigint can exit an infinite loop defined outside of the code.
     const { Worker } = await import("worker_threads");
     new Worker(
