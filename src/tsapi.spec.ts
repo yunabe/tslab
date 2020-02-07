@@ -9,7 +9,10 @@ describe("transpile", () => {
     // With .js suffix in fileName, ts.transpileModule handle the input as JS, not TS.
     let out = ts.transpileModule('let x: string = "hello"', {
       fileName: "src.js",
-      reportDiagnostics: true
+      reportDiagnostics: true,
+      compilerOptions: {
+        newLine: ts.NewLineKind.LineFeed
+      }
     });
     expect(out.diagnostics.length).toEqual(1);
     expect(out.diagnostics[0].messageText).toEqual(
@@ -32,7 +35,8 @@ describe("transpile", () => {
         fileName: "src.js",
         compilerOptions: {
           noImplicitUseStrict: true,
-          module: ts.ModuleKind.CommonJS
+          module: ts.ModuleKind.CommonJS,
+          newLine: ts.NewLineKind.LineFeed
         }
       }
     );
