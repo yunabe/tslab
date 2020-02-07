@@ -11,6 +11,7 @@ import {
   sleep
 } from "./testutil";
 import ts from "@tslab/typescript-for-tslab";
+import { normalizeJoin } from "./tspath";
 
 let ex: executor.Executor;
 let waitFileEvent: WaitFileEventFunc;
@@ -464,7 +465,7 @@ describe("externalFiles", () => {
       expect(consoleErrorCalls).toEqual([
         [
           "%s%d:%d - %s",
-          `${dir}/a.ts `,
+          pathlib.normalize(`${dir}/a.ts `),
           1,
           14,
           "Type '\"AAA\"' is not assignable to type 'number'."
@@ -495,7 +496,7 @@ describe("externalFiles", () => {
 
   it("changed", async () => {
     await runInTmpAsync("pkg", async dir => {
-      const srcPath = pathlib.resolve(pathlib.join(dir, "a.ts"));
+      const srcPath = normalizeJoin(process.cwd(), dir, "a.ts");
       fs.writeFileSync(srcPath, 'export const aVal = "ABC";');
       let promise = ex.execute(`import {aVal} from "./${dir}/a";`);
       expect(await promise).toBe(true);
