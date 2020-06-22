@@ -266,6 +266,7 @@ describe("complete", () => {
         "compileFunction",
         "createContext",
         "isContext",
+        "measureMemory",
         "runInContext",
         "runInNewContext",
         "runInThisContext",
@@ -308,6 +309,12 @@ describe("complete", () => {
           },
           {
             name: "compileFunction",
+            kind: "function",
+            kindModifiers: "declare",
+            sortText: "0",
+          },
+          {
+            name: "measureMemory",
             kind: "function",
             kindModifiers: "declare",
             sortText: "0",
