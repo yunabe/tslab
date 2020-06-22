@@ -40,9 +40,9 @@ describe("complete", () => {
         isNewIdentifierLocation: false,
         entries: [
           { name: "abc", kind: "property", kindModifiers: "", sortText: "0" },
-          { name: "xyz", kind: "property", kindModifiers: "", sortText: "0" }
-        ]
-      }
+          { name: "xyz", kind: "property", kindModifiers: "", sortText: "0" },
+        ],
+      },
     });
   });
 
@@ -62,9 +62,9 @@ describe("complete", () => {
         isNewIdentifierLocation: false,
         entries: [
           { name: "abc", kind: "property", kindModifiers: "", sortText: "0" },
-          { name: "xyz", kind: "property", kindModifiers: "", sortText: "0" }
-        ]
-      }
+          { name: "xyz", kind: "property", kindModifiers: "", sortText: "0" },
+        ],
+      },
     });
   });
 
@@ -84,9 +84,9 @@ describe("complete", () => {
         isNewIdentifierLocation: false,
         entries: [
           { name: "abc", kind: "property", kindModifiers: "", sortText: "0" },
-          { name: "xyz", kind: "property", kindModifiers: "", sortText: "0" }
-        ]
-      }
+          { name: "xyz", kind: "property", kindModifiers: "", sortText: "0" },
+        ],
+      },
     });
   });
 
@@ -106,9 +106,9 @@ describe("complete", () => {
         isNewIdentifierLocation: false,
         entries: [
           { name: "abc", kind: "property", kindModifiers: "", sortText: "0" },
-          { name: "xyz", kind: "property", kindModifiers: "", sortText: "0" }
-        ]
-      }
+          { name: "xyz", kind: "property", kindModifiers: "", sortText: "0" },
+        ],
+      },
     });
   });
 
@@ -127,9 +127,9 @@ describe("complete", () => {
         isNewIdentifierLocation: false,
         entries: [
           { name: "abc", kind: "property", kindModifiers: "", sortText: "0" },
-          { name: "xyz", kind: "property", kindModifiers: "", sortText: "0" }
-        ]
-      }
+          { name: "xyz", kind: "property", kindModifiers: "", sortText: "0" },
+        ],
+      },
     });
   });
 
@@ -141,7 +141,7 @@ describe("complete", () => {
       start,
       end: start,
       candidates: [],
-      original: undefined
+      original: undefined,
     });
 
     // https://github.com/yunabe/tslab/issues/13
@@ -166,9 +166,9 @@ describe("complete", () => {
         isNewIdentifierLocation: false,
         entries: [
           { name: "alpha", kind: "property", kindModifiers: "", sortText: "0" },
-          { name: "beta", kind: "property", kindModifiers: "", sortText: "0" }
-        ]
-      }
+          { name: "beta", kind: "property", kindModifiers: "", sortText: "0" },
+        ],
+      },
     });
   });
 
@@ -186,9 +186,9 @@ describe("complete", () => {
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
         entries: [
-          { name: "beta", kind: "property", kindModifiers: "", sortText: "0" }
-        ]
-      }
+          { name: "beta", kind: "property", kindModifiers: "", sortText: "0" },
+        ],
+      },
     });
   });
 
@@ -207,9 +207,9 @@ describe("complete", () => {
         isNewIdentifierLocation: false,
         entries: [
           { name: "alpha", kind: "property", kindModifiers: "", sortText: "0" },
-          { name: "beta", kind: "property", kindModifiers: "", sortText: "0" }
-        ]
-      }
+          { name: "beta", kind: "property", kindModifiers: "", sortText: "0" },
+        ],
+      },
     });
   });
 
@@ -228,9 +228,9 @@ describe("complete", () => {
         isNewIdentifierLocation: false,
         entries: [
           { name: "alpha", kind: "property", kindModifiers: "", sortText: "0" },
-          { name: "beta", kind: "property", kindModifiers: "", sortText: "0" }
-        ]
-      }
+          { name: "beta", kind: "property", kindModifiers: "", sortText: "0" },
+        ],
+      },
     });
   });
 
@@ -249,9 +249,9 @@ describe("complete", () => {
         isNewIdentifierLocation: false,
         entries: [
           { name: "alpha", kind: "property", kindModifiers: "", sortText: "0" },
-          { name: "beta", kind: "property", kindModifiers: "", sortText: "0" }
-        ]
-      }
+          { name: "beta", kind: "property", kindModifiers: "", sortText: "0" },
+        ],
+      },
     });
   });
 
@@ -269,7 +269,7 @@ describe("complete", () => {
         "runInContext",
         "runInNewContext",
         "runInThisContext",
-        "Script"
+        "Script",
       ],
       original: {
         isGlobalCompletion: false,
@@ -280,46 +280,46 @@ describe("complete", () => {
             name: "createContext",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "0"
+            sortText: "0",
           },
           {
             name: "isContext",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "0"
+            sortText: "0",
           },
           {
             name: "runInContext",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "0"
+            sortText: "0",
           },
           {
             name: "runInNewContext",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "0"
+            sortText: "0",
           },
           {
             name: "runInThisContext",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "0"
+            sortText: "0",
           },
           {
             name: "compileFunction",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "0"
+            sortText: "0",
           },
           {
             name: "Script",
             kind: "class",
             kindModifiers: "declare",
-            sortText: "0"
-          }
-        ]
-      }
+            sortText: "0",
+          },
+        ],
+      },
     });
   });
 
@@ -341,9 +341,9 @@ describe("complete", () => {
           { name: "cxy", kind: "property", kindModifiers: "", sortText: "0" },
           { name: "dXY", kind: "property", kindModifiers: "", sortText: "0" },
           { name: "xyz", kind: "property", kindModifiers: "", sortText: "0" },
-          { name: "XYZ", kind: "property", kindModifiers: "", sortText: "0" }
-        ]
-      }
+          { name: "XYZ", kind: "property", kindModifiers: "", sortText: "0" },
+        ],
+      },
     });
   });
 
@@ -353,7 +353,7 @@ describe("complete", () => {
     expect(info.original).not.toBeUndefined();
     // Filter entries to keep this test short.
     info.candidates = info.candidates.slice(0, 5);
-    info.original.entries = info.original.entries.filter(e => {
+    info.original.entries = info.original.entries.filter((e) => {
       if (e.name.startsWith("Array")) {
         return true;
       }
@@ -375,17 +375,17 @@ describe("complete", () => {
             name: "Array",
             kind: "var",
             kindModifiers: "declare",
-            sortText: "4"
+            sortText: "4",
           },
           {
             name: "ArrayBuffer",
             kind: "var",
             kindModifiers: "declare",
-            sortText: "4"
+            sortText: "4",
           },
-          { name: "let", kind: "keyword", kindModifiers: "", sortText: "4" }
-        ]
-      }
+          { name: "let", kind: "keyword", kindModifiers: "", sortText: "4" },
+        ],
+      },
     });
   });
 
@@ -412,34 +412,34 @@ describe("complete", () => {
             name: "oldval",
             kind: "let",
             kindModifiers: "declare",
-            sortText: "4"
+            sortText: "4",
           },
           {
             name: "globalThis",
             kind: "module",
             kindModifiers: "",
-            sortText: "4"
+            sortText: "4",
           },
           {
             name: "eval",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "4"
+            sortText: "4",
           },
           {
             name: "parseInt",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "4"
+            sortText: "4",
           },
           {
             name: "parseFloat",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "4"
-          }
-        ]
-      }
+            sortText: "4",
+          },
+        ],
+      },
     });
   });
 
@@ -460,34 +460,34 @@ describe("complete", () => {
             name: "globalThis",
             kind: "module",
             kindModifiers: "",
-            sortText: "4"
+            sortText: "4",
           },
           {
             name: "eval",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "4"
+            sortText: "4",
           },
           {
             name: "parseInt",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "4"
+            sortText: "4",
           },
           {
             name: "parseFloat",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "4"
+            sortText: "4",
           },
           {
             name: "isNaN",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "4"
-          }
-        ]
-      }
+            sortText: "4",
+          },
+        ],
+      },
     });
   });
 
@@ -508,34 +508,34 @@ describe("complete", () => {
             name: "globalThis",
             kind: "module",
             kindModifiers: "",
-            sortText: "4"
+            sortText: "4",
           },
           {
             name: "eval",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "4"
+            sortText: "4",
           },
           {
             name: "parseInt",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "4"
+            sortText: "4",
           },
           {
             name: "parseFloat",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "4"
+            sortText: "4",
           },
           {
             name: "isNaN",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "4"
-          }
-        ]
-      }
+            sortText: "4",
+          },
+        ],
+      },
     });
   });
 
@@ -556,34 +556,34 @@ describe("complete", () => {
             name: "globalThis",
             kind: "module",
             kindModifiers: "",
-            sortText: "4"
+            sortText: "4",
           },
           {
             name: "eval",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "4"
+            sortText: "4",
           },
           {
             name: "parseInt",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "4"
+            sortText: "4",
           },
           {
             name: "parseFloat",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "4"
+            sortText: "4",
           },
           {
             name: "isNaN",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "4"
-          }
-        ]
-      }
+            sortText: "4",
+          },
+        ],
+      },
     });
   });
 
@@ -593,7 +593,7 @@ describe("complete", () => {
     expect(info).not.toBeUndefined();
     // Filter entries to keep this test short.
     info.candidates = info.candidates.slice(0, 6);
-    info.original.entries = info.original.entries.filter(e => {
+    info.original.entries = info.original.entries.filter((e) => {
       if (e.kind === "string") {
         return true;
       }
@@ -610,7 +610,7 @@ describe("complete", () => {
         '"eclair"',
         '"froyo"',
         "v",
-        "__dirname"
+        "__dirname",
       ],
       original: {
         isGlobalCompletion: true,
@@ -621,30 +621,30 @@ describe("complete", () => {
             name: "Array",
             kind: "var",
             kindModifiers: "declare",
-            sortText: "4"
+            sortText: "4",
           },
           {
             name: "ArrayBuffer",
             kind: "var",
             kindModifiers: "declare",
-            sortText: "4"
+            sortText: "4",
           },
           {
             name: '"cupcake"',
             kind: "string",
             kindModifiers: "",
-            sortText: "0"
+            sortText: "0",
           },
           { name: '"donut"', kind: "string", kindModifiers: "", sortText: "0" },
           {
             name: '"eclair"',
             kind: "string",
             kindModifiers: "",
-            sortText: "0"
+            sortText: "0",
           },
-          { name: '"froyo"', kind: "string", kindModifiers: "", sortText: "0" }
-        ]
-      }
+          { name: '"froyo"', kind: "string", kindModifiers: "", sortText: "0" },
+        ],
+      },
     });
   });
 
@@ -670,17 +670,17 @@ describe("complete", () => {
             name: "arguments",
             kind: "local var",
             kindModifiers: "",
-            sortText: "0"
+            sortText: "0",
           },
           { name: "fn", kind: "function", kindModifiers: "", sortText: "0" },
           {
             name: "globalThis",
             kind: "module",
             kindModifiers: "",
-            sortText: "4"
-          }
-        ]
-      }
+            sortText: "4",
+          },
+        ],
+      },
     });
   });
 
@@ -696,8 +696,8 @@ describe("complete", () => {
         isGlobalCompletion: false,
         isMemberCompletion: false,
         isNewIdentifierLocation: false,
-        entries: []
-      }
+        entries: [],
+      },
     });
   });
 
@@ -713,8 +713,8 @@ describe("complete", () => {
         isGlobalCompletion: false,
         isMemberCompletion: false,
         isNewIdentifierLocation: false,
-        entries: []
-      }
+        entries: [],
+      },
     });
   });
 
@@ -727,7 +727,7 @@ describe("complete", () => {
       start,
       end: start,
       candidates: [],
-      original: undefined
+      original: undefined,
     });
   });
 
@@ -750,24 +750,24 @@ describe("complete", () => {
             name: "@abstract",
             kind: "keyword",
             kindModifiers: "",
-            sortText: "0"
+            sortText: "0",
           },
           {
             name: "@access",
             kind: "keyword",
             kindModifiers: "",
-            sortText: "0"
+            sortText: "0",
           },
           { name: "@alias", kind: "keyword", kindModifiers: "", sortText: "0" },
           {
             name: "@argument",
             kind: "keyword",
             kindModifiers: "",
-            sortText: "0"
+            sortText: "0",
           },
-          { name: "@async", kind: "keyword", kindModifiers: "", sortText: "0" }
-        ]
-      }
+          { name: "@async", kind: "keyword", kindModifiers: "", sortText: "0" },
+        ],
+      },
     });
   });
 
@@ -792,7 +792,7 @@ describe("complete", () => {
             name: "abstract",
             kind: "keyword",
             kindModifiers: "",
-            sortText: "0"
+            sortText: "0",
           },
           { name: "access", kind: "keyword", kindModifiers: "", sortText: "0" },
           { name: "alias", kind: "keyword", kindModifiers: "", sortText: "0" },
@@ -800,11 +800,11 @@ describe("complete", () => {
             name: "argument",
             kind: "keyword",
             kindModifiers: "",
-            sortText: "0"
+            sortText: "0",
           },
-          { name: "async", kind: "keyword", kindModifiers: "", sortText: "0" }
-        ]
-      }
+          { name: "async", kind: "keyword", kindModifiers: "", sortText: "0" },
+        ],
+      },
     });
   });
 
@@ -822,9 +822,9 @@ describe("complete", () => {
         isNewIdentifierLocation: false,
         entries: [
           { name: "xyz", kind: "parameter", kindModifiers: "", sortText: "0" },
-          { name: "abc", kind: "parameter", kindModifiers: "", sortText: "0" }
-        ]
-      }
+          { name: "abc", kind: "parameter", kindModifiers: "", sortText: "0" },
+        ],
+      },
     });
   });
 });
