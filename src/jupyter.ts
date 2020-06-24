@@ -390,7 +390,7 @@ class ZmqMessage {
       msg_type: this.header.msg_type,
       // Set a unique ID to prevent a problem like #14.
       // TODO: Check this by integration tests.
-      msg_id: randomBytes(16).toString("hex")
+      msg_id: randomBytes(16).toString("hex"),
     };
     rep.parent = this.header;
     rep.metadata = {};
@@ -480,9 +480,9 @@ export class JupyterHandlerImpl implements JupyterHandler {
         name: lang,
         version,
         mimetype,
-        file_extension
+        file_extension,
       },
-      banner
+      banner,
     };
     if (!this.isJs) {
       // This fix https://github.com/yunabe/tslab/issues/18 in both Jupyter notebook and JupyterLab magically.
@@ -499,7 +499,7 @@ export class JupyterHandlerImpl implements JupyterHandler {
         // Also, typescript flag is defined in:
         // https://codemirror.net/mode/javascript/index.html
         name: "javascript",
-        typescript: true
+        typescript: true,
       };
     }
     return reply;
@@ -537,7 +537,7 @@ export class JupyterHandlerImpl implements JupyterHandler {
     }
     return {
       status: status,
-      execution_count: count ? count.count : undefined
+      execution_count: count ? count.count : undefined,
     };
   }
 
@@ -593,12 +593,12 @@ export class JupyterHandlerImpl implements JupyterHandler {
     const res = isCompleteCode(req.code);
     if (res.completed) {
       return {
-        status: "complete"
+        status: "complete",
       };
     }
     return {
       indent: res.indent,
-      status: "incomplete"
+      status: "incomplete",
     };
   }
 
@@ -609,7 +609,7 @@ export class JupyterHandlerImpl implements JupyterHandler {
         status: "ok",
         found: false,
         data: {},
-        metadata: {}
+        metadata: {},
       };
     }
     let text = printQuickInfo(info);
@@ -619,9 +619,9 @@ export class JupyterHandlerImpl implements JupyterHandler {
       data: {
         // text/plain must be filled even if "text/html" is provided.
         // TODO: Fill text/html too if necessary.
-        "text/plain": text
+        "text/plain": text,
       },
-      metadata: {}
+      metadata: {},
     };
   }
 
@@ -632,13 +632,13 @@ export class JupyterHandlerImpl implements JupyterHandler {
       cursor_end: info.end,
       matches: info.candidates,
       metadata: {},
-      status: "ok"
+      status: "ok",
     };
   }
 
   handleShutdown(req: ShutdownRequest): ShutdownReply {
     return {
-      restart: false
+      restart: false,
     };
   }
 
@@ -673,7 +673,7 @@ export class ZmqServer {
   publishStatus(status: string, parent: ZmqMessage) {
     const reply = parent.createReply();
     reply.content = {
-      execution_state: status
+      execution_state: status,
     };
     reply.header.msg_type = "status";
     reply.signAndSend(this.connInfo.key, this.iopub);
@@ -735,7 +735,7 @@ export class ZmqServer {
       reply.header.msg_type = "stream";
       reply.content = {
         name,
-        text
+        text,
       };
       reply.signAndSend(this.connInfo.key, this.iopub);
     };
@@ -832,7 +832,7 @@ export class ZmqServer {
       this.bindSocket(this.shell, cinfo.shell_port),
       this.bindSocket(this.control, cinfo.control_port),
       this.bindSocket(this.stdin, cinfo.stdin_port),
-      this.bindSocket(this.hb, cinfo.hb_port)
+      this.bindSocket(this.hb, cinfo.hb_port),
     ]);
   }
 

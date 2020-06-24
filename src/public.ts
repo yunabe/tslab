@@ -14,7 +14,7 @@ interface Versions {
 export const versions: Versions = {
   tslab: getVersion(),
   typescript: ts.version,
-  node: process.version
+  node: process.version,
 };
 
 export interface Display {
@@ -104,12 +104,12 @@ class DisplayImpl {
     jupyter.lastWriteDisplayData(
       {
         data: {
-          [contentType]: b
+          [contentType]: b,
         },
         metadata: {},
         transient: {
-          display_id: this.id
-        }
+          display_id: this.id,
+        },
       },
       update
     );

@@ -43,7 +43,7 @@ describe("convert", () => {
         "const y = 'foo';",
         "exports.y = y;",
         "var z = true;",
-        "exports.z = z;"
+        "exports.z = z;",
       ])
     );
     expect(out.declOutput).toEqual(
@@ -51,7 +51,7 @@ describe("convert", () => {
         "export let x: number;",
         'export const y: "foo";',
         "export var z: boolean;",
-        ""
+        "",
       ].join("\n")
     );
   });
@@ -93,7 +93,7 @@ describe("convert", () => {
         "        setTimeout(resolve, ms);",
         "    });",
         "}",
-        "exports.sleep = sleep;"
+        "exports.sleep = sleep;",
       ])
     );
     expect(out.declOutput).toEqual(
@@ -101,7 +101,7 @@ describe("convert", () => {
         "export function sum(x: any, y: any): any;",
         "export function xrange(n: any): Generator<number, void, unknown>;",
         "export function sleep(ms: any): Promise<any>;",
-        ""
+        "",
       ].join("\n")
     );
   });
@@ -136,7 +136,7 @@ describe("convert", () => {
         "function sum(x, y) {",
         "    return x + y;",
         "}",
-        "exports.sum = sum;"
+        "exports.sum = sum;",
       ])
     );
     expect(out.declOutput).toEqual(
@@ -148,7 +148,7 @@ describe("convert", () => {
         "export function sum(x: number, y: number): number;",
         "/** @type {any} */",
         "export let x: any;",
-        ""
+        "",
       ].join("\n")
     );
   });
@@ -161,8 +161,8 @@ describe("convert", () => {
         end: { offset: 13, line: 0, character: 13 },
         messageText: "'types' can only be used in a .ts file.",
         category: 1,
-        code: 8010
-      }
+        code: 8010,
+      },
     ]);
   });
 
@@ -174,8 +174,8 @@ describe("convert", () => {
         end: { offset: 13, line: 0, character: 13 },
         messageText: "Type '\"hello\"' is not assignable to type 'number'.",
         category: 1,
-        code: 2322
-      }
+        code: 2322,
+      },
     ]);
   });
 });
@@ -203,9 +203,9 @@ describe("complete", () => {
         isNewIdentifierLocation: false,
         entries: [
           { name: "abc", kind: "property", kindModifiers: "", sortText: "0" },
-          { name: "xyz", kind: "property", kindModifiers: "", sortText: "0" }
-        ]
-      }
+          { name: "xyz", kind: "property", kindModifiers: "", sortText: "0" },
+        ],
+      },
     });
   });
 });

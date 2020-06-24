@@ -106,7 +106,7 @@ describe("Proxy", () => {
           )}, value = ${JSON.stringify(value)}, receiver = ${objStr(receiver)}`
         );
         return true;
-      }
+      },
     });
     let obj1: { [key: string]: any } = {};
     Object.setPrototypeOf(obj1, proxy0);
@@ -114,7 +114,7 @@ describe("Proxy", () => {
     obj1.abc = "hello";
 
     expect(messages).toEqual([
-      'target = obj0, prop = "abc", value = "hello", receiver = obj1'
+      'target = obj0, prop = "abc", value = "hello", receiver = obj1',
     ]);
   });
 
@@ -129,7 +129,7 @@ describe("Proxy", () => {
       process.kill(process.pid, "SIGINT");
     }, 0);`,
       {
-        eval: true
+        eval: true,
       }
     );
     try {
@@ -151,13 +151,13 @@ describe("Proxy", () => {
       process.kill(process.pid, "SIGINT");
     }, 0);`,
       {
-        eval: true
+        eval: true,
       }
     );
     const sandbox = {
       loop: () => {
         while (true) {}
-      }
+      },
     };
     try {
       vm.runInNewContext(`loop()`, sandbox, { breakOnSigint: true });
@@ -169,7 +169,7 @@ describe("Proxy", () => {
 
 describe("promise", () => {
   it("async and promise", () => {
-    let p = (async function() {})();
+    let p = (async function () {})();
     // The result of async is an instance of Promise outside of vm.
     // TODO: Why this is not the case in vm?
     expect(p.constructor).toBe(Promise);
@@ -186,10 +186,10 @@ describe("promise", () => {
     }
 
     let out: number[] = [];
-    let p = new Promise(done => {
+    let p = new Promise((done) => {
       out.push(0);
       done("abc");
-    }).then(v => {
+    }).then((v) => {
       out.push(2);
       expect(v).toEqual("abc");
     });
@@ -198,7 +198,7 @@ describe("promise", () => {
     expect(out).toEqual(range(3));
 
     out = [];
-    p = (async function() {
+    p = (async function () {
       out.push(0);
       await null;
       out.push(2);
@@ -218,12 +218,12 @@ describe("promise", () => {
     // Advanced. `done('xyz') does not invoke the callback immediately.
     out = [];
     p = Promise.resolve({
-      then: done => {
+      then: (done) => {
         out.push(1);
         done("xyz");
         out.push(2);
-      }
-    }).then(x => {
+      },
+    }).then((x) => {
       expect(x).toEqual("xyz");
       out.push(3);
     });
@@ -235,14 +235,14 @@ describe("promise", () => {
     // The order of operations changes between target = ES2017 and ES2015.
     // When target is ES2015, the order is [0, 2, 4, 3, 1].
     out = [];
-    p = (async function() {
+    p = (async function () {
       out.push(0);
       let x = await ({
-        then: done => {
+        then: (done) => {
           out.push(2);
           done("xyz");
           out.push(3);
-        }
+        },
       } as any);
       expect(x).toEqual("xyz");
       out.push(4);
@@ -259,9 +259,9 @@ describe("promise", () => {
       }
     }
     out = [];
-    p = (async function() {
+    p = (async function () {
       out.push(0);
-      let cp = new CustomPromise(done => {
+      let cp = new CustomPromise((done) => {
         done("abc");
       });
       expect(cp).toBeInstanceOf(Promise);

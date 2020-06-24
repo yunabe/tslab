@@ -34,7 +34,7 @@ function createPlugin(files: Map<string, string>): rollup.Plugin {
       if (files.has(id)) {
         return files.get(id);
       }
-    }
+    },
   };
 }
 
@@ -53,12 +53,12 @@ export async function bundle(
       commonjs(),
       // c.f. https://github.com/webpack/webpack/issues/1720
       replace({
-        "process.env.NODE_ENV": JSON.stringify("production")
-      })
-    ]
+        "process.env.NODE_ENV": JSON.stringify("production"),
+      }),
+    ],
   });
   const { output } = await bundle.generate({
-    format: "esm"
+    format: "esm",
   });
   return output[0].code;
 }

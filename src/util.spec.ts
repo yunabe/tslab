@@ -2,7 +2,7 @@ import {
   TaskQueue,
   TaskCanceledError,
   isValidModuleName,
-  escapeHTML
+  escapeHTML,
 } from "./util";
 import { sleep } from "./testutil";
 

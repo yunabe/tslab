@@ -48,10 +48,10 @@ describe("JupyterHandlerImpl", () => {
         codemirror_mode: {
           mode: "typescript",
           name: "javascript",
-          typescript: true
-        }
+          typescript: true,
+        },
       },
-      banner: "TypeScript"
+      banner: "TypeScript",
     });
   });
 
@@ -65,9 +65,9 @@ describe("JupyterHandlerImpl", () => {
         name: "javascript",
         version: "",
         mimetype: "text/javascript",
-        file_extension: ".js"
+        file_extension: ".js",
       },
-      banner: "JavaScript"
+      banner: "JavaScript",
     });
   });
 
@@ -76,22 +76,22 @@ describe("JupyterHandlerImpl", () => {
       displayParts: [
         {
           kind: "keyword",
-          text: "let"
+          text: "let",
         },
         {
           kind: "space",
-          text: " "
+          text: " ",
         },
         {
           kind: "localName",
-          text: "xyz"
-        }
+          text: "xyz",
+        },
       ],
       documentation: [
         {
           kind: "text",
-          text: "xys is a great variable"
-        }
+          text: "xys is a great variable",
+        },
       ],
       kind: ts.ScriptElementKind.letElement,
       kindModifiers: "",
@@ -99,20 +99,20 @@ describe("JupyterHandlerImpl", () => {
       textSpan: {
         length: 3,
         // TODO: Cancel the length of prefix.
-        start: 10
-      }
+        start: 10,
+      },
     };
     executor.inspect = () => want;
     const reply = handler.handleInspect({
       code: "",
       cursor_pos: 0,
-      detail_level: 0
+      detail_level: 0,
     });
     expect(reply).toEqual({
       status: "ok",
       found: true,
       data: { "text/plain": "let xyz\n\nxys is a great variable" },
-      metadata: {}
+      metadata: {},
     });
   });
 
@@ -135,7 +135,7 @@ describe("JupyterHandlerImpl", () => {
         code: "0",
         silent: false,
         store_history: false,
-        user_expressions: {}
+        user_expressions: {},
       },
       null,
       null
@@ -145,7 +145,7 @@ describe("JupyterHandlerImpl", () => {
         code: "1",
         silent: false,
         store_history: false,
-        user_expressions: {}
+        user_expressions: {},
       },
       writeStream,
       null
@@ -156,7 +156,7 @@ describe("JupyterHandlerImpl", () => {
         code: "2",
         silent: false,
         store_history: false,
-        user_expressions: {}
+        user_expressions: {},
       },
       writeStream,
       null
@@ -170,7 +170,7 @@ describe("JupyterHandlerImpl", () => {
           code: "0",
           silent: false,
           store_history: false,
-          user_expressions: {}
+          user_expressions: {},
         },
         writeStream,
         null
@@ -189,7 +189,7 @@ describe("JupyterHandlerImpl", () => {
         code: "unknown",
         silent: false,
         store_history: false,
-        user_expressions: {}
+        user_expressions: {},
       },
       writeStream,
       null

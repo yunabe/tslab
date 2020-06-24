@@ -5,7 +5,7 @@ import {
   runInTmpAsync,
   sleep,
   WaitFileEventFunc,
-  createConverterWithFileWatcher
+  createConverterWithFileWatcher,
 } from "./testutil";
 import fs from "fs";
 import pathlib from "path";
@@ -36,7 +36,7 @@ function buildOutput(
       ...[
         "var __importDefault = (this && this.__importDefault) || function (mod) {",
         '    return (mod && mod.__esModule) ? mod : { "default": mod };',
-        "};"
+        "};",
       ]
     );
   }
@@ -49,7 +49,7 @@ function buildOutput(
         "    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];",
         '    result["default"] = mod;',
         "    return result;",
-        "};"
+        "};",
       ]
     );
   }
@@ -88,7 +88,7 @@ let {a, b: c} = obj;
         "exports.obj = obj;",
         "let { a, b: c } = obj;",
         "exports.a = a;",
-        "exports.c = c;"
+        "exports.c = c;",
       ])
     );
     expect(out.declOutput).toEqual(
@@ -141,7 +141,7 @@ declare let a: number, c: string;
         "        setTimeout(resolve, ms);",
         "    });",
         "}",
-        "exports.sleep = sleep;"
+        "exports.sleep = sleep;",
       ])
     );
     expect(out.declOutput).toEqual(
@@ -168,7 +168,7 @@ declare function sleep(ms: number): Promise<never>;
         "exports.y = y;",
         'let { a, b: c } = { a: 123, b: "hello" };',
         "exports.a = a;",
-        "exports.c = c;"
+        "exports.c = c;",
       ])
     );
     expect(out.declOutput).toEqual(`declare let x: number, y: string;
@@ -195,7 +195,7 @@ declare let a: number, c: string;
         "let a = (_b = (_a = obj) === null || _a === void 0 ? void 0 : _a.a) === null || _b === void 0 ? void 0 : _b.b;",
         "exports.a = a;",
         "let b = (a !== null && a !== void 0 ? a : obj);",
-        "exports.b = b;"
+        "exports.b = b;",
       ])
     );
   });
@@ -218,7 +218,7 @@ function increment() {
         "function increment() {",
         "    exports.counter = counter += 1;",
         "}",
-        "exports.increment = increment;"
+        "exports.increment = increment;",
       ])
     );
     expect(out.declOutput).toEqual(`declare let counter: number;
@@ -257,7 +257,7 @@ class SquareImpl implements Square {
         "        this.sideLength = sideLength;",
         "    }",
         "}",
-        "exports.SquareImpl = SquareImpl;"
+        "exports.SquareImpl = SquareImpl;",
       ])
     );
     expect(out.declOutput).toEqual(`interface Shape {
@@ -296,7 +296,7 @@ function identity<T>(arg: T): T {
         "function identity(arg) {",
         "    return arg;",
         "}",
-        "exports.identity = identity;"
+        "exports.identity = identity;",
       ])
     );
     expect(out.declOutput).toEqual(
@@ -325,7 +325,7 @@ enum Direction {
         '    Direction[Direction["Down"] = 2] = "Down";',
         '    Direction[Direction["Left"] = 3] = "Left";',
         '    Direction[Direction["Right"] = 4] = "Right";',
-        "})(Direction || (exports.Direction = Direction = {}));"
+        "})(Direction || (exports.Direction = Direction = {}));",
       ])
     );
     expect(out.declOutput).toEqual(`declare enum Direction {
@@ -356,13 +356,13 @@ enum Direction {
         start: {
           character: 4,
           line: 0,
-          offset: 4
+          offset: 4,
         },
         end: {
           character: 5,
           line: 0,
-          offset: 5
-        }
+          offset: 5,
+        },
       },
       {
         category: 1,
@@ -371,13 +371,13 @@ enum Direction {
         start: {
           character: 7,
           line: 0,
-          offset: 7
+          offset: 7,
         },
         end: {
           character: 8,
           line: 0,
-          offset: 8
-        }
+          offset: 8,
+        },
       },
       {
         category: 1,
@@ -386,14 +386,14 @@ enum Direction {
         start: {
           character: 8,
           line: 0,
-          offset: 8
+          offset: 8,
         },
         end: {
           character: 9,
           line: 0,
-          offset: 9
-        }
-      }
+          offset: 9,
+        },
+      },
     ]);
   });
 
@@ -416,7 +416,7 @@ let info: CpuInfo;
           "const os2 = os;",
           "exports.os2 = os2;",
           "let info;",
-          "exports.info = info;"
+          "exports.info = info;",
         ],
         { importStar: true }
       )
@@ -449,7 +449,7 @@ import * as pathlib from "path";
           "let info;",
           "exports.info = info;",
           'const pathlib = __importStar(require("path"));',
-          "exports.pathlib = pathlib;"
+          "exports.pathlib = pathlib;",
         ],
         { importDefault: true, importStar: true }
       )
@@ -494,7 +494,7 @@ let info = userInfo();
           'const { userInfo } = await Promise.resolve().then(() => __importStar(require("os")));',
           "exports.userInfo = userInfo;",
           "let info = userInfo();",
-          "exports.info = info;"
+          "exports.info = info;",
         ],
         { importStar: true }
       )
@@ -531,7 +531,7 @@ declare let info: import(\"os\").UserInfo<string>;
         "    abc: 123,",
         '    xyz: "hello"',
         "};",
-        "exports.obj = obj;"
+        "exports.obj = obj;",
       ])
     );
     expect(out.declOutput).toEqual(`interface MyInterface {
@@ -573,14 +573,14 @@ describe("converter diagnostics", () => {
         start: {
           character: 6,
           line: 0,
-          offset: 6
+          offset: 6,
         },
         end: {
           character: 7,
           line: 0,
-          offset: 7
-        }
-      }
+          offset: 7,
+        },
+      },
     ]);
   });
 
@@ -594,14 +594,14 @@ describe("converter diagnostics", () => {
         start: {
           character: 4,
           line: 0,
-          offset: 4
+          offset: 4,
         },
         end: {
           character: 5,
           line: 0,
-          offset: 5
-        }
-      }
+          offset: 5,
+        },
+      },
     ]);
   });
 
@@ -615,8 +615,8 @@ describe("converter diagnostics", () => {
         messageText:
           "Cannot find name 'document'. Do you need to change your target library? Try changing the `lib` compiler option to include 'dom'.",
         category: 1,
-        code: 2584
-      }
+        code: 2584,
+      },
     ]);
   });
 
@@ -630,13 +630,13 @@ describe("converter diagnostics", () => {
         start: {
           character: 4,
           line: 0,
-          offset: 4
+          offset: 4,
         },
         end: {
           character: 5,
           line: 0,
-          offset: 5
-        }
+          offset: 5,
+        },
       },
       {
         category: 1,
@@ -645,14 +645,14 @@ describe("converter diagnostics", () => {
         start: {
           character: 15,
           line: 0,
-          offset: 15
+          offset: 15,
         },
         end: {
           character: 16,
           line: 0,
-          offset: 16
-        }
-      }
+          offset: 16,
+        },
+      },
     ]);
   });
 
@@ -675,13 +675,13 @@ class ShapeImpl implements Shape {}
         start: {
           character: 6,
           line: 4,
-          offset: 44
+          offset: 44,
         },
         end: {
           character: 15,
           line: 4,
-          offset: 53
-        }
+          offset: 53,
+        },
       },
       {
         category: 1,
@@ -691,14 +691,14 @@ class ShapeImpl implements Shape {}
         start: {
           character: 6,
           line: 4,
-          offset: 44
+          offset: 44,
         },
         end: {
           character: 15,
           line: 4,
-          offset: 53
-        }
-      }
+          offset: 53,
+        },
+      },
     ]);
   });
 
@@ -721,14 +721,14 @@ class ShapeImpl implements Shape {}
         start: {
           character: 21,
           line: 1,
-          offset: 22
+          offset: 22,
         },
         end: {
           character: 23,
           line: 1,
-          offset: 24
-        }
-      }
+          offset: 24,
+        },
+      },
     ]);
   });
 
@@ -748,14 +748,14 @@ class ShapeImpl implements Shape {}
         "}",
         "exports.asyncHello = asyncHello;",
         "let msg = await asyncHello();",
-        "exports.msg = msg;"
+        "exports.msg = msg;",
       ])
     );
     expect(out.declOutput).toEqual(
       [
         "declare function asyncHello(): Promise<string>;",
         "declare let msg: string;",
-        ""
+        "",
       ].join("\n")
     );
   });
@@ -774,7 +774,7 @@ class ShapeImpl implements Shape {}
       buildOutput([
         "let x = 3 + 4;",
         "exports.x = x;",
-        "exports.tsLastExpr = x * x;"
+        "exports.tsLastExpr = x * x;",
       ])
     );
 
@@ -798,7 +798,7 @@ class ShapeImpl implements Shape {}
         "exports.tsLastExpr = tsLastExpr;",
         "const tsLastExpr0 = 30;",
         "exports.tsLastExpr0 = tsLastExpr0;",
-        "exports.tsLastExpr1 = tsLastExpr + tsLastExpr0;"
+        "exports.tsLastExpr1 = tsLastExpr + tsLastExpr0;",
       ])
     );
   });
@@ -807,28 +807,28 @@ class ShapeImpl implements Shape {}
     const tests = [
       {
         name: "function expression",
-        src: "let f = function() { return await asyncHello(); }"
+        src: "let f = function() { return await asyncHello(); }",
       },
       {
         name: "arrow function",
-        src: "let f = () => { return await asyncHello(); }"
+        src: "let f = () => { return await asyncHello(); }",
       },
       {
         name: "arrow function w/o block",
-        src: "let f = () => await asyncHello()"
+        src: "let f = () => await asyncHello()",
       },
       {
         name: "function declaration",
-        src: "function f() { return await asyncHello(); }"
+        src: "function f() { return await asyncHello(); }",
       },
       {
         name: "class declaration",
-        src: "class Cls { f() { return await asyncHello(); } }"
+        src: "class Cls { f() { return await asyncHello(); } }",
       },
       {
         name: "namespace",
-        src: "namespace ns { await asyncHello(); }"
-      }
+        src: "namespace ns { await asyncHello(); }",
+      },
     ];
     for (const tt of tests) {
       it(tt.name, () => {
@@ -839,8 +839,8 @@ class ShapeImpl implements Shape {}
         }
         ` + tt.src
         );
-        expect(out.diagnostics.map(e => e.messageText)).toEqual([
-          "'await' expression is only allowed within an async function."
+        expect(out.diagnostics.map((e) => e.messageText)).toEqual([
+          "'await' expression is only allowed within an async function.",
         ]);
       });
     }
@@ -882,14 +882,14 @@ describe("with prev", () => {
         start: {
           character: 0,
           line: 0,
-          offset: 0
+          offset: 0,
         },
         end: {
           character: 1,
           line: 0,
-          offset: 1
-        }
-      }
+          offset: 1,
+        },
+      },
     ]);
   });
 
@@ -904,7 +904,7 @@ describe("with prev", () => {
         "declare let x: boolean;",
         "declare let z: string;",
         "declare let y: string;",
-        "declare const a: number;"
+        "declare const a: number;",
       ].join("\n") + "\n"
     );
   });
@@ -921,7 +921,7 @@ describe("with prev", () => {
         "}",
         "exports.itype = itype;",
         "let atype = 123;",
-        "exports.atype = atype;"
+        "exports.atype = atype;",
       ])
     );
     expect(out.declOutput).toEqual(`declare class itype {
@@ -963,7 +963,7 @@ let A: any;
         "}",
         "declare enum B {",
         "    L = 2",
-        "}"
+        "}",
       ].join("\n"),
       "let A = 10;"
     );
@@ -983,7 +983,7 @@ let A: any;
         "}",
         "declare enum B {",
         "    L = 2",
-        "}"
+        "}",
       ].join("\n"),
       "interface A {x: number}"
     );
@@ -998,7 +998,7 @@ let A: any;
         "    L = 2",
         "}",
         "let A: any;",
-        ""
+        "",
       ].join("\n")
     );
   });
@@ -1108,7 +1108,7 @@ declare let m: Map;
         "}",
         "declare function createMap(): Map;",
         "declare let m: Map;",
-        ""
+        "",
       ].join("\n")
     );
   });
@@ -1119,7 +1119,7 @@ declare let m: Map;
     expect(out.output).toEqual(
       buildOutput([
         'const path_1 = require("path");',
-        "exports.join = path_1.join;"
+        "exports.join = path_1.join;",
       ])
     );
     out = conv.convert(out.declOutput, 'join("a", "b");');
@@ -1144,7 +1144,7 @@ declare let m: Map;
           'const tslab = __importStar(require("tslab"));',
           "exports.tslab = tslab;",
           "let d = tslab.newDisplay();",
-          "exports.d = d;"
+          "exports.d = d;",
         ],
         { importStar: true }
       )
@@ -1168,7 +1168,7 @@ describe("modules", () => {
         'const mylib_1 = require("./mylib");',
         "exports.abc = mylib_1.abc;",
         "const xyz = mylib_1.abc;",
-        "exports.xyz = xyz;"
+        "exports.xyz = xyz;",
       ])
     );
     expect(out.declOutput).toEqual(
@@ -1192,8 +1192,8 @@ describe("modules", () => {
         messageText: `Type '"ABC"' is not assignable to type 'number'.`,
         category: 1,
         code: 2322,
-        fileName: "mylib.ts"
-      }
+        fileName: "mylib.ts",
+      },
     ];
     expect(
       conv.addModule("mylib", `export const abc: number = "ABC";`)
@@ -1214,8 +1214,8 @@ describe("modules", () => {
         messageText: "Cannot find name 'abc'.",
         category: 1,
         code: 2304,
-        fileName: undefined
-      }
+        fileName: undefined,
+      },
     ]);
   });
 });
@@ -1230,7 +1230,7 @@ describe("repeated inputs", () => {
       declOutput: "",
       diagnostics: [],
       hasToplevelAwait: false,
-      lastExpressionVar: "tsLastExpr"
+      lastExpressionVar: "tsLastExpr",
     };
     let out = conv.convert("", src);
     expect(out).toEqual(want);
@@ -1250,15 +1250,15 @@ describe("repeated inputs", () => {
         messageText:
           "An arithmetic operand must be of type 'any', 'number', 'bigint' or an enum type.",
         category: 1,
-        code: 2356
-      }
+        code: 2356,
+      },
     ]);
   });
 });
 
 describe("externalFiles", () => {
   it("sideOutputs", () => {
-    runInTmp("pkg", dir => {
+    runInTmp("pkg", (dir) => {
       fs.writeFileSync(
         pathlib.join(dir, "hello.ts"),
         'export const message: string = "Hello tslab in hello.ts!";'
@@ -1271,14 +1271,14 @@ describe("externalFiles", () => {
       expect(output.sideOutputs).toEqual([
         {
           path: normalizeJoin(process.cwd(), `${dir}/hello.js`),
-          data: buildOutput(['exports.message = "Hello tslab in hello.ts!";'])
-        }
+          data: buildOutput(['exports.message = "Hello tslab in hello.ts!";']),
+        },
       ]);
     });
   });
 
   it("dependencies", () => {
-    runInTmp("pkg", dir => {
+    runInTmp("pkg", (dir) => {
       // Confirm b.js is output to sideOutputs though c.js is not.
       fs.writeFileSync(
         pathlib.join(dir, "a.ts"),
@@ -1297,21 +1297,21 @@ describe("externalFiles", () => {
       expect(output.sideOutputs).toEqual([
         {
           path: normalizeJoin(process.cwd(), `${dir}/a.js`),
-          data: buildOutput(['exports.aVal = "AAA";'])
+          data: buildOutput(['exports.aVal = "AAA";']),
         },
         {
           path: normalizeJoin(process.cwd(), `${dir}/c.js`),
           data: buildOutput([
             'const a_1 = require("./a");',
-            'exports.cVal = a_1.aVal + "CCC";'
-          ])
-        }
+            'exports.cVal = a_1.aVal + "CCC";',
+          ]),
+        },
       ]);
     });
   });
 
   it("errors", () => {
-    runInTmp("pkg", dir => {
+    runInTmp("pkg", (dir) => {
       fs.writeFileSync(
         pathlib.join(dir, "a.ts"),
         'export const aVal: number = "AAA";\nlet x = await new Promise(resolve => resolve(1));'
@@ -1324,7 +1324,7 @@ describe("externalFiles", () => {
           messageText: "Type '\"AAA\"' is not assignable to type 'number'.",
           category: 1,
           code: 2322,
-          fileName: pathlib.normalize(`${dir}/a.ts`)
+          fileName: pathlib.normalize(`${dir}/a.ts`),
         },
         // Top-level await is not allowed in external files.
         {
@@ -1334,24 +1334,24 @@ describe("externalFiles", () => {
             "'await' expression is only allowed within an async function.",
           category: 1,
           code: 1308,
-          fileName: pathlib.normalize(`${dir}/a.ts`)
-        }
+          fileName: pathlib.normalize(`${dir}/a.ts`),
+        },
       ]);
     });
   });
 
   it("changed", async () => {
-    await runInTmpAsync("pkg", async dir => {
+    await runInTmpAsync("pkg", async (dir) => {
       // const srcPath = pathlib.resolve(pathlib.join(dir, "a.ts"));
-      const srcPath = normalizeJoin(process.cwd(), dir, 'a.ts');
+      const srcPath = normalizeJoin(process.cwd(), dir, "a.ts");
       fs.writeFileSync(srcPath, 'export const aVal: string = "ABC";');
       let output = conv.convert("", `import {aVal} from "./${dir}/a";`);
       expect(output.diagnostics).toEqual([]);
       expect(output.sideOutputs).toEqual([
         {
           path: normalizeJoin(process.cwd(), `${dir}/a.js`),
-          data: buildOutput(['exports.aVal = "ABC";'])
-        }
+          data: buildOutput(['exports.aVal = "ABC";']),
+        },
       ]);
 
       fs.writeFileSync(srcPath, 'export const aVal: string = "XYZ";');
@@ -1363,8 +1363,8 @@ describe("externalFiles", () => {
       expect(output.sideOutputs).toEqual([
         {
           path: normalizeJoin(process.cwd(), `${dir}/a.js`),
-          data: buildOutput(['exports.aVal = "XYZ";'])
-        }
+          data: buildOutput(['exports.aVal = "XYZ";']),
+        },
       ]);
     });
   });
@@ -1374,77 +1374,77 @@ describe("isCompleteCode", () => {
   it("force complete", () => {
     expect(converter.isCompleteCode("function f() {")).toEqual({
       completed: false,
-      indent: "  "
+      indent: "  ",
     });
     expect(converter.isCompleteCode("function f() {\n")).toEqual({
       completed: false,
-      indent: ""
+      indent: "",
     });
     expect(converter.isCompleteCode("function f() {\n\n")).toEqual({
-      completed: true
+      completed: true,
     });
     expect(converter.isCompleteCode("function f() {\n  \n\t")).toEqual({
-      completed: true
+      completed: true,
     });
     expect(converter.isCompleteCode("function f() {\r\n  \r\n\t")).toEqual({
-      completed: true
+      completed: true,
     });
     expect(converter.isCompleteCode("  \n  ")).toEqual({
-      completed: true
+      completed: true,
     });
   });
 
   it("completed", () => {
     expect(converter.isCompleteCode("let x = 10")).toEqual({ completed: true });
     expect(converter.isCompleteCode("function f() {\n}")).toEqual({
-      completed: true
+      completed: true,
     });
     expect(converter.isCompleteCode("class C {\n}")).toEqual({
-      completed: true
+      completed: true,
     });
     expect(converter.isCompleteCode("let x-+10")).toEqual({
-      completed: true
+      completed: true,
     });
     expect(converter.isCompleteCode("<div></div>")).toEqual({
-      completed: true
+      completed: true,
     });
   });
 
   it("incompleted", () => {
     expect(converter.isCompleteCode("function f() {\n  f()")).toEqual({
       completed: false,
-      indent: "  "
+      indent: "  ",
     });
     expect(converter.isCompleteCode("while (true) {\n\tlet x = 10;")).toEqual({
       completed: false,
-      indent: "\t"
+      indent: "\t",
     });
     expect(converter.isCompleteCode("fn(x,\n   y")).toEqual({
       completed: false,
-      indent: "   "
+      indent: "   ",
     });
     expect(converter.isCompleteCode("let x = y +")).toEqual({
       completed: false,
-      indent: ""
+      indent: "",
     });
 
     // increase indnet
     expect(converter.isCompleteCode("  function f() {")).toEqual({
       completed: false,
-      indent: "    "
+      indent: "    ",
     });
     // decrease indent
     expect(
       converter.isCompleteCode("function f() {\n  if (x) {\n    }")
     ).toEqual({
       completed: false,
-      indent: "  "
+      indent: "  ",
     });
     // JSX/TSX
     expect(converter.isCompleteCode("<div>")).toEqual({
       completed: false,
       // TODO: Autoindent JSX.
-      indent: ""
+      indent: "",
     });
   });
 });
@@ -1589,7 +1589,7 @@ describe("esModuleToCommonJSModule", () => {
       "let x = 10;",
       "const y = 20;",
       "var z = x + y;",
-      "export {x, y, z}"
+      "export {x, y, z}",
     ].join("\n");
     const want = buildOutput([
       "let x = 10;",
@@ -1597,7 +1597,7 @@ describe("esModuleToCommonJSModule", () => {
       "const y = 20;",
       "exports.y = y;",
       "var z = x + y;",
-      "exports.z = z;"
+      "exports.z = z;",
     ]);
     expect(
       converter.esModuleToCommonJSModule(src, ts.ScriptTarget.ES2019)
@@ -1609,7 +1609,7 @@ describe("esModuleToCommonJSModule", () => {
       'import * as os from "os";',
       'import {a, b} from "vm";',
       "let c = a() + b;",
-      "export {os, a, b, c}"
+      "export {os, a, b, c}",
     ].join("\n");
     expect(
       converter.esModuleToCommonJSModule(src, ts.ScriptTarget.ES2019)
@@ -1622,7 +1622,7 @@ describe("esModuleToCommonJSModule", () => {
           "exports.a = vm_1.a;",
           "exports.b = vm_1.b;",
           "let c = vm_1.a() + vm_1.b;",
-          "exports.c = c;"
+          "exports.c = c;",
         ],
         { importStar: true }
       )

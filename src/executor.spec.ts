@@ -8,7 +8,7 @@ import {
   runInTmpAsync,
   WaitFileEventFunc,
   createConverterWithFileWatcher,
-  sleep
+  sleep,
 } from "./testutil";
 import ts from "@tslab/typescript-for-tslab";
 import { normalizeJoin } from "./tspath";
@@ -28,12 +28,12 @@ beforeAll(() => {
     browserConv.close();
   };
   let exconsole = {
-    log: function(...args) {
+    log: function (...args) {
       consoleLogCalls.push(args);
     },
-    error: function(...args) {
+    error: function (...args) {
       consoleErrorCalls.push(args);
-    }
+    },
   };
   const convs = { node: node.converter, browser: browserConv, close };
   ex = executor.createExecutor(process.cwd(), convs, exconsole);
@@ -94,7 +94,7 @@ describe("execute", () => {
       myglobal: global,
       myprocess: process,
       myconsole: console,
-      MyArray: Array
+      MyArray: Array,
     };
     for (let key of Object.getOwnPropertyNames(ex.locals)) {
       expect(ex.locals[key]).toBe(expectLocals[key]);
@@ -133,7 +133,7 @@ describe("execute", () => {
   for (const tc of [
     { name: "import start", import: 'import * as crypto from "crypto";' },
     { name: "import default", import: 'import crypto from "crypto";' },
-    { name: "dynamic import", import: 'const crypto = await import("crypto")' }
+    { name: "dynamic import", import: 'const crypto = await import("crypto")' },
   ]) {
     // Note: For some reason, dynamic import is way slower than others.
     it(tc.name, async () => {
@@ -141,7 +141,7 @@ describe("execute", () => {
         [
           tc.import,
           'const message = "Hello TypeScript!";',
-          'const hash = crypto.createHash("sha256").update(message).digest("hex");'
+          'const hash = crypto.createHash("sha256").update(message).digest("hex");',
         ].join("\n")
       );
       expect(ok).toBe(true);
@@ -176,7 +176,7 @@ describe("execute", () => {
       await ex.execute(
         [
           'Object.defineProperty(exports, "myprop", {value: true});',
-          "let prop0 = exports.myprop"
+          "let prop0 = exports.myprop",
         ].join("\n")
       )
     ).toBe(true);
@@ -184,14 +184,14 @@ describe("execute", () => {
       await ex.execute(
         [
           'Object.defineProperty(exports, "myprop", {value: false});',
-          "let prop1 = exports.myprop"
+          "let prop1 = exports.myprop",
         ].join("\n")
       )
     ).toBe(true);
 
     expect(ex.locals).toEqual({
       prop0: true,
-      prop1: false
+      prop1: false,
     });
   });
 
@@ -201,12 +201,12 @@ describe("execute", () => {
       await ex.execute(
         [
           'Object.defineProperty(exports, "__esModule", {value: true});',
-          'Object.defineProperty(exports, "__esModule", {value: false});'
+          'Object.defineProperty(exports, "__esModule", {value: false});',
         ].join("\n")
       )
     ).toBe(false);
     expect(consoleErrorCalls).toEqual([
-      [new TypeError("Cannot redefine property: __esModule")]
+      [new TypeError("Cannot redefine property: __esModule")],
     ]);
   });
 
@@ -214,7 +214,7 @@ describe("execute", () => {
     expect(await ex.execute(`let x + y;`)).toBe(false);
     expect(consoleErrorCalls).toEqual([
       ["%s%d:%d - %s", "", 1, 7, "',' expected."],
-      ["%s%d:%d - %s", "", 1, 9, "Cannot find name 'y'."]
+      ["%s%d:%d - %s", "", 1, 9, "Cannot find name 'y'."],
     ]);
   });
 
@@ -380,7 +380,7 @@ describe("interrupt", () => {
     expect(await promise).toBe(false);
     expect(consoleLogCalls).toEqual([]);
     expect(consoleErrorCalls).toEqual([
-      [new Error("Interrupted asynchronously")]
+      [new Error("Interrupted asynchronously")],
     ]);
   });
 });
@@ -432,7 +432,7 @@ export let a = 'XXX';`)
 
 describe("externalFiles", () => {
   it("dependencies", async () => {
-    await runInTmpAsync("pkg", async dir => {
+    await runInTmpAsync("pkg", async (dir) => {
       fs.writeFileSync(
         pathlib.join(dir, "a.ts"),
         'export const aVal: string = "AAA";'
@@ -454,7 +454,7 @@ describe("externalFiles", () => {
   });
 
   it("errors", async () => {
-    await runInTmpAsync("pkg", async dir => {
+    await runInTmpAsync("pkg", async (dir) => {
       fs.writeFileSync(
         pathlib.join(dir, "a.ts"),
         'export const aVal: number = "AAA";'
@@ -468,19 +468,19 @@ describe("externalFiles", () => {
           pathlib.normalize(`${dir}/a.ts `),
           1,
           14,
-          "Type '\"AAA\"' is not assignable to type 'number'."
-        ]
+          "Type '\"AAA\"' is not assignable to type 'number'.",
+        ],
       ]);
     });
   });
 
   it("cache module", async () => {
-    await runInTmpAsync("pkg", async dir => {
+    await runInTmpAsync("pkg", async (dir) => {
       fs.writeFileSync(
         pathlib.join(dir, "rand.ts"),
         [
           'import { randomBytes } from "crypto";',
-          'export const uid = randomBytes(8).toString("hex");'
+          'export const uid = randomBytes(8).toString("hex");',
         ].join("\n")
       );
       let promise = ex.execute(`import {uid} from "./${dir}/rand";`);
@@ -495,7 +495,7 @@ describe("externalFiles", () => {
   });
 
   it("changed", async () => {
-    await runInTmpAsync("pkg", async dir => {
+    await runInTmpAsync("pkg", async (dir) => {
       const srcPath = normalizeJoin(process.cwd(), dir, "a.ts");
       fs.writeFileSync(srcPath, 'export const aVal = "ABC";');
       let promise = ex.execute(`import {aVal} from "./${dir}/a";`);
@@ -545,13 +545,13 @@ describe("browswer", () => {
         { kind: "localName", text: "document" },
         { kind: "punctuation", text: ":" },
         { kind: "space", text: " " },
-        { kind: "localName", text: "Document" }
+        { kind: "localName", text: "Document" },
       ],
       documentation: [],
       kind: "var",
       kindModifiers: "declare",
       tags: undefined,
-      textSpan: { length: 8, start: 43 }
+      textSpan: { length: 8, start: 43 },
     });
   });
 });

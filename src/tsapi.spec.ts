@@ -11,8 +11,8 @@ describe("transpile", () => {
       fileName: "src.js",
       reportDiagnostics: true,
       compilerOptions: {
-        newLine: ts.NewLineKind.LineFeed
-      }
+        newLine: ts.NewLineKind.LineFeed,
+      },
     });
     expect(out.diagnostics.length).toEqual(1);
     expect(out.diagnostics[0].messageText).toEqual(
@@ -29,15 +29,15 @@ describe("transpile", () => {
         'import * as c from "vm";',
         "let d = a() + b;",
         "let e = x(y);",
-        "export {a, b, c, d, e}"
+        "export {a, b, c, d, e}",
       ].join("\n"),
       {
         fileName: "src.js",
         compilerOptions: {
           noImplicitUseStrict: true,
           module: ts.ModuleKind.CommonJS,
-          newLine: ts.NewLineKind.LineFeed
-        }
+          newLine: ts.NewLineKind.LineFeed,
+        },
       }
     );
     expect(out.diagnostics).toEqual([]);
@@ -53,7 +53,7 @@ describe("transpile", () => {
         "exports.d = d;",
         "var e = x(y);",
         "exports.e = e;",
-        ""
+        "",
       ].join("\n")
     );
   });

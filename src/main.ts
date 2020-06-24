@@ -82,7 +82,7 @@ export function startKernel({
   configPath = "",
   enableFindLocal = true,
   jsKernel = false,
-  globalVersion = ""
+  globalVersion = "",
 }): void {
   if (enableFindLocal) {
     const local = findLocalStartKernel();
@@ -95,7 +95,7 @@ export function startKernel({
   convs.node; // Warm the converter for Node.js
   const executor = createExecutor(process.cwd(), convs, {
     log: console.log,
-    error: console.error
+    error: console.error,
   });
   const server = new ZmqServer(
     new JupyterHandlerImpl(executor, jsKernel),
@@ -105,10 +105,10 @@ export function startKernel({
     executor.interrupt();
   });
   // TODO: Test these handlers.
-  process.on("uncaughtException", err => {
+  process.on("uncaughtException", (err) => {
     console.error("UncaughtException:", err);
   });
-  process.on("unhandledRejection", reason => {
+  process.on("unhandledRejection", (reason) => {
     console.error("UnhandledPromiseRejection:", reason);
   });
   server.init();
@@ -145,11 +145,11 @@ export function main() {
       "--prefix [prefix]",
       "Kernelspec will be installed in {PREFIX}/share/jupyter/kernels/"
     )
-    .action(function() {
+    .action(function () {
       if (arguments.length != 1) {
         console.error(
           "Unused args:",
-          Array.from(arguments).filter(arg => {
+          Array.from(arguments).filter((arg) => {
             return typeof arg === "string";
           })
         );
@@ -170,7 +170,7 @@ export function main() {
       const cmdStr = `${python} ${args.join(" ")}`;
       console.log("Running", cmdStr);
       const ret = child_process.spawnSync(python, args, {
-        stdio: "inherit"
+        stdio: "inherit",
       });
       if (ret.error) {
         console.error("Failed to spawn:", cmdStr);
@@ -184,11 +184,11 @@ export function main() {
     .description("Start Jupyter kernel. Used from Jupyter internally")
     .option("--config-path <path>", "Path of config file")
     .option("--js", "If set, start JavaScript kernel. Otherwise, TypeScript.")
-    .action(function() {
+    .action(function () {
       if (arguments.length != 1) {
         console.error(
           "Unused args:",
-          Array.from(arguments).filter(arg => {
+          Array.from(arguments).filter((arg) => {
             return typeof arg === "string";
           })
         );

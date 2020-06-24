@@ -20,7 +20,7 @@ describe("bundle", () => {
       "index.js",
       new Map<string, string>([
         ["index.js", `const foo = require("./foo");console.log(foo.x);`],
-        ["foo.js", "exports.x = 10;"]
+        ["foo.js", "exports.x = 10;"],
       ])
     );
     const want = [
@@ -31,7 +31,7 @@ describe("bundle", () => {
       "};",
       "",
       "console.log(foo.x);",
-      ""
+      "",
     ].join("\n");
     // console.log(JSON.stringify(out.split("\n")));
     expect(out).toEqual(want);
@@ -42,7 +42,7 @@ describe("bundle", () => {
       "index.js",
       new Map<string, string>([
         ["index.js", `const foo = require("./foo");console.log(foo);`],
-        ["foo.js", "module.exports = 'foobarbaz';"]
+        ["foo.js", "module.exports = 'foobarbaz';"],
       ])
     );
     const want = ["var foo = 'foobarbaz';", "", "console.log(foo);", ""].join(
@@ -58,8 +58,8 @@ describe("bundle", () => {
       new Map<string, string>([
         [
           "index.js",
-          `if (process.env.NODE_ENV === 'production') {console.log('prod');} else {console.log('demo')}`
-        ]
+          `if (process.env.NODE_ENV === 'production') {console.log('prod');} else {console.log('demo')}`,
+        ],
       ])
     );
     const want = "{console.log('prod');}\n";

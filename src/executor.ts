@@ -108,7 +108,7 @@ function wrapRequire(
         return mod;
       }
       return req.apply(thisArg, argArray);
-    }
+    },
   });
 }
 
@@ -138,7 +138,7 @@ export function createExecutor(
     sideModules
   );
   const proxyHandler: ProxyHandler<{ [key: string]: any }> = {
-    get: function(_target, prop) {
+    get: function (_target, prop) {
       if (prop === "require") {
         return req;
       }
@@ -149,7 +149,7 @@ export function createExecutor(
         return locals[prop as any];
       }
       return global[prop];
-    }
+    },
   };
   const sandbox = new Proxy(locals, proxyHandler);
   vm.createContext(sandbox);
@@ -179,7 +179,7 @@ export function createExecutor(
       set: (_target, prop, value) => {
         locals[prop as any] = value;
         return true;
-      }
+      },
     });
   }
 
@@ -229,7 +229,7 @@ export function createExecutor(
         : "(function() { ";
       const wrapped = prefix + converted.output + "\n})()";
       const ret = vm.runInContext(wrapped, sandbox, {
-        breakOnSigint: true
+        breakOnSigint: true,
       });
       if (converted.hasToplevelAwait) {
         promise = ret;
@@ -288,6 +288,6 @@ export function createExecutor(
     locals,
     reset,
     interrupt,
-    close
+    close,
   };
 }

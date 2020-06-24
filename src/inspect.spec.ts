@@ -26,34 +26,34 @@ describe("inspect", () => {
       displayParts: [
         {
           kind: "keyword",
-          text: "let"
+          text: "let",
         },
         {
           kind: "space",
-          text: " "
+          text: " ",
         },
         {
           kind: "localName",
-          text: "xyz"
+          text: "xyz",
         },
         {
           kind: "punctuation",
-          text: ":"
+          text: ":",
         },
         {
           kind: "space",
-          text: " "
+          text: " ",
         },
         {
           kind: "keyword",
-          text: "number"
-        }
+          text: "number",
+        },
       ],
       documentation: [
         {
           kind: "text",
-          text: "xys is a great variable"
-        }
+          text: "xys is a great variable",
+        },
       ],
       kind: "let",
       kindModifiers: "",
@@ -61,8 +61,8 @@ describe("inspect", () => {
       textSpan: {
         length: 3,
         // TODO: Cancel the length of prefix.
-        start: position
-      }
+        start: position,
+      },
     });
     expect(printQuickInfo(info)).toEqual(
       ["let xyz: number", "", "xys is a great variable"].join("\n")
@@ -77,34 +77,34 @@ describe("inspect", () => {
       displayParts: [
         {
           kind: "keyword",
-          text: "var"
+          text: "var",
         },
         {
           kind: "space",
-          text: " "
+          text: " ",
         },
         {
           kind: "localName",
-          text: "klm"
+          text: "klm",
         },
         {
           kind: "punctuation",
-          text: ":"
+          text: ":",
         },
         {
           kind: "space",
-          text: " "
+          text: " ",
         },
         {
           kind: "keyword",
-          text: "boolean"
-        }
+          text: "boolean",
+        },
       ],
       documentation: [
         {
           kind: "text",
-          text: "klm is a great boolean"
-        }
+          text: "klm is a great boolean",
+        },
       ],
       kind: "var",
       kindModifiers: "",
@@ -112,8 +112,8 @@ describe("inspect", () => {
       textSpan: {
         length: 3,
         // TODO: Cancel the length of prefix.
-        start: position
-      }
+        start: position,
+      },
     });
     expect(printQuickInfo(info)).toEqual(
       ["var klm: boolean", "", "klm is a great boolean"].join("\n")
@@ -128,34 +128,34 @@ describe("inspect", () => {
       displayParts: [
         {
           kind: "keyword",
-          text: "const"
+          text: "const",
         },
         {
           kind: "space",
-          text: " "
+          text: " ",
         },
         {
           kind: "localName",
-          text: "abc"
+          text: "abc",
         },
         {
           kind: "punctuation",
-          text: ":"
+          text: ":",
         },
         {
           kind: "space",
-          text: " "
+          text: " ",
         },
         {
           kind: "stringLiteral",
-          text: '"hello"'
-        }
+          text: '"hello"',
+        },
       ],
       documentation: [
         {
           kind: "text",
-          text: "abc is a great string"
-        }
+          text: "abc is a great string",
+        },
       ],
       kind: "const",
       kindModifiers: "",
@@ -163,8 +163,8 @@ describe("inspect", () => {
       textSpan: {
         length: 3,
         // TODO: Cancel the length of prefix.
-        start: position
-      }
+        start: position,
+      },
     });
     expect(printQuickInfo(info)).toEqual(
       ['const abc: "hello"', "", "abc is a great string"].join("\n")
@@ -202,25 +202,25 @@ describe("inspect", () => {
         { text: ")", kind: "punctuation" },
         { text: ":", kind: "punctuation" },
         { text: " ", kind: "space" },
-        { text: "number", kind: "keyword" }
+        { text: "number", kind: "keyword" },
       ],
       documentation: [
         {
           text: "Returns the position of the first occurrence of a substring.",
-          kind: "text"
-        }
+          kind: "text",
+        },
       ],
       tags: [
         {
           name: "param",
-          text: "searchString The substring to search for in the string"
+          text: "searchString The substring to search for in the string",
         },
         {
           name: "param",
           text:
-            "position The index at which to begin searching the String object. If omitted, search starts at the beginning of the string."
-        }
-      ]
+            "position The index at which to begin searching the String object. If omitted, search starts at the beginning of the string.",
+        },
+      ],
     });
     expect(printQuickInfo(info)).toEqual(
       [
@@ -228,7 +228,7 @@ describe("inspect", () => {
         "",
         "Returns the position of the first occurrence of a substring.",
         "@param searchString The substring to search for in the string",
-        "@param position The index at which to begin searching the String object. If omitted, search starts at the beginning of the string."
+        "@param position The index at which to begin searching the String object. If omitted, search starts at the beginning of the string.",
       ].join("\n")
     );
   });
@@ -269,14 +269,14 @@ describe("inspect", () => {
         { text: "2", kind: "numericLiteral" },
         { text: " ", kind: "space" },
         { text: "overloads", kind: "text" },
-        { text: ")", kind: "punctuation" }
+        { text: ")", kind: "punctuation" },
       ],
-      documentation: []
+      documentation: [],
     });
     expect(printQuickInfo(info)).toEqual(
       [
         "var Map: MapConstructor",
-        "new () => Map<any, any> (+2 overloads)"
+        "new () => Map<any, any> (+2 overloads)",
       ].join("\n")
     );
   });
@@ -301,9 +301,9 @@ describe("inspect", () => {
         { text: ",", kind: "punctuation" },
         { text: " ", kind: "space" },
         { text: "number", kind: "keyword" },
-        { text: ">", kind: "punctuation" }
+        { text: ">", kind: "punctuation" },
       ],
-      documentation: []
+      documentation: [],
     });
     expect(printQuickInfo(info)).toEqual("let m: Map<string, number>");
   });
@@ -325,9 +325,9 @@ describe("inspect", () => {
         { text: ",", kind: "punctuation" },
         { text: " ", kind: "space" },
         { text: "V", kind: "typeParameterName" },
-        { text: ">", kind: "punctuation" }
+        { text: ">", kind: "punctuation" },
       ],
-      documentation: []
+      documentation: [],
     });
     expect(printQuickInfo(info)).toEqual("interface Map<K, V>");
   });
@@ -351,9 +351,9 @@ describe("inspect", () => {
         { text: " ", kind: "space" },
         { text: "=", kind: "operator" },
         { text: " ", kind: "space" },
-        { text: "0", kind: "numericLiteral" }
+        { text: "0", kind: "numericLiteral" },
       ],
-      documentation: []
+      documentation: [],
     });
     expect(printQuickInfo(info)).toEqual("(enum member) myenum.key1 = 0");
   });

@@ -93,7 +93,7 @@ interface RebuildTimer {
 
 const cancellationToken: ts.CancellationToken = {
   isCancellationRequested: (): boolean => false,
-  throwIfCancellationRequested: (): void => {}
+  throwIfCancellationRequested: (): void => {},
 };
 
 export function createConverter(options?: ConverterOptions): Converter {
@@ -133,7 +133,7 @@ export function createConverter(options?: ConverterOptions): Converter {
   const srcPrefixOffsets = {
     offset: srcPrefix.length,
     line: (srcPrefix.match(/\n/g) || []).length,
-    char: srcPrefix.length - (srcPrefix.lastIndexOf("\n") + 1)
+    char: srcPrefix.length - (srcPrefix.lastIndexOf("\n") + 1),
   };
   let srcContent: string = "";
   let declContent: string = "";
@@ -143,7 +143,7 @@ export function createConverter(options?: ConverterOptions): Converter {
 
   const sys = Object.create(ts.sys) as ts.System;
   let rebuildTimer: RebuildTimer = null;
-  sys.getCurrentDirectory = function() {
+  sys.getCurrentDirectory = function () {
     return cwd;
   };
   sys.setTimeout = (callback: (...args: any[]) => void): any => {
@@ -160,7 +160,7 @@ export function createConverter(options?: ConverterOptions): Converter {
     }
     throw new Error("clearing unexpected tiemr");
   };
-  sys.readFile = function(path, encoding) {
+  sys.readFile = function (path, encoding) {
     if (path === srcFilename) {
       return srcPrefix + srcContent;
     }
@@ -172,7 +172,7 @@ export function createConverter(options?: ConverterOptions): Converter {
     }
     return ts.sys.readFile(forwardTslabPath(cwd, path), encoding);
   };
-  sys.directoryExists = function(path: string): boolean {
+  sys.directoryExists = function (path: string): boolean {
     if (ts.sys.directoryExists(forwardTslabPath(cwd, path))) {
       return true;
     }
@@ -182,13 +182,13 @@ export function createConverter(options?: ConverterOptions): Converter {
     // TODO: Test this behavior.
     return normalizeJoin(cwd, "node_modules") === path;
   };
-  sys.fileExists = function(path: string): boolean {
+  sys.fileExists = function (path: string): boolean {
     if (ts.sys.fileExists(forwardTslabPath(cwd, path))) {
       return true;
     }
     return virtualFiles.has(path);
   };
-  sys.readDirectory = function(
+  sys.readDirectory = function (
     path: string,
     extensions?: readonly string[],
     exclude?: readonly string[],
@@ -203,7 +203,7 @@ export function createConverter(options?: ConverterOptions): Converter {
       depth
     );
   };
-  sys.writeFile = function(path, data) {
+  sys.writeFile = function (path, data) {
     throw new Error("writeFile must not be called");
   };
   let notifyUpdateSrc: ts.FileWatcherCallback = null;
@@ -215,13 +215,13 @@ export function createConverter(options?: ConverterOptions): Converter {
     if (path === srcFilename) {
       notifyUpdateSrc = callback;
       return {
-        close: () => {}
+        close: () => {},
       };
     }
     if (path === declFilename) {
       notifyUpdateDecls = callback;
       return {
-        close: () => {}
+        close: () => {},
       };
     }
     // Note: File watchers for real files and virtual files are mixed here.
@@ -239,7 +239,7 @@ export function createConverter(options?: ConverterOptions): Converter {
       close: () => {
         fileWatchers.delete(path);
         watcher.close();
-      }
+      },
     };
   };
   // This takes several hundreds millisecs.
@@ -255,7 +255,7 @@ export function createConverter(options?: ConverterOptions): Converter {
       // c.f.
       // https://github.com/microsoft/TypeScript/blob/master/src/testRunner/unittests/config/commandLineParsing.ts
       // https://github.com/microsoft/TypeScript/blob/master/src/compiler/commandLineParser.ts
-      lib: transpileLib.map(lib => `lib.${lib}.d.ts`),
+      lib: transpileLib.map((lib) => `lib.${lib}.d.ts`),
       declaration: true,
       newLine: ts.NewLineKind.LineFeed,
       // Remove 'use strict' from outputs.
@@ -271,18 +271,18 @@ export function createConverter(options?: ConverterOptions): Converter {
       skipLibCheck: true,
       // rootDir is necessary to stabilize the paths of output files.
       rootDir: cwd,
-      outDir
+      outDir,
     },
     sys,
     null,
-    function(d: ts.Diagnostic) {
+    function (d: ts.Diagnostic) {
       console.log(d.messageText);
     },
-    function(d: ts.Diagnostic) {
+    function (d: ts.Diagnostic) {
       // Drop watch status changes.
     }
   );
-  host.afterProgramCreate = function(b: ts.BuilderProgram) {
+  host.afterProgramCreate = function (b: ts.BuilderProgram) {
     builder = b;
   };
   const watch = ts.createWatchProgram(host);
@@ -294,7 +294,7 @@ export function createConverter(options?: ConverterOptions): Converter {
     convert,
     inspect,
     complete,
-    addModule
+    addModule,
   };
 
   function close() {
@@ -327,7 +327,7 @@ export function createConverter(options?: ConverterOptions): Converter {
     );
     if (diag.diagnostics.length > 0) {
       return {
-        diagnostics: diag.diagnostics
+        diagnostics: diag.diagnostics,
       };
     }
 
@@ -365,7 +365,7 @@ export function createConverter(options?: ConverterOptions): Converter {
           }
           sideOutputs.push({
             path: normalizeJoin(cwd, rel),
-            data: esModuleToCommonJSModule(data, transpileTarget)
+            data: esModuleToCommonJSModule(data, transpileTarget),
           });
         },
         undefined,
@@ -389,7 +389,7 @@ export function createConverter(options?: ConverterOptions): Converter {
       diagnostics: diag.diagnostics,
       hasToplevelAwait: diag.hasToplevelAwait,
       sideOutputs,
-      lastExpressionVar
+      lastExpressionVar,
     };
   }
 
@@ -399,7 +399,7 @@ export function createConverter(options?: ConverterOptions): Converter {
     // TODO: Integration-test for this behavior.
     const typeRoots =
       ts.getDefaultTypeRoots(cwd, {
-        directoryExists: sys.directoryExists
+        directoryExists: sys.directoryExists,
       }) || [];
     for (const root of typeRoots) {
       if (ts.sys.fileExists(normalizeJoin(root, "node", "package.json"))) {
@@ -480,12 +480,12 @@ export function createConverter(options?: ConverterOptions): Converter {
       const ord = a.sortText.localeCompare(b.sortText);
       return ord !== 0 ? ord : a.name.localeCompare(b.name);
     });
-    const candidates = entries.map(e => e.name);
+    const candidates = entries.map((e) => e.name);
     return {
       start: pos - srcPrefix.length,
       end: pos - srcPrefix.length,
       candidates,
-      original: info
+      original: info,
     };
   }
 
@@ -518,10 +518,10 @@ export function createConverter(options?: ConverterOptions): Converter {
         return {
           name: e.name,
           sortKey: key + e.sortText,
-          index
+          index,
         };
       })
-      .filter(e => !!e);
+      .filter((e) => !!e);
     // Sort stably by using the original index.
     candidates.sort((a, b) => {
       const ord = a.sortKey.localeCompare(b.sortKey);
@@ -530,8 +530,8 @@ export function createConverter(options?: ConverterOptions): Converter {
     return {
       start: id.getStart(srcFile) - srcPrefix.length,
       end: id.end - srcPrefix.length,
-      candidates: candidates.map(e => e.name),
-      original: info
+      candidates: candidates.map((e) => e.name),
+      original: info,
     };
   }
 
@@ -558,7 +558,7 @@ export function createConverter(options?: ConverterOptions): Converter {
       if (!keep.type && !keep.value) {
         return;
       }
-      sym.declarations.forEach(decl => {
+      sym.declarations.forEach((decl) => {
         let node = decl as ts.Node;
         while (node.parent !== declsSF) {
           node = node.parent;
@@ -643,7 +643,7 @@ export function createConverter(options?: ConverterOptions): Converter {
       });
     });
     let statements = [];
-    declsSF.statements.forEach(stmt => {
+    declsSF.statements.forEach((stmt) => {
       let names = keepMap.get(stmt);
       if (!names) {
         return;
@@ -651,7 +651,7 @@ export function createConverter(options?: ConverterOptions): Converter {
       statements.push(stmt);
       if (ts.isVariableStatement(stmt)) {
         const decls: ts.VariableDeclaration[] = [];
-        stmt.declarationList.declarations.forEach(decl => {
+        stmt.declarationList.declarations.forEach((decl) => {
           if (!ts.isIdentifier(decl.name)) {
             // This must not happen.
             return;
@@ -675,7 +675,7 @@ export function createConverter(options?: ConverterOptions): Converter {
     let printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
 
     let anyVarsDecls: string[] = [];
-    anyVars.forEach(name => {
+    anyVars.forEach((name) => {
       anyVarsDecls.push(`let ${name}: any;\n`);
     });
     return printer.printFile(declsSF) + anyVarsDecls.join("");
@@ -767,7 +767,7 @@ export function createConverter(options?: ConverterOptions): Converter {
     const pos = {
       offset: offset,
       line: lineChar.line,
-      character: lineChar.character
+      character: lineChar.character,
     };
     if (fileName === srcFilename || virtualFiles.has(fileName)) {
       pos.offset -= srcPrefixOffsets.offset;
@@ -814,7 +814,7 @@ export function createConverter(options?: ConverterOptions): Converter {
           messageText: d.messageText.toString(),
           category: d.category,
           code: d.code,
-          fileName
+          fileName,
         });
         continue;
       }
@@ -841,7 +841,7 @@ export function createConverter(options?: ConverterOptions): Converter {
       end,
       messageText: msg.messageText,
       category: msg.category,
-      code: msg.code
+      code: msg.code,
     });
     if (!msg.next) {
       return;
@@ -861,7 +861,7 @@ export function createConverter(options?: ConverterOptions): Converter {
   ): ts.CustomTransformers {
     return {
       after: [after],
-      afterDeclarations: [afterDeclarations]
+      afterDeclarations: [afterDeclarations],
     };
     function createLastExprVar() {
       const prefix = "tsLastExpr";
@@ -899,7 +899,7 @@ export function createConverter(options?: ConverterOptions): Converter {
                     lastName,
                     undefined,
                     stmt.expression
-                  )
+                  ),
                 ],
                 ts.NodeFlags.Const
               )
@@ -1038,8 +1038,8 @@ export function esModuleToCommonJSModule(
       target,
       newLine: ts.NewLineKind.LineFeed,
       // Remove 'use strict' from outputs.
-      noImplicitUseStrict: true
-    }
+      noImplicitUseStrict: true,
+    },
   }).outputText;
   return out;
 }
@@ -1063,7 +1063,7 @@ export function keepNamesInImport(
       }
     } else {
       let elms: ts.ImportSpecifier[] = [];
-      imc.namedBindings.elements.forEach(elm => {
+      imc.namedBindings.elements.forEach((elm) => {
         if (names.has(elm.name.escapedText)) {
           elms.push(elm);
         }
@@ -1134,7 +1134,7 @@ function getAllSrcDependencies(
   return builder
     .getAllDependencies(sourceFile)
     .filter(
-      dep =>
+      (dep) =>
         dep.endsWith(".js") || (dep.endsWith(".ts") && !dep.endsWith(".d.ts"))
     );
 }

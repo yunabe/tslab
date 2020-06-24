@@ -40,7 +40,7 @@ export class TaskQueue {
    * @param fn A function executed in this queue.
    */
   add<T>(fn: () => Promise<T>): Promise<T> {
-    let promise = this.prev.then(fn, reason => {
+    let promise = this.prev.then(fn, (reason) => {
       if (reason instanceof TaskCanceledError) {
         // Avoid unnecessary deep nesting.
         throw reason;
@@ -80,7 +80,7 @@ export function escapeHTML(s: string): string {
 	`>`, "&gt;",
   `"`, "&#34;",
   */
-  return s.replace(/[&'<>"]/g, m => {
+  return s.replace(/[&'<>"]/g, (m) => {
     switch (m) {
       case "&":
         return "&amp;";
