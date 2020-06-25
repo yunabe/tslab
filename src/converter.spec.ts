@@ -758,6 +758,7 @@ class ShapeImpl implements Shape {}
         "",
       ].join("\n")
     );
+    expect(out.hasToplevelAwait).toBe(true);
   });
 
   it("require is reserved", () => {
