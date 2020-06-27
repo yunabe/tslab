@@ -16,7 +16,7 @@ You can write and execute JavaScript and TypeScript interactively on browsers an
 - Display non-text contents like images, HTML, JavaScript, SVG, etc...
 - Interactive deep neural network machine learning ([TensorFlow.js](https://www.tensorflow.org/js/guide/nodejs)) and data exploration with JavaScript.
 - JavaScript is [40x faster than Python](https://www.google.com/search?hl=en&q=python3+node.js+performance).
-- TypeScript 3.7 support.
+- TypeScript 3.9 support.
   - ["Optional Chaining"](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-7.html#optional-chaining) and ["Nullish Coalescing"](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-7.html#nullish-coalescing) are supported.
 - Top-level [`await`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/await) support.
 - REPL console support.
