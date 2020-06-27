@@ -5,6 +5,26 @@
 
 import vm from "vm";
 
+describe("property", () => {
+  it("get-writable", () => {
+    // Can not set both writable and get.
+    let obj: any = {};
+    try {
+      Object.defineProperty(obj, "prop", {
+        get: () => {
+          return 123;
+        },
+        writable: true,
+      });
+      fail("must fail");
+    } catch (e) {
+      expect((e as Error).message).toContain(
+        "Cannot both specify accessors and a value or writable attribute"
+      );
+    }
+  });
+});
+
 describe("vm", () => {
   it("basics", () => {
     const sandbox = {};

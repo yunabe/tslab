@@ -174,10 +174,18 @@ export function createExecutor(
   }
 
   function createExports(locals: { [key: string]: any }) {
-    const exprts: { [key: string]: any } = {};
-    return new Proxy(exprts, {
-      set: (_target, prop, value) => {
-        locals[prop as any] = value;
+    return new Proxy(locals, {
+      // We need to handle defineProperty as set because TypeScript converts
+      // named imports to defineProperty but we want to named imported symbols rewritable.
+      defineProperty: (_target, prop, attrs) => {
+        if (prop === "__esModule") {
+          return true;
+        }
+        if (attrs.get) {
+          locals[prop as any] = attrs.get();
+        } else {
+          locals[prop as any] = attrs.value;
+        }
         return true;
       },
     });

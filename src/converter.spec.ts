@@ -28,34 +28,52 @@ function buildOutput(
     noEsModule?: boolean;
     importStar?: boolean;
     importDefault?: boolean;
+    exports?: string[];
   }
 ): string {
   const out: string[] = [];
-  if (opts && opts.importDefault) {
-    out.push(
-      ...[
-        "var __importDefault = (this && this.__importDefault) || function (mod) {",
-        '    return (mod && mod.__esModule) ? mod : { "default": mod };',
-        "};",
-      ]
-    );
-  }
   if (opts && opts.importStar) {
     out.push(
       ...[
+        "var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {",
+        "    if (k2 === undefined) k2 = k;",
+        "    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });",
+        "}) : (function(o, m, k, k2) {",
+        "    if (k2 === undefined) k2 = k;",
+        "    o[k2] = m[k];",
+        "}));",
+        "var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {",
+        '    Object.defineProperty(o, "default", { enumerable: true, value: v });',
+        "}) : function(o, v) {",
+        '    o["default"] = v;',
+        "});",
         "var __importStar = (this && this.__importStar) || function (mod) {",
         "    if (mod && mod.__esModule) return mod;",
         "    var result = {};",
-        "    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];",
-        '    result["default"] = mod;',
+        '    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);',
+        "    __setModuleDefault(result, mod);",
         "    return result;",
         "};",
       ]
     );
+    if (opts && opts.importDefault) {
+      out.push(
+        ...[
+          "var __importDefault = (this && this.__importDefault) || function (mod) {",
+          '    return (mod && mod.__esModule) ? mod : { "default": mod };',
+          "};",
+        ]
+      );
+    }
   }
   if (!opts || !opts.noEsModule) {
     // cf. https://www.typescriptlang.org/docs/handbook/release-notes/typescript-2-7.html#support-for-import-d-from-cjs-from-commonjs-modules-with---esmoduleinteropa
     out.push('Object.defineProperty(exports, "__esModule", { value: true });');
+  }
+  if (opts && opts.exports) {
+    out.push(
+      opts.exports.map((e) => `exports.${e}`).join(" = ") + " = void 0;"
+    );
   }
   out.push(...lines);
   out.push("");
@@ -76,20 +94,23 @@ let {a, b: c} = obj;
     );
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
-      buildOutput([
-        "let x = 123;",
-        "exports.x = x;",
-        "const y = 'foo';",
-        "exports.y = y;",
-        "var z = true;",
-        "exports.z = z;",
-        "exports.x = x *= 2;",
-        "let obj = { a: 10, b: 'hello' };",
-        "exports.obj = obj;",
-        "let { a, b: c } = obj;",
-        "exports.a = a;",
-        "exports.c = c;",
-      ])
+      buildOutput(
+        [
+          "let x = 123;",
+          "exports.x = x;",
+          "const y = 'foo';",
+          "exports.y = y;",
+          "var z = true;",
+          "exports.z = z;",
+          "exports.x = x *= 2;",
+          "let obj = { a: 10, b: 'hello' };",
+          "exports.obj = obj;",
+          "let { a, b: c } = obj;",
+          "exports.a = a;",
+          "exports.c = c;",
+        ],
+        { exports: ["c", "a", "obj", "z", "y", "x"] }
+      )
     );
     expect(out.declOutput).toEqual(
       `declare let x: number;
@@ -125,24 +146,27 @@ declare let a: number, c: string;
     );
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
-      buildOutput([
-        "function sum(x, y) {",
-        "    return x + y;",
-        "}",
-        "exports.sum = sum;",
-        "function* xrange(n) {",
-        "    for (let i = 0; i < n; i++) {",
-        "        yield i;",
-        "    }",
-        "}",
-        "exports.xrange = xrange;",
-        "async function sleep(ms) {",
-        "    return new Promise(resolve => {",
-        "        setTimeout(resolve, ms);",
-        "    });",
-        "}",
-        "exports.sleep = sleep;",
-      ])
+      buildOutput(
+        [
+          "function sum(x, y) {",
+          "    return x + y;",
+          "}",
+          "exports.sum = sum;",
+          "function* xrange(n) {",
+          "    for (let i = 0; i < n; i++) {",
+          "        yield i;",
+          "    }",
+          "}",
+          "exports.xrange = xrange;",
+          "async function sleep(ms) {",
+          "    return new Promise(resolve => {",
+          "        setTimeout(resolve, ms);",
+          "    });",
+          "}",
+          "exports.sleep = sleep;",
+        ],
+        { exports: ["sleep", "xrange", "sum"] }
+      )
     );
     expect(out.declOutput).toEqual(
       `declare function sum(x: number, y: number): number;
@@ -162,14 +186,17 @@ declare function sleep(ms: number): Promise<never>;
     );
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
-      buildOutput([
-        "let [x, y] = [123, 'hello'];",
-        "exports.x = x;",
-        "exports.y = y;",
-        'let { a, b: c } = { a: 123, b: "hello" };',
-        "exports.a = a;",
-        "exports.c = c;",
-      ])
+      buildOutput(
+        [
+          "let [x, y] = [123, 'hello'];",
+          "exports.x = x;",
+          "exports.y = y;",
+          'let { a, b: c } = { a: 123, b: "hello" };',
+          "exports.a = a;",
+          "exports.c = c;",
+        ],
+        { exports: ["c", "a", "y", "x"] }
+      )
     );
     expect(out.declOutput).toEqual(`declare let x: number, y: string;
 declare let a: number, c: string;
@@ -188,15 +215,18 @@ declare let a: number, c: string;
     );
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
-      buildOutput([
-        "var _a, _b;",
-        "let obj = null;",
-        "exports.obj = obj;",
-        "let a = (_b = (_a = obj) === null || _a === void 0 ? void 0 : _a.a) === null || _b === void 0 ? void 0 : _b.b;",
-        "exports.a = a;",
-        "let b = (a !== null && a !== void 0 ? a : obj);",
-        "exports.b = b;",
-      ])
+      buildOutput(
+        [
+          "var _a;",
+          "let obj = null;",
+          "exports.obj = obj;",
+          "let a = (_a = obj === null || obj === void 0 ? void 0 : obj.a) === null || _a === void 0 ? void 0 : _a.b;",
+          "exports.a = a;",
+          "let b = a !== null && a !== void 0 ? a : obj;",
+          "exports.b = b;",
+        ],
+        { exports: ["b", "a", "obj"] }
+      )
     );
   });
 
@@ -212,14 +242,17 @@ function increment() {
     );
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
-      buildOutput([
-        "let counter = 0;",
-        "exports.counter = counter;",
-        "function increment() {",
-        "    exports.counter = counter += 1;",
-        "}",
-        "exports.increment = increment;",
-      ])
+      buildOutput(
+        [
+          "let counter = 0;",
+          "exports.counter = counter;",
+          "function increment() {",
+          "    exports.counter = counter += 1;",
+          "}",
+          "exports.increment = increment;",
+        ],
+        { exports: ["counter", "increment"] }
+      )
     );
     expect(out.declOutput).toEqual(`declare let counter: number;
 declare function increment(): void;
@@ -250,15 +283,18 @@ class SquareImpl implements Square {
     );
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
-      buildOutput([
-        "class SquareImpl {",
-        "    constructor(color, sideLength) {",
-        "        this.color = color;",
-        "        this.sideLength = sideLength;",
-        "    }",
-        "}",
-        "exports.SquareImpl = SquareImpl;",
-      ])
+      buildOutput(
+        [
+          "class SquareImpl {",
+          "    constructor(color, sideLength) {",
+          "        this.color = color;",
+          "        this.sideLength = sideLength;",
+          "    }",
+          "}",
+          "exports.SquareImpl = SquareImpl;",
+        ],
+        { exports: ["SquareImpl"] }
+      )
     );
     expect(out.declOutput).toEqual(`interface Shape {
     color: string;
@@ -292,12 +328,15 @@ function identity<T>(arg: T): T {
     );
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
-      buildOutput([
-        "function identity(arg) {",
-        "    return arg;",
-        "}",
-        "exports.identity = identity;",
-      ])
+      buildOutput(
+        [
+          "function identity(arg) {",
+          "    return arg;",
+          "}",
+          "exports.identity = identity;",
+        ],
+        { exports: ["identity"] }
+      )
     );
     expect(out.declOutput).toEqual(
       "declare function identity<T>(arg: T): T;\n"
@@ -317,16 +356,19 @@ enum Direction {
     );
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
-      buildOutput([
-        "var Direction;",
-        "exports.Direction = Direction;",
-        "(function (Direction) {",
-        '    Direction[Direction["Up"] = 1] = "Up";',
-        '    Direction[Direction["Down"] = 2] = "Down";',
-        '    Direction[Direction["Left"] = 3] = "Left";',
-        '    Direction[Direction["Right"] = 4] = "Right";',
-        "})(Direction || (exports.Direction = Direction = {}));",
-      ])
+      buildOutput(
+        [
+          "var Direction;",
+          "exports.Direction = Direction;",
+          "(function (Direction) {",
+          '    Direction[Direction["Up"] = 1] = "Up";',
+          '    Direction[Direction["Down"] = 2] = "Down";',
+          '    Direction[Direction["Left"] = 3] = "Left";',
+          '    Direction[Direction["Right"] = 4] = "Right";',
+          "})(Direction || (exports.Direction = Direction = {}));",
+        ],
+        { exports: ["Direction"] }
+      )
     );
     expect(out.declOutput).toEqual(`declare enum Direction {
     Up = 1,
@@ -418,7 +460,7 @@ let info: CpuInfo;
           "let info;",
           "exports.info = info;",
         ],
-        { importStar: true }
+        { importStar: true, exports: ["info", "os2", "os"] }
       )
     );
     // let info: CpuInfo; in src causes /// reference for some reason.
@@ -451,7 +493,11 @@ import * as pathlib from "path";
           'const pathlib = __importStar(require("path"));',
           "exports.pathlib = pathlib;",
         ],
-        { importDefault: true, importStar: true }
+        {
+          importDefault: true,
+          importStar: true,
+          exports: ["pathlib", "info", "os"],
+        }
       )
     );
     expect(out.declOutput).toEqual(`/// <reference types="node" />
@@ -496,7 +542,7 @@ let info = userInfo();
           "let info = userInfo();",
           "exports.info = info;",
         ],
-        { importStar: true }
+        { importStar: true, exports: ["info", "userInfo"] }
       )
     );
     expect(out.declOutput).toEqual(
@@ -526,13 +572,16 @@ declare let info: import(\"os\").UserInfo<string>;
     );
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
-      buildOutput([
-        "let obj = {",
-        "    abc: 123,",
-        '    xyz: "hello"',
-        "};",
-        "exports.obj = obj;",
-      ])
+      buildOutput(
+        [
+          "let obj = {",
+          "    abc: 123,",
+          '    xyz: "hello"',
+          "};",
+          "exports.obj = obj;",
+        ],
+        { exports: ["obj"] }
+      )
     );
     expect(out.declOutput).toEqual(`interface MyInterface {
     abc: number;
@@ -703,6 +752,7 @@ class ShapeImpl implements Shape {}
   });
 
   it("overwrite-implicit-types", () => {
+    // This is allowed from TypeScript 3.8 or 3.9.
     const out = conv.convert(
       "",
       `
@@ -712,24 +762,29 @@ class ShapeImpl implements Shape {}
       class Promise {}
       `
     );
-    expect(out.diagnostics).toEqual([
-      {
-        category: 1,
-        code: 4060,
-        messageText:
-          "Return type of exported function has or is using private name 'Promise'.",
-        start: {
-          character: 21,
-          line: 1,
-          offset: 22,
-        },
-        end: {
-          character: 23,
-          line: 1,
-          offset: 24,
-        },
-      },
-    ]);
+    expect(out.diagnostics).toEqual([]);
+    expect(out.declOutput).toEqual(
+      [
+        "declare function fn(): globalThis.Promise<number>;",
+        "declare class Promise {",
+        "}",
+        "",
+      ].join("\n")
+    );
+    expect(out.output).toEqual(
+      buildOutput(
+        [
+          "async function fn() {",
+          "    return 0;",
+          "}",
+          "exports.fn = fn;",
+          "class Promise {",
+          "}",
+          "exports.Promise = Promise;",
+        ],
+        { exports: ["Promise", "fn"] }
+      )
+    );
   });
 
   it("top-level await", () => {
@@ -742,14 +797,17 @@ class ShapeImpl implements Shape {}
     );
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
-      buildOutput([
-        "async function asyncHello() {",
-        '    return "Hello, World!";',
-        "}",
-        "exports.asyncHello = asyncHello;",
-        "let msg = await asyncHello();",
-        "exports.msg = msg;",
-      ])
+      buildOutput(
+        [
+          "async function asyncHello() {",
+          '    return "Hello, World!";',
+          "}",
+          "exports.asyncHello = asyncHello;",
+          "let msg = await asyncHello();",
+          "exports.msg = msg;",
+        ],
+        { exports: ["msg", "asyncHello"] }
+      )
     );
     expect(out.declOutput).toEqual(
       [
@@ -772,11 +830,10 @@ class ShapeImpl implements Shape {}
     expect(out.diagnostics).toEqual([]);
     expect(out.lastExpressionVar).toBe("tsLastExpr");
     expect(out.output).toEqual(
-      buildOutput([
-        "let x = 3 + 4;",
-        "exports.x = x;",
-        "exports.tsLastExpr = x * x;",
-      ])
+      buildOutput(
+        ["let x = 3 + 4;", "exports.x = x;", "exports.tsLastExpr = x * x;"],
+        { exports: ["x", "tsLastExpr"] }
+      )
     );
 
     out = conv.convert("", "let x = 3 + 4\n;let y = x * x;");
@@ -794,13 +851,16 @@ class ShapeImpl implements Shape {}
     expect(out.diagnostics).toEqual([]);
     expect(out.lastExpressionVar).toEqual("tsLastExpr1");
     expect(out.output).toEqual(
-      buildOutput([
-        "let tsLastExpr = 10;",
-        "exports.tsLastExpr = tsLastExpr;",
-        "const tsLastExpr0 = 30;",
-        "exports.tsLastExpr0 = tsLastExpr0;",
-        "exports.tsLastExpr1 = tsLastExpr + tsLastExpr0;",
-      ])
+      buildOutput(
+        [
+          "let tsLastExpr = 10;",
+          "exports.tsLastExpr = tsLastExpr;",
+          "const tsLastExpr0 = 30;",
+          "exports.tsLastExpr0 = tsLastExpr0;",
+          "exports.tsLastExpr1 = tsLastExpr + tsLastExpr0;",
+        ],
+        { exports: ["tsLastExpr0", "tsLastExpr", "tsLastExpr1"] }
+      )
     );
   });
 
@@ -841,7 +901,7 @@ class ShapeImpl implements Shape {}
         ` + tt.src
         );
         expect(out.diagnostics.map((e) => e.messageText)).toEqual([
-          "'await' expression is only allowed within an async function.",
+          "'await' expressions are only allowed within async functions and at the top levels of modules.",
         ]);
       });
     }
@@ -856,7 +916,7 @@ describe("with prev", () => {
     const out1 = conv.convert(out0.declOutput, "let y = x * x;");
     expect(out1.diagnostics).toEqual([]);
     expect(out1.output).toEqual(
-      buildOutput(["let y = x * x;", "exports.y = y;"])
+      buildOutput(["let y = x * x;", "exports.y = y;"], { exports: ["y"] })
     );
     // TODO: Include let x; into out1.declOutput.
     expect(out1.declOutput).toEqual(
@@ -868,7 +928,9 @@ describe("with prev", () => {
     const out = conv.convert("declare let x: number\n", "x = x * x;\n");
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
-      buildOutput(["exports.tsLastExpr = x = x * x;"])
+      buildOutput(["exports.tsLastExpr = x = x * x;"], {
+        exports: ["tsLastExpr"],
+      })
     );
     expect(out.declOutput).toEqual("declare let x: number;\n");
   });
@@ -917,13 +979,16 @@ describe("with prev", () => {
     );
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
-      buildOutput([
-        "class itype {",
-        "}",
-        "exports.itype = itype;",
-        "let atype = 123;",
-        "exports.atype = atype;",
-      ])
+      buildOutput(
+        [
+          "class itype {",
+          "}",
+          "exports.itype = itype;",
+          "let atype = 123;",
+          "exports.atype = atype;",
+        ],
+        { exports: ["atype", "itype"] }
+      )
     );
     expect(out.declOutput).toEqual(`declare class itype {
     y: string;
@@ -936,7 +1001,9 @@ type atype = itype | number;
   it("overwrite prev class with value", () => {
     const out = conv.convert("class A {}\nclass B {}\n", "let A = 10;");
     expect(out.diagnostics).toEqual([]);
-    expect(out.output).toEqual(buildOutput(["let A = 10;", "exports.A = A;"]));
+    expect(out.output).toEqual(
+      buildOutput(["let A = 10;", "exports.A = A;"], { exports: ["A"] })
+    );
     expect(out.declOutput).toEqual("declare let A: number;\nclass B {\n}\n");
   });
 
@@ -969,7 +1036,9 @@ let A: any;
       "let A = 10;"
     );
     expect(out.diagnostics).toEqual([]);
-    expect(out.output).toEqual(buildOutput(["let A = 10;", "exports.A = A;"]));
+    expect(out.output).toEqual(
+      buildOutput(["let A = 10;", "exports.A = A;"], { exports: ["A"] })
+    );
     expect(out.declOutput).toEqual(
       "declare let A: number;\ndeclare enum B {\n    L = 2\n}\n"
     );
@@ -1050,7 +1119,7 @@ import { CpuInfo } from "os";
     const out = conv.convert('import * as os from "os";', "let os = 10;");
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
-      buildOutput(["let os = 10;", "exports.os = os;"])
+      buildOutput(["let os = 10;", "exports.os = os;"], { exports: ["os"] })
     );
     expect(out.declOutput).toEqual("declare let os: number;\n");
   });
@@ -1118,16 +1187,21 @@ declare let m: Map;
     let out = conv.convert("", 'import {join} from "path";');
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
-      buildOutput([
-        'const path_1 = require("path");',
-        "exports.join = path_1.join;",
-      ])
+      buildOutput(
+        [
+          'const path_1 = require("path");',
+          'Object.defineProperty(exports, "join", { enumerable: true, get: function () { return path_1.join; } });',
+        ],
+        { exports: ["join"] }
+      )
     );
     out = conv.convert(out.declOutput, 'join("a", "b");');
     expect(out.diagnostics).toEqual([]);
     expect(out.declOutput).toEqual('import { join } from "path";\n');
     expect(out.output).toEqual(
-      buildOutput(['exports.tsLastExpr = join("a", "b");'])
+      buildOutput(['exports.tsLastExpr = join("a", "b");'], {
+        exports: ["tsLastExpr"],
+      })
     );
   });
 
@@ -1147,7 +1221,7 @@ declare let m: Map;
           "let d = tslab.newDisplay();",
           "exports.d = d;",
         ],
-        { importStar: true }
+        { importStar: true, exports: ["d", "tslab"] }
       )
     );
     expect(out.declOutput).toEqual(
@@ -1165,12 +1239,15 @@ describe("modules", () => {
     );
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
-      buildOutput([
-        'const mylib_1 = require("./mylib");',
-        "exports.abc = mylib_1.abc;",
-        "const xyz = mylib_1.abc;",
-        "exports.xyz = xyz;",
-      ])
+      buildOutput(
+        [
+          'const mylib_1 = require("./mylib");',
+          'Object.defineProperty(exports, "abc", { enumerable: true, get: function () { return mylib_1.abc; } });',
+          "const xyz = mylib_1.abc;",
+          "exports.xyz = xyz;",
+        ],
+        { exports: ["xyz", "abc"] }
+      )
     );
     expect(out.declOutput).toEqual(
       'import { abc } from "./mylib";\ndeclare const xyz = "ABC";\n'
@@ -1227,7 +1304,9 @@ describe("repeated inputs", () => {
     // expressions for some reason. This test checks convert does not handle such a case.
     const src = "'x'";
     const want = {
-      output: buildOutput(["exports.tsLastExpr = 'x';"]),
+      output: buildOutput(["exports.tsLastExpr = 'x';"], {
+        exports: ["tsLastExpr"],
+      }),
       declOutput: "",
       diagnostics: [],
       hasToplevelAwait: false,
@@ -1272,7 +1351,9 @@ describe("externalFiles", () => {
       expect(output.sideOutputs).toEqual([
         {
           path: normalizeJoin(process.cwd(), `${dir}/hello.js`),
-          data: buildOutput(['exports.message = "Hello tslab in hello.ts!";']),
+          data: buildOutput(['exports.message = "Hello tslab in hello.ts!";'], {
+            exports: ["message"],
+          }),
         },
       ]);
     });
@@ -1298,14 +1379,14 @@ describe("externalFiles", () => {
       expect(output.sideOutputs).toEqual([
         {
           path: normalizeJoin(process.cwd(), `${dir}/a.js`),
-          data: buildOutput(['exports.aVal = "AAA";']),
+          data: buildOutput(['exports.aVal = "AAA";'], { exports: ["aVal"] }),
         },
         {
           path: normalizeJoin(process.cwd(), `${dir}/c.js`),
-          data: buildOutput([
-            'const a_1 = require("./a");',
-            'exports.cVal = a_1.aVal + "CCC";',
-          ]),
+          data: buildOutput(
+            ['const a_1 = require("./a");', 'exports.cVal = a_1.aVal + "CCC";'],
+            { exports: ["cVal"] }
+          ),
         },
       ]);
     });
@@ -1315,7 +1396,7 @@ describe("externalFiles", () => {
     runInTmp("pkg", (dir) => {
       fs.writeFileSync(
         pathlib.join(dir, "a.ts"),
-        'export const aVal: number = "AAA";\nlet x = await new Promise(resolve => resolve(1));'
+        'export const aVal: number = "AAA";'
       );
       const output = conv.convert("", `import {aVal} from "./${dir}/a";`);
       expect(output.diagnostics).toEqual([
@@ -1325,16 +1406,6 @@ describe("externalFiles", () => {
           messageText: "Type '\"AAA\"' is not assignable to type 'number'.",
           category: 1,
           code: 2322,
-          fileName: pathlib.normalize(`${dir}/a.ts`),
-        },
-        // Top-level await is not allowed in external files.
-        {
-          start: { offset: 43, line: 1, character: 8 },
-          end: { offset: 48, line: 1, character: 13 },
-          messageText:
-            "'await' expression is only allowed within an async function.",
-          category: 1,
-          code: 1308,
           fileName: pathlib.normalize(`${dir}/a.ts`),
         },
       ]);
@@ -1351,7 +1422,7 @@ describe("externalFiles", () => {
       expect(output.sideOutputs).toEqual([
         {
           path: normalizeJoin(process.cwd(), `${dir}/a.js`),
-          data: buildOutput(['exports.aVal = "ABC";']),
+          data: buildOutput(['exports.aVal = "ABC";'], { exports: ["aVal"] }),
         },
       ]);
 
@@ -1364,7 +1435,7 @@ describe("externalFiles", () => {
       expect(output.sideOutputs).toEqual([
         {
           path: normalizeJoin(process.cwd(), `${dir}/a.js`),
-          data: buildOutput(['exports.aVal = "XYZ";']),
+          data: buildOutput(['exports.aVal = "XYZ";'], { exports: ["aVal"] }),
         },
       ]);
     });
@@ -1592,14 +1663,17 @@ describe("esModuleToCommonJSModule", () => {
       "var z = x + y;",
       "export {x, y, z}",
     ].join("\n");
-    const want = buildOutput([
-      "let x = 10;",
-      "exports.x = x;",
-      "const y = 20;",
-      "exports.y = y;",
-      "var z = x + y;",
-      "exports.z = z;",
-    ]);
+    const want = buildOutput(
+      [
+        "let x = 10;",
+        "exports.x = x;",
+        "const y = 20;",
+        "exports.y = y;",
+        "var z = x + y;",
+        "exports.z = z;",
+      ],
+      { exports: ["z", "y", "x"] }
+    );
     expect(
       converter.esModuleToCommonJSModule(src, ts.ScriptTarget.ES2019)
     ).toEqual(want);
@@ -1620,12 +1694,12 @@ describe("esModuleToCommonJSModule", () => {
           'const os = __importStar(require("os"));',
           "exports.os = os;",
           'const vm_1 = require("vm");',
-          "exports.a = vm_1.a;",
-          "exports.b = vm_1.b;",
+          'Object.defineProperty(exports, "a", { enumerable: true, get: function () { return vm_1.a; } });',
+          'Object.defineProperty(exports, "b", { enumerable: true, get: function () { return vm_1.b; } });',
           "let c = vm_1.a() + vm_1.b;",
           "exports.c = c;",
         ],
-        { importStar: true }
+        { importStar: true, exports: ["c", "b", "a", "os"] }
       )
     );
   });

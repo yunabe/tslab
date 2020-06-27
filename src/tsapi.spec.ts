@@ -14,10 +14,9 @@ describe("transpile", () => {
         newLine: ts.NewLineKind.LineFeed,
       },
     });
-    expect(out.diagnostics.length).toEqual(1);
-    expect(out.diagnostics[0].messageText).toEqual(
-      "'types' can only be used in a .ts file."
-    );
+    expect(out.diagnostics.map((d) => d.messageText)).toEqual([
+      "Type annotations can only be used in TypeScript files.",
+    ]);
     expect(out.outputText).toEqual('var x = "hello";\n');
     expect(out.sourceMapText).toBeUndefined();
   });
@@ -44,9 +43,10 @@ describe("transpile", () => {
     expect(out.outputText).toEqual(
       [
         'Object.defineProperty(exports, "__esModule", { value: true });',
+        "exports.e = exports.d = exports.c = exports.b = exports.a = void 0;",
         'var os_1 = require("os");',
-        "exports.a = os_1.a;",
-        "exports.b = os_1.b;",
+        'Object.defineProperty(exports, "a", { enumerable: true, get: function () { return os_1.a; } });',
+        'Object.defineProperty(exports, "b", { enumerable: true, get: function () { return os_1.b; } });',
         'var c = require("vm");',
         "exports.c = c;",
         "var d = os_1.a() + os_1.b;",

@@ -38,6 +38,7 @@ describe("convert", () => {
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
       buildOutput([
+        "exports.z = exports.y = exports.x = void 0;",
         "let x = 123;",
         "exports.x = x;",
         "const y = 'foo';",
@@ -78,6 +79,7 @@ describe("convert", () => {
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
       buildOutput([
+        "exports.sleep = exports.xrange = exports.sum = void 0;",
         "function sum(x, y) {",
         "    return x + y;",
         "}",
@@ -125,6 +127,7 @@ describe("convert", () => {
     );
     expect(out.output).toEqual(
       buildOutput([
+        "exports.x = exports.sum = void 0;",
         "/** @type {any} */",
         "let x = 10;",
         "exports.x = x;",
@@ -159,7 +162,7 @@ describe("convert", () => {
       {
         start: { offset: 7, line: 0, character: 7 },
         end: { offset: 13, line: 0, character: 13 },
-        messageText: "'types' can only be used in a .ts file.",
+        messageText: "Type annotations can only be used in TypeScript files.",
         category: 1,
         code: 8010,
       },

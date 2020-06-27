@@ -170,44 +170,22 @@ describe("execute", () => {
   });
 
   it("exports defineProperty", async () => {
-    // Check we can handle defineProperty properly.
-    // defineProperty is used by TypeScript compiler to define __esModule.
+    // Check defineProperty is hooked and we can redefine properties in tslab.
     expect(
       await ex.execute(
         [
-          'Object.defineProperty(exports, "myprop", {value: true});',
+          'Object.defineProperty(exports, "myprop", {value: "p0"});',
           "let prop0 = exports.myprop",
-        ].join("\n")
-      )
-    ).toBe(true);
-    expect(
-      await ex.execute(
-        [
-          'Object.defineProperty(exports, "myprop", {value: false});',
+          'Object.defineProperty(exports, "myprop", {value: "p1"});',
           "let prop1 = exports.myprop",
         ].join("\n")
       )
     ).toBe(true);
-
     expect(ex.locals).toEqual({
-      prop0: true,
-      prop1: false,
+      myprop: "p1",
+      prop0: "p0",
+      prop1: "p1",
     });
-  });
-
-  it("exports re-defineProperty", async () => {
-    // We can not redefine properties.
-    expect(
-      await ex.execute(
-        [
-          'Object.defineProperty(exports, "__esModule", {value: true});',
-          'Object.defineProperty(exports, "__esModule", {value: false});',
-        ].join("\n")
-      )
-    ).toBe(false);
-    expect(consoleErrorCalls).toEqual([
-      [new TypeError("Cannot redefine property: __esModule")],
-    ]);
   });
 
   it("syntax error", async () => {
@@ -316,6 +294,74 @@ describe("execute", () => {
     } catch (e) {
       expect(e).toEqual(new Error("rejected immediately"));
     }
+  });
+
+  it("import star", async () => {
+    expect(
+      await ex.execute(`
+      import * as crypto from "crypto";
+      let h0 = crypto.createHash("sha256").update("Hello TypeScript!").digest("hex");
+    `)
+    ).toBe(true);
+    expect(
+      await ex.execute(`
+      let h1 = crypto.createHash("sha256").update("Hello TypeScript!").digest("hex");
+    `)
+    ).toBe(true);
+    expect(await ex.execute(`let crypto = 'crypto';`)).toBe(true);
+    const hash = createHash("sha256").update("Hello TypeScript!").digest("hex");
+    expect(ex.locals).toEqual({ crypto: "crypto", h0: hash, h1: hash });
+  });
+
+  it("import star", async () => {
+    expect(
+      await ex.execute(`
+      import * as crypto from "crypto";
+      let h0 = crypto.createHash("sha256").update("Hello TypeScript!").digest("hex");
+    `)
+    ).toBe(true);
+    expect(
+      await ex.execute(`
+      let h1 = crypto.createHash("sha256").update("Hello TypeScript!").digest("hex");
+    `)
+    ).toBe(true);
+    expect(await ex.execute(`let crypto = 'crypto';`)).toBe(true);
+    const hash = createHash("sha256").update("Hello TypeScript!").digest("hex");
+    expect(ex.locals).toEqual({ crypto: "crypto", h0: hash, h1: hash });
+  });
+
+  it("import default", async () => {
+    expect(
+      await ex.execute(`
+      import crypto from "crypto";
+      let h0 = crypto.createHash("sha256").update("Hello TypeScript!").digest("hex");
+    `)
+    ).toBe(true);
+    expect(
+      await ex.execute(`
+      let h1 = crypto.createHash("sha256").update("Hello TypeScript!").digest("hex");
+    `)
+    ).toBe(true);
+    expect(await ex.execute(`let crypto = 'crypto';`)).toBe(true);
+    const hash = createHash("sha256").update("Hello TypeScript!").digest("hex");
+    expect(ex.locals).toEqual({ crypto: "crypto", h0: hash, h1: hash });
+  });
+
+  it("named import", async () => {
+    expect(
+      await ex.execute(`
+      import {createHash} from "crypto";
+      let h0 = createHash("sha256").update("Hello TypeScript!").digest("hex");
+    `)
+    ).toBe(true);
+    expect(
+      await ex.execute(`
+      let h1 = createHash("sha256").update("Hello TypeScript!").digest("hex");
+    `)
+    ).toBe(true);
+    expect(await ex.execute(`let createHash = 'createHash';`)).toBe(true);
+    const hash = createHash("sha256").update("Hello TypeScript!").digest("hex");
+    expect(ex.locals).toEqual({ createHash: "createHash", h0: hash, h1: hash });
   });
 
   it("package tslab", async () => {
