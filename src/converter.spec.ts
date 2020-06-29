@@ -1205,6 +1205,23 @@ declare let m: Map;
     );
   });
 
+  it("reproduce bug#32", () => {
+    // https://github.com/yunabe/tslab/issues/32 is reproducible.
+    let out = conv.convert("", "let x = {}; let b = x.constructor === Object");
+    expect(out.diagnostics).toEqual([]);
+    expect(out.output).toEqual(
+      buildOutput(
+        [
+          "let x = {};",
+          "exports.x = x;",
+          "let b = x.constructor === Object;",
+          "exports.b = b;",
+        ],
+        { exports: ["b", "x"] }
+      )
+    );
+  });
+
   it("package tslab", () => {
     const out = conv.convert(
       "",

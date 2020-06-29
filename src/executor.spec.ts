@@ -404,6 +404,12 @@ describe("execute", () => {
     expect(t1 / t0).toBeGreaterThan(0.5);
     expect(t0 / t1).toBeGreaterThan(0.5);
   });
+
+  it("reproduce bug#32", async () => {
+    // https://github.com/yunabe/tslab/issues/32 is reproducible.
+    expect(await ex.execute(`let b = {}.constructor === Object`)).toBe(true);
+    expect(ex.locals.b).toEqual(false);
+  });
 });
 
 describe("interrupt", () => {
