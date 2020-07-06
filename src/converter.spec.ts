@@ -909,7 +909,7 @@ class ShapeImpl implements Shape {}
 });
 
 describe("with prev", () => {
-  it("basics", () => {
+  it("variables", () => {
     const out0 = conv.convert("", "let x = 123;");
     expect(out0.diagnostics).toEqual([]);
     expect(out0.declOutput).toEqual("declare let x: number;\n");
@@ -921,6 +921,47 @@ describe("with prev", () => {
     // TODO: Include let x; into out1.declOutput.
     expect(out1.declOutput).toEqual(
       "declare let y: number;\ndeclare let x: number;\n"
+    );
+  });
+
+  it("non variables", () => {
+    const out0 = conv.convert(
+      "",
+      [
+        "import * as crypto from 'crypto';",
+        "import {createHash} from 'crypto';",
+        "class Greeter { greeting: string; }",
+        "enum Color { Red, Green, Blue}",
+      ].join("\n")
+    );
+    expect(out0.diagnostics).toEqual([]);
+    const out1 = conv.convert(
+      out0.declOutput,
+      [
+        'crypto.createHash("sha256").update("Hello TypeScript!");',
+        'createHash("sha256");',
+        "let x = new Greeter();",
+        'x = {greeting: "message"}',
+        "let y = x.greeting;",
+        "let z = Color.Red;",
+      ].join("\n")
+    );
+    expect(out1.diagnostics).toEqual([]);
+    expect(out1.output).toEqual(
+      buildOutput(
+        [
+          'crypto.createHash("sha256").update("Hello TypeScript!");',
+          'createHash("sha256");',
+          "let x = new Greeter();",
+          "exports.x = x;",
+          'exports.x = x = { greeting: "message" };',
+          "let y = x.greeting;",
+          "exports.y = y;",
+          "let z = Color.Red;",
+          "exports.z = z;",
+        ],
+        { exports: ["z", "y", "x"] }
+      )
     );
   });
 
