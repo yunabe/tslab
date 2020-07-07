@@ -34,6 +34,8 @@ export interface Executor {
    * to call `interrupt` while `execute` is blocked.
    */
   interrupt(): void;
+
+  /** locals exposes tslab local variables for unit tests. */
   locals: { [key: string]: any };
 
   /** Release internal resources to terminate the process gracefully. */
@@ -117,8 +119,6 @@ export function createExecutor(
   convs: ConverterSet,
   console: ConsoleInterface
 ): Executor {
-  const locals: { [key: string]: any } = {};
-
   const sideOutputs = new Map<string, string>();
   const sideModules = new Map<string, NodeModule>();
   function updateSideOutputs(outs: SideOutput[]): void {
@@ -130,32 +130,23 @@ export function createExecutor(
     }
   }
 
-  let exports: any = null;
+  const exports = createExports();
   const req = wrapRequire(
     createRequire(rootDir),
     rootDir,
     sideOutputs,
     sideModules
   );
-  const proxyHandler: ProxyHandler<{ [key: string]: any }> = {
-    get: function (_target, prop) {
-      if (prop === "require") {
-        return req;
-      }
-      if (prop === "exports") {
-        return exports;
-      }
-      if (locals.hasOwnProperty(prop)) {
-        return locals[prop as any];
-      }
-      return global[prop];
-    },
-  };
-  const sandbox = new Proxy(locals, proxyHandler);
-  vm.createContext(sandbox);
+  // Set __tslab__ to pass `exports` and `require` to the code.
+  // We need to wrapthe code with runInThisContext rather than
+  // setting __tslab__ to globalThis directory because jest
+  // hooks accesses to global variables.
+  vm.runInThisContext("(x) => {globalThis.__tslab__ = x; }")({
+    exports,
+    require: req,
+  });
 
   let prevDecl = "";
-
   let interrupted = new Error("Interrupted asynchronously");
   let rejectInterruptPromise: (reason?: any) => void;
   let interruptPromise: Promise<void>;
@@ -173,8 +164,9 @@ export function createExecutor(
     resetInterruptPromise();
   }
 
-  function createExports(locals: { [key: string]: any }) {
-    return new Proxy(locals, {
+  function createExports() {
+    const exports = {};
+    return new Proxy(exports, {
       // We need to handle defineProperty as set because TypeScript converts
       // named imports to defineProperty but we want to named imported symbols rewritable.
       defineProperty: (_target, prop, attrs) => {
@@ -182,9 +174,9 @@ export function createExecutor(
           return true;
         }
         if (attrs.get) {
-          locals[prop as any] = attrs.get();
+          exports[prop as any] = attrs.get();
         } else {
-          locals[prop as any] = attrs.value;
+          exports[prop as any] = attrs.value;
         }
         return true;
       },
@@ -231,12 +223,14 @@ export function createExecutor(
     try {
       // Wrap code with (function(){...}) to improve the performance (#11)
       // Also, it's necessary to redeclare let and const in tslab.
-      exports = createExports(locals);
       const prefix = converted.hasToplevelAwait
-        ? "(async function() { "
-        : "(function() { ";
-      const wrapped = prefix + converted.output + "\n})()";
-      const ret = vm.runInContext(wrapped, sandbox, {
+        ? "(async function(exports, require) { "
+        : "(function(exports, require) { ";
+      const wrapped =
+        prefix +
+        converted.output +
+        "\n})(__tslab__.exports, __tslab__.require)";
+      const ret = vm.runInThisContext(wrapped, {
         breakOnSigint: true,
       });
       if (converted.hasToplevelAwait) {
@@ -257,10 +251,10 @@ export function createExecutor(
     prevDecl = converted.declOutput || "";
     if (
       converted.lastExpressionVar &&
-      locals[converted.lastExpressionVar] != null
+      exports[converted.lastExpressionVar] != null
     ) {
-      let ret: any = locals[converted.lastExpressionVar];
-      delete locals[converted.lastExpressionVar];
+      let ret: any = exports[converted.lastExpressionVar];
+      delete exports[converted.lastExpressionVar];
       console.log(ret);
     }
     return true;
@@ -280,8 +274,8 @@ export function createExecutor(
 
   function reset(): void {
     prevDecl = "";
-    for (const name of Object.getOwnPropertyNames(locals)) {
-      delete locals[name];
+    for (const name of Object.getOwnPropertyNames(exports)) {
+      delete exports[name];
     }
   }
 
@@ -293,7 +287,7 @@ export function createExecutor(
     execute,
     inspect,
     complete,
-    locals,
+    locals: exports,
     reset,
     interrupt,
     close,

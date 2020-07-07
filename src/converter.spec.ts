@@ -916,9 +916,10 @@ describe("with prev", () => {
     const out1 = conv.convert(out0.declOutput, "let y = x * x;");
     expect(out1.diagnostics).toEqual([]);
     expect(out1.output).toEqual(
-      buildOutput(["let y = x * x;", "exports.y = y;"], { exports: ["y"] })
+      buildOutput(["let y = exports.x * exports.x;", "exports.y = y;"], {
+        exports: ["y"],
+      })
     );
-    // TODO: Include let x; into out1.declOutput.
     expect(out1.declOutput).toEqual(
       "declare let y: number;\ndeclare let x: number;\n"
     );
@@ -950,14 +951,14 @@ describe("with prev", () => {
     expect(out1.output).toEqual(
       buildOutput(
         [
-          'crypto.createHash("sha256").update("Hello TypeScript!");',
-          'createHash("sha256");',
-          "let x = new Greeter();",
+          'exports.crypto.createHash("sha256").update("Hello TypeScript!");',
+          'exports.createHash("sha256");',
+          "let x = new exports.Greeter();",
           "exports.x = x;",
           'exports.x = x = { greeting: "message" };',
           "let y = x.greeting;",
           "exports.y = y;",
-          "let z = Color.Red;",
+          "let z = exports.Color.Red;",
           "exports.z = z;",
         ],
         { exports: ["z", "y", "x"] }
@@ -969,7 +970,7 @@ describe("with prev", () => {
     const out = conv.convert("declare let x: number\n", "x = x * x;\n");
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
-      buildOutput(["exports.tsLastExpr = x = x * x;"], {
+      buildOutput(["exports.tsLastExpr = exports.x = exports.x * exports.x;"], {
         exports: ["tsLastExpr"],
       })
     );
@@ -1240,7 +1241,7 @@ declare let m: Map;
     expect(out.diagnostics).toEqual([]);
     expect(out.declOutput).toEqual('import { join } from "path";\n');
     expect(out.output).toEqual(
-      buildOutput(['exports.tsLastExpr = join("a", "b");'], {
+      buildOutput(['exports.tsLastExpr = exports.join("a", "b");'], {
         exports: ["tsLastExpr"],
       })
     );

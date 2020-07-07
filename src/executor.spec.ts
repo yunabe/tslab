@@ -84,23 +84,9 @@ describe("execute", () => {
   });
 
   it("node globals", async () => {
-    let ok = await ex.execute(`
-    let myglobal = global;
-    let myprocess = process;
-    let myconsole = console;
-    let MyArray = Array;`);
+    let ok = await ex.execute(`let ver = process.version;`);
     expect(ok).toBe(true);
-    const expectLocals = {
-      myglobal: global,
-      myprocess: process,
-      myconsole: console,
-      MyArray: Array,
-    };
-    for (let key of Object.getOwnPropertyNames(ex.locals)) {
-      expect(ex.locals[key]).toBe(expectLocals[key]);
-      delete expectLocals[key];
-    }
-    expect(Object.getOwnPropertyNames(expectLocals)).toEqual([]);
+    expect(ex.locals.ver).toEqual(process.version);
   });
 
   it("redeclare const", async () => {
@@ -361,7 +347,11 @@ describe("execute", () => {
     ).toBe(true);
     expect(await ex.execute(`let createHash = 'createHash';`)).toBe(true);
     const hash = createHash("sha256").update("Hello TypeScript!").digest("hex");
-    expect(ex.locals).toEqual({ createHash: "createHash", h0: hash, h1: hash });
+    expect(ex.locals).toEqual({
+      createHash: "createHash",
+      h0: hash,
+      h1: hash,
+    });
   });
 
   it("package tslab", async () => {
@@ -405,10 +395,10 @@ describe("execute", () => {
     expect(t0 / t1).toBeGreaterThan(0.5);
   });
 
-  it("reproduce bug#32", async () => {
+  it("fixed bug#32", async () => {
     // https://github.com/yunabe/tslab/issues/32 is reproducible.
     expect(await ex.execute(`let b = {}.constructor === Object`)).toBe(true);
-    expect(ex.locals.b).toEqual(false);
+    expect(ex.locals.b).toEqual(true);
   });
 });
 

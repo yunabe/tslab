@@ -10,31 +10,15 @@ Also, `tslab` has `@types/node` as `dependencies`, not `devDependencies`. This i
 
 ## Code executor
 
-### runInContext vs. runInThisContext
+### runInThisContext and how to share variables amoung cells
 
-tslab uses runInContext, not runInThisContext, internally to share variables among cells as global variables.
+To share variables among code cells, `tslab` converts references to variables defined in previous cells (e.g. `x + y`) to references to properties of `exports` (e.g. `exports.x + exports.y`) before running code in `vm.runInThisContext`.
 
-tslab converts the original input like:
+- `getCustomTransformers` in `src/converter.ts`
+- `vm.runInThisContext` in `src/executor.ts`
 
-```ts
-/* == cell0 == */
-let x = 1;
-/* == cell1 == */
-x = 2 * x;
-```
-
-into the converted JavaScript like:
-
-```ts
-/* == cell0 == */
-let x = 1;
-exports.x = x;
-/* == cell1 == */
-x = 2 * x;
-```
-
-As you can see, the variable `x` is referred as a global variable in `cell1`.
-To execute them correctly, we need to run them with `runInContext` with a custom `vm` context.
+Previously, `tslab` used `vm.runInContext` with a customized context which hooks accesses to variables defined in previous cells.
+But `tslab` switched to the current approach with `vm.runInThisContext` to avoid problems like [#32](https://github.com/yunabe/tslab/issues/32).
 
 ### exports
 

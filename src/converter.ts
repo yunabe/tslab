@@ -371,9 +371,14 @@ export function createConverter(options?: ConverterOptions): Converter {
         },
         undefined,
         undefined,
-        getCustomTransformers(keys, (name: string) => {
-          lastExpressionVar = name;
-        })
+        getCustomTransformers(
+          builder.getProgram().getTypeChecker(),
+          declsFile,
+          keys,
+          (name: string) => {
+            lastExpressionVar = name;
+          }
+        )
       );
     }
     if (sideOutputs) {
@@ -857,9 +862,12 @@ export function createConverter(options?: ConverterOptions): Converter {
    * @param setLastExprName A callback to store the created name.
    */
   function getCustomTransformers(
+    checker: ts.TypeChecker,
+    declsFile: ts.SourceFile,
     locals: Set<string>,
     setLastExprName: (name: string) => void
   ): ts.CustomTransformers {
+    const nullTransformationContext = ts.getNullTransformationContext();
     return {
       after: [after],
       afterDeclarations: [afterDeclarations],
@@ -878,9 +886,43 @@ export function createConverter(options?: ConverterOptions): Converter {
         i++;
       }
     }
+    // Wrap identifiers to previous variables with exports.
+    function wrapPrevIdentifier(node: ts.Node) {
+      if (!ts.isIdentifier(node)) {
+        return ts.visitEachChild(
+          node,
+          wrapPrevIdentifier,
+          nullTransformationContext
+        );
+      }
+      if (
+        node.parent &&
+        ts.isPropertyAccessExpression(node.parent) &&
+        node.parent.name === node
+      ) {
+        return node;
+      }
+      let prev = false;
+      for (const decl of checker.getSymbolAtLocation(node)?.declarations ??
+        []) {
+        if (decl.getSourceFile() === declsFile) {
+          prev = true;
+          break;
+        }
+      }
+      if (!prev) {
+        return node;
+      }
+      return ts.createPropertyAccess(ts.createIdentifier("exports"), node);
+    }
     function after(): (node: ts.SourceFile) => ts.SourceFile {
       // Rewrite the output to store the last expression to a variable.
       return (node: ts.SourceFile) => {
+        node = ts.visitEachChild(
+          node,
+          wrapPrevIdentifier,
+          nullTransformationContext
+        );
         for (let i = node.statements.length - 1; i >= 0; i--) {
           const stmt = node.statements[i];
           if (ts.isExportDeclaration(stmt)) {
