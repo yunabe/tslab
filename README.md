@@ -58,7 +58,9 @@ If nbviewer is down, please view the notebooks on GitHub instead.
     [the latest Jupyter does not support Python2.7](https://ipython.readthedocs.io/en/stable/whatsnew/version6.html)
 - Install the latest version of [JupyterLab or Jupyter Notebook](https://jupyter.org/install)
 
-### Installing tslab by npm
+### Installing tslab
+
+First, install `tslab` with `npm`.
 
 ```shell
 npm install -g tslab
@@ -70,7 +72,7 @@ Please make sure `tslab` command is available in your terminal.
 tslab install --version
 ```
 
-### Registering tslab to Jupyter
+Then, register `tslab` to your Jupyter environment.
 
 ```shell
 tslab install [--python=python3]
