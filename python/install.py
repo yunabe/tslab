@@ -14,7 +14,8 @@ except:
 
 
 def create_kernel_json(is_js, bin):
-    argv = [bin, 'kernel', '--config-path={connection_file}']
+    # config-path and {connection_file} should be split due to #36.
+    argv = [bin, 'kernel', '--config-path', '{connection_file}']
     if is_js:
         argv.append('--js')
     return {
