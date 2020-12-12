@@ -175,7 +175,7 @@ describe("convert", () => {
       {
         start: { offset: 12, line: 0, character: 12 },
         end: { offset: 13, line: 0, character: 13 },
-        messageText: "Type '\"hello\"' is not assignable to type 'number'.",
+        messageText: "Type 'string' is not assignable to type 'number'.",
         category: 1,
         code: 2322,
       },
@@ -205,8 +205,8 @@ describe("complete", () => {
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
         entries: [
-          { name: "abc", kind: "property", kindModifiers: "", sortText: "0" },
-          { name: "xyz", kind: "property", kindModifiers: "", sortText: "0" },
+          { name: "abc", kind: "property", kindModifiers: "", sortText: "1" },
+          { name: "xyz", kind: "property", kindModifiers: "", sortText: "1" },
         ],
       },
     });

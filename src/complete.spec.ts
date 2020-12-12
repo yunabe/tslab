@@ -39,8 +39,8 @@ describe("complete", () => {
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
         entries: [
-          { name: "abc", kind: "property", kindModifiers: "", sortText: "0" },
-          { name: "xyz", kind: "property", kindModifiers: "", sortText: "0" },
+          { name: "abc", kind: "property", kindModifiers: "", sortText: "1" },
+          { name: "xyz", kind: "property", kindModifiers: "", sortText: "1" },
         ],
       },
     });
@@ -52,17 +52,19 @@ describe("complete", () => {
     const src = `let v = { abc: "hello", xyz: 10 }; v.ab[cur]`;
     const info = complete(src);
     const end = src.indexOf(`[cur]`);
+    const start = end - 2;
     expect(info).toEqual({
-      start: end - 2,
+      start,
       end,
       candidates: ["abc"],
       original: {
         isGlobalCompletion: false,
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
+        optionalReplacementSpan: { start, length: 2 },
         entries: [
-          { name: "abc", kind: "property", kindModifiers: "", sortText: "0" },
-          { name: "xyz", kind: "property", kindModifiers: "", sortText: "0" },
+          { name: "abc", kind: "property", kindModifiers: "", sortText: "1" },
+          { name: "xyz", kind: "property", kindModifiers: "", sortText: "1" },
         ],
       },
     });
@@ -82,9 +84,10 @@ describe("complete", () => {
         isGlobalCompletion: false,
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
+        optionalReplacementSpan: { start, length: 2 },
         entries: [
-          { name: "abc", kind: "property", kindModifiers: "", sortText: "0" },
-          { name: "xyz", kind: "property", kindModifiers: "", sortText: "0" },
+          { name: "abc", kind: "property", kindModifiers: "", sortText: "1" },
+          { name: "xyz", kind: "property", kindModifiers: "", sortText: "1" },
         ],
       },
     });
@@ -104,9 +107,10 @@ describe("complete", () => {
         isGlobalCompletion: false,
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
+        optionalReplacementSpan: { start: pos - 1, length: 2 },
         entries: [
-          { name: "abc", kind: "property", kindModifiers: "", sortText: "0" },
-          { name: "xyz", kind: "property", kindModifiers: "", sortText: "0" },
+          { name: "abc", kind: "property", kindModifiers: "", sortText: "1" },
+          { name: "xyz", kind: "property", kindModifiers: "", sortText: "1" },
         ],
       },
     });
@@ -125,9 +129,10 @@ describe("complete", () => {
         isGlobalCompletion: false,
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
+        optionalReplacementSpan: { start: start, length: end - start },
         entries: [
-          { name: "abc", kind: "property", kindModifiers: "", sortText: "0" },
-          { name: "xyz", kind: "property", kindModifiers: "", sortText: "0" },
+          { name: "abc", kind: "property", kindModifiers: "", sortText: "1" },
+          { name: "xyz", kind: "property", kindModifiers: "", sortText: "1" },
         ],
       },
     });
@@ -165,8 +170,8 @@ describe("complete", () => {
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
         entries: [
-          { name: "alpha", kind: "property", kindModifiers: "", sortText: "0" },
-          { name: "beta", kind: "property", kindModifiers: "", sortText: "0" },
+          { name: "alpha", kind: "property", kindModifiers: "", sortText: "1" },
+          { name: "beta", kind: "property", kindModifiers: "", sortText: "1" },
         ],
       },
     });
@@ -186,7 +191,7 @@ describe("complete", () => {
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
         entries: [
-          { name: "beta", kind: "property", kindModifiers: "", sortText: "0" },
+          { name: "beta", kind: "property", kindModifiers: "", sortText: "1" },
         ],
       },
     });
@@ -197,17 +202,19 @@ describe("complete", () => {
     const src = `let v: {alpha: string, beta: number} = {al[cur]}`;
     const info = complete(src);
     const end = src.indexOf(`[cur]`);
+    const start = end - 2;
     expect(info).toEqual({
-      start: end - 2,
+      start,
       end,
       candidates: ["alpha"],
       original: {
         isGlobalCompletion: false,
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
+        optionalReplacementSpan: { start, length: end - start },
         entries: [
-          { name: "alpha", kind: "property", kindModifiers: "", sortText: "0" },
-          { name: "beta", kind: "property", kindModifiers: "", sortText: "0" },
+          { name: "alpha", kind: "property", kindModifiers: "", sortText: "1" },
+          { name: "beta", kind: "property", kindModifiers: "", sortText: "1" },
         ],
       },
     });
@@ -226,9 +233,10 @@ describe("complete", () => {
         isGlobalCompletion: false,
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
+        optionalReplacementSpan: { start, length: 2 },
         entries: [
-          { name: "alpha", kind: "property", kindModifiers: "", sortText: "0" },
-          { name: "beta", kind: "property", kindModifiers: "", sortText: "0" },
+          { name: "alpha", kind: "property", kindModifiers: "", sortText: "1" },
+          { name: "beta", kind: "property", kindModifiers: "", sortText: "1" },
         ],
       },
     });
@@ -247,9 +255,10 @@ describe("complete", () => {
         isGlobalCompletion: false,
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
+        optionalReplacementSpan: { start: middle - 1, length: 2 },
         entries: [
-          { name: "alpha", kind: "property", kindModifiers: "", sortText: "0" },
-          { name: "beta", kind: "property", kindModifiers: "", sortText: "0" },
+          { name: "alpha", kind: "property", kindModifiers: "", sortText: "1" },
+          { name: "beta", kind: "property", kindModifiers: "", sortText: "1" },
         ],
       },
     });
@@ -281,49 +290,49 @@ describe("complete", () => {
             name: "createContext",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "0",
+            sortText: "1",
           },
           {
             name: "isContext",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "0",
+            sortText: "1",
           },
           {
             name: "runInContext",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "0",
+            sortText: "1",
           },
           {
             name: "runInNewContext",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "0",
+            sortText: "1",
           },
           {
             name: "runInThisContext",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "0",
+            sortText: "1",
           },
           {
             name: "compileFunction",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "0",
+            sortText: "1",
           },
           {
             name: "measureMemory",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "0",
+            sortText: "1",
           },
           {
             name: "Script",
             kind: "class",
             kindModifiers: "declare",
-            sortText: "0",
+            sortText: "1",
           },
         ],
       },
@@ -334,21 +343,23 @@ describe("complete", () => {
     const src = `let v = { bxy: true, axy: "hello", cxy: 3.4, dXY: false, xyz: 10, XYZ: 30 }; v.XY[cur]`;
     const info = complete(src);
     const end = src.indexOf(`[cur]`);
+    const start = end - 2;
     expect(info).toEqual({
-      start: end - 2,
+      start,
       end,
       candidates: ["XYZ", "xyz", "bxy", "axy", "cxy", "dXY"],
       original: {
         isGlobalCompletion: false,
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
+        optionalReplacementSpan: { start, length: 2 },
         entries: [
-          { name: "bxy", kind: "property", kindModifiers: "", sortText: "0" },
-          { name: "axy", kind: "property", kindModifiers: "", sortText: "0" },
-          { name: "cxy", kind: "property", kindModifiers: "", sortText: "0" },
-          { name: "dXY", kind: "property", kindModifiers: "", sortText: "0" },
-          { name: "xyz", kind: "property", kindModifiers: "", sortText: "0" },
-          { name: "XYZ", kind: "property", kindModifiers: "", sortText: "0" },
+          { name: "bxy", kind: "property", kindModifiers: "", sortText: "1" },
+          { name: "axy", kind: "property", kindModifiers: "", sortText: "1" },
+          { name: "cxy", kind: "property", kindModifiers: "", sortText: "1" },
+          { name: "dXY", kind: "property", kindModifiers: "", sortText: "1" },
+          { name: "xyz", kind: "property", kindModifiers: "", sortText: "1" },
+          { name: "XYZ", kind: "property", kindModifiers: "", sortText: "1" },
         ],
       },
     });
@@ -382,15 +393,15 @@ describe("complete", () => {
             name: "Array",
             kind: "var",
             kindModifiers: "declare",
-            sortText: "4",
+            sortText: "5",
           },
           {
             name: "ArrayBuffer",
             kind: "var",
             kindModifiers: "declare",
-            sortText: "4",
+            sortText: "5",
           },
-          { name: "let", kind: "keyword", kindModifiers: "", sortText: "4" },
+          { name: "let", kind: "keyword", kindModifiers: "", sortText: "5" },
         ],
       },
     });
@@ -419,31 +430,31 @@ describe("complete", () => {
             name: "oldval",
             kind: "let",
             kindModifiers: "declare",
-            sortText: "4",
+            sortText: "5",
           },
           {
             name: "globalThis",
             kind: "module",
             kindModifiers: "",
-            sortText: "4",
+            sortText: "5",
           },
           {
             name: "eval",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "4",
+            sortText: "5",
           },
           {
             name: "parseInt",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "4",
+            sortText: "5",
           },
           {
             name: "parseFloat",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "4",
+            sortText: "5",
           },
         ],
       },
@@ -462,36 +473,37 @@ describe("complete", () => {
         isGlobalCompletion: true,
         isMemberCompletion: false,
         isNewIdentifierLocation: false,
+        optionalReplacementSpan: { start: 0, length: 4 },
         entries: [
           {
             name: "globalThis",
             kind: "module",
             kindModifiers: "",
-            sortText: "4",
+            sortText: "5",
           },
           {
             name: "eval",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "4",
+            sortText: "5",
           },
           {
             name: "parseInt",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "4",
+            sortText: "5",
           },
           {
             name: "parseFloat",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "4",
+            sortText: "5",
           },
           {
             name: "isNaN",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "4",
+            sortText: "5",
           },
         ],
       },
@@ -510,36 +522,37 @@ describe("complete", () => {
         isGlobalCompletion: true,
         isMemberCompletion: false,
         isNewIdentifierLocation: false,
+        optionalReplacementSpan: { start: 0, length: 4 },
         entries: [
           {
             name: "globalThis",
             kind: "module",
             kindModifiers: "",
-            sortText: "4",
+            sortText: "5",
           },
           {
             name: "eval",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "4",
+            sortText: "5",
           },
           {
             name: "parseInt",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "4",
+            sortText: "5",
           },
           {
             name: "parseFloat",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "4",
+            sortText: "5",
           },
           {
             name: "isNaN",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "4",
+            sortText: "5",
           },
         ],
       },
@@ -558,36 +571,37 @@ describe("complete", () => {
         isGlobalCompletion: true,
         isMemberCompletion: false,
         isNewIdentifierLocation: false,
+        optionalReplacementSpan: { start: 0, length: 4 },
         entries: [
           {
             name: "globalThis",
             kind: "module",
             kindModifiers: "",
-            sortText: "4",
+            sortText: "5",
           },
           {
             name: "eval",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "4",
+            sortText: "5",
           },
           {
             name: "parseInt",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "4",
+            sortText: "5",
           },
           {
             name: "parseFloat",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "4",
+            sortText: "5",
           },
           {
             name: "isNaN",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "4",
+            sortText: "5",
           },
         ],
       },
@@ -628,28 +642,28 @@ describe("complete", () => {
             name: "Array",
             kind: "var",
             kindModifiers: "declare",
-            sortText: "4",
+            sortText: "5",
           },
           {
             name: "ArrayBuffer",
             kind: "var",
             kindModifiers: "declare",
-            sortText: "4",
+            sortText: "5",
           },
           {
             name: '"cupcake"',
             kind: "string",
             kindModifiers: "",
-            sortText: "0",
+            sortText: "1",
           },
-          { name: '"donut"', kind: "string", kindModifiers: "", sortText: "0" },
+          { name: '"donut"', kind: "string", kindModifiers: "", sortText: "1" },
           {
             name: '"eclair"',
             kind: "string",
             kindModifiers: "",
-            sortText: "0",
+            sortText: "1",
           },
-          { name: '"froyo"', kind: "string", kindModifiers: "", sortText: "0" },
+          { name: '"froyo"', kind: "string", kindModifiers: "", sortText: "1" },
         ],
       },
     });
@@ -671,20 +685,20 @@ describe("complete", () => {
         isMemberCompletion: false,
         isNewIdentifierLocation: false,
         entries: [
-          { name: "abc", kind: "parameter", kindModifiers: "", sortText: "0" },
-          { name: "xyz", kind: "parameter", kindModifiers: "", sortText: "0" },
+          { name: "abc", kind: "parameter", kindModifiers: "", sortText: "1" },
+          { name: "xyz", kind: "parameter", kindModifiers: "", sortText: "1" },
           {
             name: "arguments",
             kind: "local var",
             kindModifiers: "",
-            sortText: "0",
+            sortText: "1",
           },
-          { name: "fn", kind: "function", kindModifiers: "", sortText: "0" },
+          { name: "fn", kind: "function", kindModifiers: "", sortText: "1" },
           {
             name: "globalThis",
             kind: "module",
             kindModifiers: "",
-            sortText: "4",
+            sortText: "5",
           },
         ],
       },
@@ -703,6 +717,7 @@ describe("complete", () => {
         isGlobalCompletion: false,
         isMemberCompletion: false,
         isNewIdentifierLocation: false,
+        optionalReplacementSpan: { start: start, length: 0 },
         entries: [],
       },
     });
@@ -757,22 +772,22 @@ describe("complete", () => {
             name: "@abstract",
             kind: "keyword",
             kindModifiers: "",
-            sortText: "0",
+            sortText: "1",
           },
           {
             name: "@access",
             kind: "keyword",
             kindModifiers: "",
-            sortText: "0",
+            sortText: "1",
           },
-          { name: "@alias", kind: "keyword", kindModifiers: "", sortText: "0" },
+          { name: "@alias", kind: "keyword", kindModifiers: "", sortText: "1" },
           {
             name: "@argument",
             kind: "keyword",
             kindModifiers: "",
-            sortText: "0",
+            sortText: "1",
           },
-          { name: "@async", kind: "keyword", kindModifiers: "", sortText: "0" },
+          { name: "@async", kind: "keyword", kindModifiers: "", sortText: "1" },
         ],
       },
     });
@@ -799,17 +814,17 @@ describe("complete", () => {
             name: "abstract",
             kind: "keyword",
             kindModifiers: "",
-            sortText: "0",
+            sortText: "1",
           },
-          { name: "access", kind: "keyword", kindModifiers: "", sortText: "0" },
-          { name: "alias", kind: "keyword", kindModifiers: "", sortText: "0" },
+          { name: "access", kind: "keyword", kindModifiers: "", sortText: "1" },
+          { name: "alias", kind: "keyword", kindModifiers: "", sortText: "1" },
           {
             name: "argument",
             kind: "keyword",
             kindModifiers: "",
-            sortText: "0",
+            sortText: "1",
           },
-          { name: "async", kind: "keyword", kindModifiers: "", sortText: "0" },
+          { name: "async", kind: "keyword", kindModifiers: "", sortText: "1" },
         ],
       },
     });
@@ -828,8 +843,8 @@ describe("complete", () => {
         isMemberCompletion: false,
         isNewIdentifierLocation: false,
         entries: [
-          { name: "xyz", kind: "parameter", kindModifiers: "", sortText: "0" },
-          { name: "abc", kind: "parameter", kindModifiers: "", sortText: "0" },
+          { name: "xyz", kind: "parameter", kindModifiers: "", sortText: "1" },
+          { name: "abc", kind: "parameter", kindModifiers: "", sortText: "1" },
         ],
       },
     });

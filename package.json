@@ -1,6 +1,6 @@
 {
   "name": "tslab",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "description": "Jupyter for JavaScript and TypeScript",
   "main": "dist/public.js",
   "types": "dist/public.d.ts",
@@ -20,7 +20,7 @@
     "@rollup/plugin-commonjs": "^13.0.0",
     "@rollup/plugin-node-resolve": "^8.1.0",
     "@rollup/plugin-replace": "^2.3.0",
-    "@tslab/typescript-for-tslab": "3.9.7",
+    "@tslab/typescript-for-tslab": "4.1.2",
     "@types/node": "^14.0.13",
     "commander": "^5.1.0",
     "rollup": "^2.18.0",

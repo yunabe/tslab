@@ -25,7 +25,6 @@ afterAll(() => {
 function buildOutput(
   lines: string[],
   opts?: {
-    noEsModule?: boolean;
     importStar?: boolean;
     importDefault?: boolean;
     exports?: string[];
@@ -50,7 +49,7 @@ function buildOutput(
         "var __importStar = (this && this.__importStar) || function (mod) {",
         "    if (mod && mod.__esModule) return mod;",
         "    var result = {};",
-        '    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);',
+        '    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);',
         "    __setModuleDefault(result, mod);",
         "    return result;",
         "};",
@@ -66,10 +65,8 @@ function buildOutput(
       );
     }
   }
-  if (!opts || !opts.noEsModule) {
-    // cf. https://www.typescriptlang.org/docs/handbook/release-notes/typescript-2-7.html#support-for-import-d-from-cjs-from-commonjs-modules-with---esmoduleinteropa
-    out.push('Object.defineProperty(exports, "__esModule", { value: true });');
-  }
+  // cf. https://www.typescriptlang.org/docs/handbook/release-notes/typescript-2-7.html#support-for-import-d-from-cjs-from-commonjs-modules-with---esmoduleinteropa
+  out.push('Object.defineProperty(exports, "__esModule", { value: true });');
   if (opts && opts.exports) {
     out.push(
       opts.exports.map((e) => `exports.${e}`).join(" = ") + " = void 0;"
@@ -313,7 +310,7 @@ declare class SquareImpl implements Square {
   it("types", () => {
     const out = conv.convert("", `type mytype = number | string;`);
     expect(out.diagnostics).toEqual([]);
-    expect(out.output).toEqual("");
+    expect(out.output).toEqual(buildOutput([]));
     expect(out.declOutput).toEqual("declare type mytype = number | string;\n");
   });
 
@@ -383,9 +380,7 @@ enum Direction {
     // TODO: Revisit how to handle this ambiguity.
     let out = conv.convert("", "{x: 10}");
     expect(out.diagnostics).toEqual([]);
-    expect(out.output).toEqual(
-      buildOutput(["{", "    x: 10;", "}"], { noEsModule: true })
-    );
+    expect(out.output).toEqual(buildOutput(["{", "    x: 10;", "}"]));
     expect(out.declOutput).toEqual("");
 
     out = conv.convert("", "{x: 3, y: 4}");
@@ -639,7 +634,7 @@ describe("converter diagnostics", () => {
       {
         category: 1,
         code: 2322,
-        messageText: "Type '10' is not assignable to type 'string'.",
+        messageText: "Type 'number' is not assignable to type 'string'.",
         start: {
           character: 4,
           line: 0,
@@ -1055,7 +1050,7 @@ type atype = itype | number;
       "interface A {x: number}"
     );
     expect(out.diagnostics).toEqual([]);
-    expect(out.output).toEqual("");
+    expect(out.output).toEqual(buildOutput([]));
     expect(out.declOutput).toEqual(`interface A {
     x: number;
 }
@@ -1100,7 +1095,7 @@ let A: any;
       "interface A {x: number}"
     );
     expect(out.diagnostics).toEqual([]);
-    expect(out.output).toEqual("");
+    expect(out.output).toEqual(buildOutput([]));
     expect(out.declOutput).toEqual(
       [
         "interface A {",
@@ -1121,7 +1116,7 @@ let A: any;
       "interface CpuInfo {x: number}"
     );
     expect(out.diagnostics).toEqual([]);
-    expect(out.output).toEqual("");
+    expect(out.output).toEqual(buildOutput([]));
     expect(out.declOutput).toEqual(`interface CpuInfo {
     x: number;
 }
@@ -1169,7 +1164,7 @@ import { CpuInfo } from "os";
   it("merge imported namespace with new type", () => {
     const out = conv.convert('import * as os from "os";', "type os = string;");
     expect(out.diagnostics).toEqual([]);
-    expect(out.output).toEqual("");
+    expect(out.output).toEqual(buildOutput([]));
     expect(out.declOutput).toEqual(
       'declare type os = string;\nimport * as os from "os";\n'
     );
@@ -1326,7 +1321,7 @@ describe("modules", () => {
       {
         start: { offset: 13, line: 0, character: 13 },
         end: { offset: 16, line: 0, character: 16 },
-        messageText: `Type '"ABC"' is not assignable to type 'number'.`,
+        messageText: `Type 'string' is not assignable to type 'number'.`,
         category: 1,
         code: 2322,
         fileName: "mylib.ts",
@@ -1462,7 +1457,7 @@ describe("externalFiles", () => {
         {
           start: { offset: 13, line: 0, character: 13 },
           end: { offset: 17, line: 0, character: 17 },
-          messageText: "Type '\"AAA\"' is not assignable to type 'number'.",
+          messageText: "Type 'string' is not assignable to type 'number'.",
           category: 1,
           code: 2322,
           fileName: pathlib.normalize(`${dir}/a.ts`),

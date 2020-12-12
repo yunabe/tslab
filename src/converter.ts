@@ -12,6 +12,15 @@ export interface SideOutput {
   data: string;
 }
 
+// This is a hack to remove readonly from AST nodes.
+// TODO(yunabe): Use visit API instead of modifying AST nodes directly.
+type Mutable<T> = {
+  -readonly [P in keyof T]: T[P];
+};
+function asMutable<T>(o: T): Mutable<T> {
+  return o as Mutable<T>;
+}
+
 export interface ConvertResult {
   output?: string;
   declOutput?: string;
@@ -322,7 +331,7 @@ export function createConverter(options?: ConverterOptions): Converter {
       declsFile = builder.getSourceFile(declFilename);
       srcFile = builder.getSourceFile(srcFilename);
     }
-    srcFile.parent = declsFile;
+    asMutable(srcFile).parent = declsFile;
     const diag = convertDiagnostics(
       getPreEmitDiagnosticsWithDependencies(builder, srcFile)
     );
@@ -426,7 +435,7 @@ export function createConverter(options?: ConverterOptions): Converter {
     updateContent(prevDecl, src);
     let declsFile = builder.getSourceFile(declFilename);
     let srcFile = builder.getSourceFile(srcFilename);
-    srcFile.parent = declsFile;
+    asMutable(srcFile).parent = declsFile;
     const info = ts.getQuickInfoAtPosition(
       srcFile,
       builder.getProgram().getTypeChecker(),
@@ -447,7 +456,7 @@ export function createConverter(options?: ConverterOptions): Converter {
     updateContent(prevDecl, src);
     let declsFile = builder.getSourceFile(declFilename);
     let srcFile = builder.getSourceFile(srcFilename);
-    srcFile.parent = declsFile;
+    asMutable(srcFile).parent = declsFile;
 
     const pos = position + srcPrefix.length;
     const info = getCompletionsAtPosition(
@@ -460,6 +469,9 @@ export function createConverter(options?: ConverterOptions): Converter {
       {},
       undefined
     );
+    if (info?.optionalReplacementSpan) {
+      info.optionalReplacementSpan.start -= srcPrefix.length;
+    }
 
     const prev: ts.Node = ts.tslab.findPrecedingToken(pos, srcFile);
     // Note: In contradiction to the docstring, findPrecedingToken may return prev with
@@ -495,6 +507,7 @@ export function createConverter(options?: ConverterOptions): Converter {
     };
   }
 
+  // TODO(yunabe): Probably, replace this with optionalReplacementSpan.
   function completionWithId(
     info: ts.CompletionInfo | undefined,
     id: ts.Identifier,
@@ -667,7 +680,10 @@ export function createConverter(options?: ConverterOptions): Converter {
           }
           decls.push(decl);
         });
-        stmt.declarationList.declarations = ts.createNodeArray(decls);
+        //TODO(yunabe): Stop using ts.createNodeArray, which is deprecated in TypeScript 4.
+        asMutable(stmt.declarationList).declarations = ts.createNodeArray(
+          decls
+        );
       }
       if (ts.isImportDeclaration(stmt)) {
         keepNamesInImport(stmt, names);
@@ -677,7 +693,7 @@ export function createConverter(options?: ConverterOptions): Converter {
       // - FunctionDeclaration (ditto)
       // - InterfaceDeclaration (ditto)
     });
-    declsSF.statements = ts.createNodeArray(statements);
+    asMutable(declsSF).statements = ts.createNodeArray(statements);
     let printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
 
     let anyVarsDecls: string[] = [];
@@ -950,7 +966,7 @@ export function createConverter(options?: ConverterOptions): Converter {
           );
           setLastExprName(lastName);
           statements.push(...node.statements.slice(i + 1));
-          node.statements = ts.createNodeArray(statements);
+          asMutable(node).statements = ts.createNodeArray(statements);
           break;
         }
         return node;
@@ -966,7 +982,7 @@ export function createConverter(options?: ConverterOptions): Converter {
           }
           statements.push(stmt);
         }
-        node.statements = ts.createNodeArray(statements);
+        asMutable(node).statements = ts.createNodeArray(statements);
         return node;
       };
     }
@@ -1097,12 +1113,12 @@ export function keepNamesInImport(
   }
   let imc = im.importClause;
   if (imc.name && !names.has(imc.name.escapedText)) {
-    delete imc.name;
+    delete asMutable(imc).name;
   }
   if (imc.namedBindings) {
     if (ts.isNamespaceImport(imc.namedBindings)) {
       if (!names.has(imc.namedBindings.name.escapedText)) {
-        delete imc.namedBindings;
+        delete asMutable(imc).namedBindings;
       }
     } else {
       let elms: ts.ImportSpecifier[] = [];
@@ -1112,9 +1128,9 @@ export function keepNamesInImport(
         }
       });
       if (elms.length) {
-        imc.namedBindings.elements = ts.createNodeArray(elms);
+        asMutable(imc.namedBindings).elements = ts.createNodeArray(elms);
       } else {
-        delete imc.namedBindings;
+        delete asMutable(imc).namedBindings;
       }
     }
   }

@@ -510,7 +510,7 @@ describe("externalFiles", () => {
           pathlib.normalize(`${dir}/a.ts `),
           1,
           14,
-          "Type '\"AAA\"' is not assignable to type 'number'.",
+          "Type 'string' is not assignable to type 'number'.",
         ],
       ]);
     });
