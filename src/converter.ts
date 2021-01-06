@@ -270,6 +270,7 @@ export function createConverter(options?: ConverterOptions): Converter {
       // Remove 'use strict' from outputs.
       noImplicitUseStrict: true,
       experimentalDecorators: true,
+      resolveJsonModule: true,
       jsx: ts.JsxEmit.React,
       typeRoots: getTypeRoots(),
       // allowJs, checkJs and outDir are necessary to transpile .js files.
