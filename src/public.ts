@@ -2,6 +2,7 @@ import { randomBytes } from "crypto";
 import * as jupyter from "./jupyter";
 import { getVersion } from "./util";
 import * as ts from "@tslab/typescript-for-tslab";
+import plotHtml from './plot'
 
 /** This is defined to make the docstring of `versions` shorter */
 interface Versions {
@@ -28,6 +29,15 @@ export interface Display {
   gif(b: Uint8Array): void;
   pdf(b: Uint8Array): void;
   text(s: string): void;
+  plot(
+    width: number,
+    height: number,
+    ...args: [
+      data: Record<string, any>[],
+      layout?: Record<string, any>,
+      config?: Record<string, any>
+    ]
+  ): void
   raw(contentType: string, b: string | Uint8Array);
 }
 
@@ -84,6 +94,17 @@ class DisplayImpl {
   }
   text(s: string): void {
     this.raw("text/plain", s);
+  }
+  plot(
+    width: number,
+    height: number,
+    ...args: [
+      data: Record<string, any>[],
+      layout?: Record<string, any>,
+      config?: Record<string, any>
+    ]
+  ): void {
+    this.html(plotHtml(width, height, ...args))
   }
   raw(contentType: string, b: string | Uint8Array): void {
     if (jupyter.lastWriteDisplayData == null) {
