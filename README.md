@@ -69,7 +69,7 @@ npm install -g tslab
 Please make sure `tslab` command is available in your terminal.
 
 ```
-tslab install --version
+tslab --version
 ```
 
 Then, register `tslab` to your Jupyter environment.
