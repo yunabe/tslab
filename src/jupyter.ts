@@ -1,15 +1,15 @@
-import { createHmac, randomBytes } from "crypto";
-import fs from "fs";
-import { TextDecoder } from "util";
+import { createHmac, randomBytes } from 'crypto';
+import fs from 'fs';
+import { TextDecoder } from 'util';
 
 // This zmq must be used only for types.
 // zeromq runtime must be delay loaded in init().
-import * as zmq from "zeromq";
+import * as zmq from 'zeromq';
 
-import { isCompleteCode } from "./converter";
-import { Executor } from "./executor";
-import { printQuickInfo } from "./inspect";
-import { TaskQueue, TaskCanceledError } from "./util";
+import { isCompleteCode } from './converter';
+import { Executor } from './executor';
+import { printQuickInfo } from './inspect';
+import { TaskQueue, TaskCanceledError } from './util';
 
 const utf8Decoder = new TextDecoder();
 
@@ -17,10 +17,7 @@ const utf8Decoder = new TextDecoder();
  * The process-wide global variable to hold the last valid
  * writeDisplayData. This is used from the display public API.
  */
-export let lastWriteDisplayData: (
-  data: DisplayData,
-  update: boolean
-) => void = null;
+export let lastWriteDisplayData: (data: DisplayData, update: boolean) => void = null;
 
 interface ConnectionInfo {
   shell_port: number;
@@ -203,7 +200,7 @@ interface IsCompleteRequest {
 
 interface IsCompleteReply {
   /** One of 'complete', 'incomplete', 'invalid', 'unknown' */
-  status: "complete" | "incomplete" | "invalid" | "unknown";
+  status: 'complete' | 'incomplete' | 'invalid' | 'unknown';
 
   /**
    * If status is 'incomplete', indent should contain the characters to use
@@ -238,7 +235,7 @@ interface InspectRequest {
 
 interface InspectReply {
   /** 'ok' if the request succeeded or 'error', with error information as in all other replies. */
-  status: "ok";
+  status: 'ok';
 
   /** found should be true if an object was found, false otherwise */
   found: boolean;
@@ -282,7 +279,7 @@ interface CompleteReply {
    * in which case it should be 'error', along with the usual error message content
    * in other messages.
    */
-  status: "ok";
+  status: 'ok';
 }
 
 interface ShutdownRequest {
@@ -349,11 +346,11 @@ class ZmqMessage {
   private constructor() {}
 
   private static verifyHmac(key: string, hmac: string, rest: Buffer[]) {
-    const hash = createHmac("sha256", key);
+    const hash = createHmac('sha256', key);
     for (const r of rest) {
       hash.update(r);
     }
-    const hex = hash.digest("hex");
+    const hex = hash.digest('hex');
     if (hex == hmac) {
       return;
     }
@@ -381,16 +378,16 @@ class ZmqMessage {
     rep.identity = this.identity;
     rep.delim = this.delim;
     // Sets an empty string to hmac because it won't be used.
-    rep.hmac = "";
+    rep.hmac = '';
     rep.header = {
-      version: "5.3",
+      version: '5.3',
       date: new Date().toISOString(),
       session: this.header.session,
       username: this.header.username,
       msg_type: this.header.msg_type,
       // Set a unique ID to prevent a problem like #14.
       // TODO: Check this by integration tests.
-      msg_id: randomBytes(16).toString("hex"),
+      msg_id: randomBytes(16).toString('hex'),
     };
     rep.parent = this.header;
     rep.metadata = {};
@@ -412,11 +409,11 @@ class ZmqMessage {
       bodies.push(JSON.stringify(e));
     }
 
-    const hash = createHmac("sha256", key);
+    const hash = createHmac('sha256', key);
     for (const b of bodies) {
       hash.update(b);
     }
-    heads.push(hash.digest("hex"));
+    heads.push(hash.digest('hex'));
     sock.send(heads.concat(bodies));
   }
 }
@@ -458,24 +455,24 @@ export class JupyterHandlerImpl implements JupyterHandler {
   }
 
   handleKernel(): KernelInfoReply {
-    let lang = "typescript";
-    let version = "3.7.2";
-    let implementation = "tslab";
-    let file_extension = ".ts";
-    let banner = "TypeScript";
-    let mimetype = "text/typescript";
+    let lang = 'typescript';
+    let version = '3.7.2';
+    let implementation = 'tslab';
+    let file_extension = '.ts';
+    let banner = 'TypeScript';
+    let mimetype = 'text/typescript';
     if (this.isJs) {
-      lang = "javascript";
-      version = "";
-      implementation = "jslab";
-      file_extension = ".js";
-      banner = "JavaScript";
-      mimetype = "text/javascript";
+      lang = 'javascript';
+      version = '';
+      implementation = 'jslab';
+      file_extension = '.js';
+      banner = 'JavaScript';
+      mimetype = 'text/javascript';
     }
     const reply: KernelInfoReply = {
-      protocol_version: "5.3",
+      protocol_version: '5.3',
       implementation,
-      implementation_version: "1.0.0",
+      implementation_version: '1.0.0',
       language_info: {
         name: lang,
         version,
@@ -491,14 +488,14 @@ export class JupyterHandlerImpl implements JupyterHandler {
         // https://github.com/jupyterlab/jupyterlab/blob/1377bd183764860b384bea7c36ea1c52b6095e05/packages/codemirror/src/mode.ts#L133
         // As we can see in the code, jupyterlab does not pass codemirror_mode to CodeMirror directly.
         // Thus, `typescript: true` below is not used in jupyterlab.
-        mode: "typescript",
+        mode: 'typescript',
 
         // name and typescript are used to enable TypeScript CodeMirror in notebook.
         // We don't fully understand why this combination works magically. It might be related to:
         // https://github.com/jupyter/notebook/blob/8b21329deb9dd04271b12e3d2790c5be9f1fd51e/notebook/static/notebook/js/notebook.js#L2199
         // Also, typescript flag is defined in:
         // https://codemirror.net/mode/javascript/index.html
-        name: "javascript",
+        name: 'javascript',
         typescript: true,
       };
     }
@@ -510,23 +507,21 @@ export class JupyterHandlerImpl implements JupyterHandler {
     writeStream: (name: string, text: string) => void,
     writeDisplayData: (data: DisplayData, update: boolean) => void
   ): Promise<ExecuteReply> {
-    let status = "ok";
+    let status = 'ok';
     let count: ExecutionCount = null;
     try {
-      count = await this.execQueue.add(() =>
-        this.handleExecuteImpl(req, writeStream, writeDisplayData)
-      );
+      count = await this.execQueue.add(() => this.handleExecuteImpl(req, writeStream, writeDisplayData));
     } catch (e) {
       if (e instanceof ExecutionCount) {
-        status = "error";
+        status = 'error';
         count = e;
       } else if (e instanceof TaskCanceledError) {
-        status = "abort";
+        status = 'abort';
       } else {
-        status = "error";
-        console.error("unexpected error:", e);
+        status = 'error';
+        console.error('unexpected error:', e);
       }
-      if (status === "error") {
+      if (status === 'error') {
         // Sleep 200ms to abort all pending tasks in ZMQ queue then reset the task queue.
         // https://github.com/yunabe/tslab/issues/19
         // We might just need to sleep 1ms here to process all pending requests in ZMQ.
@@ -555,14 +550,8 @@ export class JupyterHandlerImpl implements JupyterHandler {
   ): Promise<ExecutionCount> {
     // Python kernel forward outputs to the cell even after the execution is finished.
     // We follow the same convension here.
-    process.stdout.write = this.createWriteToIopub(
-      "stdout",
-      writeStream
-    ) as any;
-    process.stderr.write = this.createWriteToIopub(
-      "stderr",
-      writeStream
-    ) as any;
+    process.stdout.write = this.createWriteToIopub('stdout', writeStream) as any;
+    process.stderr.write = this.createWriteToIopub('stderr', writeStream) as any;
     lastWriteDisplayData = writeDisplayData;
 
     let count = new ExecutionCount(++this.execCount);
@@ -573,13 +562,10 @@ export class JupyterHandlerImpl implements JupyterHandler {
     return count;
   }
 
-  createWriteToIopub(
-    name: "stdout" | "stderr",
-    writeStream: (name: string, text: string) => void
-  ) {
+  createWriteToIopub(name: 'stdout' | 'stderr', writeStream: (name: string, text: string) => void) {
     return (buffer: string | Uint8Array, encoding?: string): boolean => {
       let text: string;
-      if (typeof buffer === "string") {
+      if (typeof buffer === 'string') {
         text = buffer;
       } else {
         text = utf8Decoder.decode(buffer);
@@ -593,12 +579,12 @@ export class JupyterHandlerImpl implements JupyterHandler {
     const res = isCompleteCode(req.code);
     if (res.completed) {
       return {
-        status: "complete",
+        status: 'complete',
       };
     }
     return {
       indent: res.indent,
-      status: "incomplete",
+      status: 'incomplete',
     };
   }
 
@@ -606,7 +592,7 @@ export class JupyterHandlerImpl implements JupyterHandler {
     const info = this.executor.inspect(req.code, req.cursor_pos);
     if (!info) {
       return {
-        status: "ok",
+        status: 'ok',
         found: false,
         data: {},
         metadata: {},
@@ -614,12 +600,12 @@ export class JupyterHandlerImpl implements JupyterHandler {
     }
     let text = printQuickInfo(info);
     return {
-      status: "ok",
+      status: 'ok',
       found: true,
       data: {
         // text/plain must be filled even if "text/html" is provided.
         // TODO: Fill text/html too if necessary.
-        "text/plain": text,
+        'text/plain': text,
       },
       metadata: {},
     };
@@ -632,7 +618,7 @@ export class JupyterHandlerImpl implements JupyterHandler {
       cursor_end: info.end,
       matches: info.candidates,
       metadata: {},
-      status: "ok",
+      status: 'ok',
     };
   }
 
@@ -675,36 +661,36 @@ export class ZmqServer {
     reply.content = {
       execution_state: status,
     };
-    reply.header.msg_type = "status";
+    reply.header.msg_type = 'status';
     reply.signAndSend(this.connInfo.key, this.iopub);
   }
 
   async handleShellMessage(sock: zmq.Router, ...args: Buffer[]) {
     const msg = ZmqMessage.fromRaw(this.connInfo.key, args);
     let terminated = false;
-    this.publishStatus("busy", msg);
+    this.publishStatus('busy', msg);
     try {
       switch (msg.header.msg_type) {
-        case "kernel_info_request":
+        case 'kernel_info_request':
           this.handleKernelInfo(sock, msg);
           break;
-        case "execute_request":
+        case 'execute_request':
           await this.handleExecute(sock, msg);
           break;
-        case "is_complete_request":
+        case 'is_complete_request':
           this.handleIsComplete(sock, msg);
           break;
-        case "inspect_request":
+        case 'inspect_request':
           this.handleInspect(sock, msg);
           break;
-        case "complete_request":
+        case 'complete_request':
           this.handleComplete(sock, msg);
           break;
-        case "comm_info_request":
+        case 'comm_info_request':
           // This is sent for ipywidgets with content = { target_name: 'jupyter.widget' }.
           this.handleCommInfoRequest(sock, msg);
           break;
-        case "shutdown_request":
+        case 'shutdown_request':
           this.handleShutdown(sock, msg);
           terminated = true;
           break;
@@ -712,7 +698,7 @@ export class ZmqServer {
           console.warn(`unknown msg_type: ${msg.header.msg_type}`);
       }
     } finally {
-      this.publishStatus("idle", msg);
+      this.publishStatus('idle', msg);
     }
     if (terminated) {
       // TODO: Write tests for the graceful termination.
@@ -722,17 +708,17 @@ export class ZmqServer {
 
   handleKernelInfo(sock, msg: ZmqMessage) {
     const reply = msg.createReply();
-    reply.header.msg_type = "kernel_info_reply";
+    reply.header.msg_type = 'kernel_info_reply';
     reply.content = this.handler.handleKernel();
     reply.signAndSend(this.connInfo.key, sock);
   }
 
   async handleExecute(sock, msg: ZmqMessage) {
     const reply = msg.createReply();
-    reply.header.msg_type = "execute_reply";
+    reply.header.msg_type = 'execute_reply';
     const writeStream = (name: string, text: string) => {
       const reply = msg.createReply();
-      reply.header.msg_type = "stream";
+      reply.header.msg_type = 'stream';
       reply.content = {
         name,
         text,
@@ -741,45 +727,39 @@ export class ZmqServer {
     };
     const writeDisplayData = (data: DisplayData, update: boolean) => {
       const reply = msg.createReply();
-      reply.header.msg_type = update ? "update_display_data" : "display_data";
+      reply.header.msg_type = update ? 'update_display_data' : 'display_data';
       reply.content = data;
       reply.signAndSend(this.connInfo.key, this.iopub);
     };
-    const content: ExecuteReply = await this.handler.handleExecute(
-      msg.content as ExecuteRequest,
-      writeStream,
-      writeDisplayData
-    );
+    const content: ExecuteReply = await this.handler.handleExecute(msg.content as ExecuteRequest, writeStream, writeDisplayData);
     reply.content = content;
     reply.signAndSend(this.connInfo.key, sock);
   }
 
   handleIsComplete(sock, msg: ZmqMessage) {
     const reply = msg.createReply();
-    reply.header.msg_type = "is_complete_reply";
-    reply.content = this.handler.handleIsComplete(
-      msg.content as IsCompleteRequest
-    );
+    reply.header.msg_type = 'is_complete_reply';
+    reply.content = this.handler.handleIsComplete(msg.content as IsCompleteRequest);
     reply.signAndSend(this.connInfo.key, sock);
   }
 
   handleInspect(sock, msg: ZmqMessage) {
     const reply = msg.createReply();
-    reply.header.msg_type = "inspect_reply";
+    reply.header.msg_type = 'inspect_reply';
     reply.content = this.handler.handleInspect(msg.content as InspectRequest);
     reply.signAndSend(this.connInfo.key, sock);
   }
 
   handleComplete(sock, msg: ZmqMessage) {
     const reply = msg.createReply();
-    reply.header.msg_type = "complete_reply";
+    reply.header.msg_type = 'complete_reply';
     reply.content = this.handler.handleComplete(msg.content as CompleteRequest);
     reply.signAndSend(this.connInfo.key, sock);
   }
 
   handleCommInfoRequest(sock: zmq.Router, msg: ZmqMessage) {
     const reply = msg.createReply();
-    reply.header.msg_type = "complete_reply";
+    reply.header.msg_type = 'complete_reply';
     // comm is not supported in tslab now. Returns an empty comms.
     (reply.content as CommInfoReply) = { comms: {} };
     reply.signAndSend(this.connInfo.key, sock);
@@ -787,21 +767,19 @@ export class ZmqServer {
 
   handleShutdown(sock, msg: ZmqMessage) {
     const reply = msg.createReply();
-    reply.header.msg_type = "shutdown_reply";
+    reply.header.msg_type = 'shutdown_reply';
     reply.content = this.handler.handleShutdown(msg.content as ShutdownRequest);
     reply.signAndSend(this.connInfo.key, sock);
   }
 
   async init(): Promise<void> {
-    const cinfo: ConnectionInfo = JSON.parse(
-      fs.readFileSync(this.configPath, "utf-8")
-    );
+    const cinfo: ConnectionInfo = JSON.parse(fs.readFileSync(this.configPath, 'utf-8'));
     this.connInfo = cinfo;
 
     // https://zeromq.github.io/zeromq.js/index.html
     // zeromq runtime must be delay loaded so that mutiple instances of
     // this module can be loaded (e.g. global and local ones).
-    const zmq = await import("zeromq");
+    const zmq = await import('zeromq');
     this.iopub = new zmq.Publisher();
     this.shell = new zmq.Router();
     this.control = new zmq.Router();

@@ -10,8 +10,8 @@ module.exports = {
       allowUnlimitedContractSize: true,
       gasPrice: 'auto',
       forking: {
-        url: "https://eth-mainnet.alchemyapi.io/v2/u00W7u55YuNg2jblv7LqCEhyMjso8sQY",
-      }
+        url: 'https://eth-mainnet.alchemyapi.io/v2/u00W7u55YuNg2jblv7LqCEhyMjso8sQY',
+      },
     },
   },
   solidity: {

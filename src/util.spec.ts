@@ -1,37 +1,32 @@
-import {
-  TaskQueue,
-  TaskCanceledError,
-  isValidModuleName,
-  escapeHTML,
-} from "./util";
-import { sleep } from "./testutil";
+import { TaskQueue, TaskCanceledError, isValidModuleName, escapeHTML } from './util';
+import { sleep } from './testutil';
 
-describe("TaskQueue", () => {
-  it("sequential", async () => {
+describe('TaskQueue', () => {
+  it('sequential', async () => {
     let queue = new TaskQueue();
     const lst: string[] = [];
     queue.add(async () => {
       await sleep(10);
-      lst.push("A");
+      lst.push('A');
     });
-    lst.push("a");
+    lst.push('a');
     queue.add(async () => {
       await sleep(5);
-      lst.push("B");
+      lst.push('B');
     });
-    lst.push("b");
+    lst.push('b');
     const ret = await queue.add(async () => {
-      lst.push("C");
+      lst.push('C');
       return lst;
     });
-    lst.push("c");
-    expect(ret).toEqual(["a", "b", "A", "B", "C", "c"]);
+    lst.push('c');
+    expect(ret).toEqual(['a', 'b', 'A', 'B', 'C', 'c']);
   });
 
-  it("canceled", async () => {
+  it('canceled', async () => {
     let queue = new TaskQueue();
     const lst: string[] = [];
-    let rootErr = new Error("root cause");
+    let rootErr = new Error('root cause');
     let p0 = queue.add(async () => {
       await sleep(10);
       throw rootErr;
@@ -40,44 +35,44 @@ describe("TaskQueue", () => {
       return 123;
     });
     let p2 = queue.add(async () => {
-      return "hello";
+      return 'hello';
     });
 
     try {
       await p0;
-      fail("await p0 must fail.");
+      fail('await p0 must fail.');
     } catch (e) {
       expect(e).toBe(rootErr);
     }
     let p1Err: any;
     try {
       await p1;
-      fail("await p1 must fail.");
+      fail('await p1 must fail.');
     } catch (e) {
       expect(e).toBeInstanceOf(TaskCanceledError);
       expect(e.reason).toBe(rootErr);
-      expect(e.toString()).toEqual("TaskCanceledError: Error: root cause");
+      expect(e.toString()).toEqual('TaskCanceledError: Error: root cause');
       p1Err = e;
     }
     try {
       await p2;
-      fail("await p2 must fail.");
+      fail('await p2 must fail.');
     } catch (e) {
       expect(e).toBe(p1Err);
     }
   });
 
-  it("reset", async () => {
+  it('reset', async () => {
     let queue = new TaskQueue();
     const lst: string[] = [];
-    let rootErr = new Error("root cause");
+    let rootErr = new Error('root cause');
     let p0 = queue.add(async () => {
       await sleep(10);
       throw rootErr;
     });
     try {
       await p0;
-      fail("await p0 must fail.");
+      fail('await p0 must fail.');
     } catch (e) {
       expect(e).toBe(rootErr);
     }
@@ -89,7 +84,7 @@ describe("TaskQueue", () => {
       // It's important to yield to invoke a time in reset.
       await sleep(0);
       let p = queue.add(async () => {
-        return "success";
+        return 'success';
       });
       try {
         res = await p;
@@ -100,32 +95,32 @@ describe("TaskQueue", () => {
         abort++;
       }
       if (Date.now() - start > 200) {
-        fail("queue is not reset properly in 10ms");
+        fail('queue is not reset properly in 10ms');
         break;
       }
     }
     // Multiple tasks are cancelled before reset is applied.
     expect(abort).toBeGreaterThan(0);
-    expect(res).toEqual("success");
+    expect(res).toEqual('success');
   });
 });
 
-it("isValidModuleName", () => {
-  expect(isValidModuleName("abc")).toBeTruthy();
-  expect(isValidModuleName("ABC")).toBeTruthy();
-  expect(isValidModuleName("012")).toBeTruthy();
+it('isValidModuleName', () => {
+  expect(isValidModuleName('abc')).toBeTruthy();
+  expect(isValidModuleName('ABC')).toBeTruthy();
+  expect(isValidModuleName('012')).toBeTruthy();
 
-  expect(isValidModuleName("")).toBeFalsy();
-  expect(isValidModuleName("  ")).toBeFalsy();
-  expect(isValidModuleName(" abc")).toBeFalsy();
-  expect(isValidModuleName("a/b")).toBeFalsy();
+  expect(isValidModuleName('')).toBeFalsy();
+  expect(isValidModuleName('  ')).toBeFalsy();
+  expect(isValidModuleName(' abc')).toBeFalsy();
+  expect(isValidModuleName('a/b')).toBeFalsy();
 });
 
-it("escapeHTML", () => {
-  expect(escapeHTML("&")).toEqual("&amp;");
-  expect(escapeHTML("'")).toEqual("&#39;");
-  expect(escapeHTML("<")).toEqual("&lt;");
-  expect(escapeHTML(">")).toEqual("&gt;");
-  expect(escapeHTML('"')).toEqual("&#34;");
-  expect(escapeHTML("<&>")).toEqual("&lt;&amp;&gt;");
+it('escapeHTML', () => {
+  expect(escapeHTML('&')).toEqual('&amp;');
+  expect(escapeHTML("'")).toEqual('&#39;');
+  expect(escapeHTML('<')).toEqual('&lt;');
+  expect(escapeHTML('>')).toEqual('&gt;');
+  expect(escapeHTML('"')).toEqual('&#34;');
+  expect(escapeHTML('<&>')).toEqual('&lt;&amp;&gt;');
 });

@@ -1,15 +1,9 @@
-import * as converter from "./converter";
-import * as ts from "@tslab/typescript-for-tslab";
-import {
-  runInTmp,
-  runInTmpAsync,
-  sleep,
-  WaitFileEventFunc,
-  createConverterWithFileWatcher,
-} from "./testutil";
-import fs from "fs";
-import pathlib from "path";
-import { normalizeJoin } from "./tspath";
+import * as converter from './converter';
+import * as ts from '@tslab/typescript-for-tslab';
+import { runInTmp, runInTmpAsync, sleep, WaitFileEventFunc, createConverterWithFileWatcher } from './testutil';
+import fs from 'fs';
+import pathlib from 'path';
+import { normalizeJoin } from './tspath';
 
 let conv: converter.Converter;
 let waitFileEvent: WaitFileEventFunc;
@@ -34,33 +28,33 @@ function buildOutput(
   if (opts && opts.importStar) {
     out.push(
       ...[
-        "var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {",
-        "    if (k2 === undefined) k2 = k;",
-        "    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });",
-        "}) : (function(o, m, k, k2) {",
-        "    if (k2 === undefined) k2 = k;",
-        "    o[k2] = m[k];",
-        "}));",
-        "var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {",
+        'var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {',
+        '    if (k2 === undefined) k2 = k;',
+        '    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });',
+        '}) : (function(o, m, k, k2) {',
+        '    if (k2 === undefined) k2 = k;',
+        '    o[k2] = m[k];',
+        '}));',
+        'var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {',
         '    Object.defineProperty(o, "default", { enumerable: true, value: v });',
-        "}) : function(o, v) {",
+        '}) : function(o, v) {',
         '    o["default"] = v;',
-        "});",
-        "var __importStar = (this && this.__importStar) || function (mod) {",
-        "    if (mod && mod.__esModule) return mod;",
-        "    var result = {};",
+        '});',
+        'var __importStar = (this && this.__importStar) || function (mod) {',
+        '    if (mod && mod.__esModule) return mod;',
+        '    var result = {};',
         '    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);',
-        "    __setModuleDefault(result, mod);",
-        "    return result;",
-        "};",
+        '    __setModuleDefault(result, mod);',
+        '    return result;',
+        '};',
       ]
     );
     if (opts && opts.importDefault) {
       out.push(
         ...[
-          "var __importDefault = (this && this.__importDefault) || function (mod) {",
+          'var __importDefault = (this && this.__importDefault) || function (mod) {',
           '    return (mod && mod.__esModule) ? mod : { "default": mod };',
-          "};",
+          '};',
         ]
       );
     }
@@ -68,19 +62,17 @@ function buildOutput(
   // cf. https://www.typescriptlang.org/docs/handbook/release-notes/typescript-2-7.html#support-for-import-d-from-cjs-from-commonjs-modules-with---esmoduleinteropa
   out.push('Object.defineProperty(exports, "__esModule", { value: true });');
   if (opts && opts.exports) {
-    out.push(
-      opts.exports.map((e) => `exports.${e}`).join(" = ") + " = void 0;"
-    );
+    out.push(opts.exports.map((e) => `exports.${e}`).join(' = ') + ' = void 0;');
   }
   out.push(...lines);
-  out.push("");
-  return out.join("\n");
+  out.push('');
+  return out.join('\n');
 }
 
-describe("converter valid", () => {
-  it("variables", () => {
+describe('converter valid', () => {
+  it('variables', () => {
     const out = conv.convert(
-      "",
+      '',
       `let x = 123;
 const y = 'foo';
 var z = true;
@@ -93,20 +85,20 @@ let {a, b: c} = obj;
     expect(out.output).toEqual(
       buildOutput(
         [
-          "let x = 123;",
-          "exports.x = x;",
+          'let x = 123;',
+          'exports.x = x;',
           "const y = 'foo';",
-          "exports.y = y;",
-          "var z = true;",
-          "exports.z = z;",
-          "exports.x = x *= 2;",
+          'exports.y = y;',
+          'var z = true;',
+          'exports.z = z;',
+          'exports.x = x *= 2;',
           "let obj = { a: 10, b: 'hello' };",
-          "exports.obj = obj;",
-          "let { a, b: c } = obj;",
-          "exports.a = a;",
-          "exports.c = c;",
+          'exports.obj = obj;',
+          'let { a, b: c } = obj;',
+          'exports.a = a;',
+          'exports.c = c;',
         ],
-        { exports: ["c", "a", "obj", "z", "y", "x"] }
+        { exports: ['c', 'a', 'obj', 'z', 'y', 'x'] }
       )
     );
     expect(out.declOutput).toEqual(
@@ -122,9 +114,9 @@ declare let a: number, c: string;
     );
   });
 
-  it("functions", () => {
+  it('functions', () => {
     const out = conv.convert(
-      "",
+      '',
       `
       function sum(x: number, y: number): number {
         return x + y;
@@ -145,24 +137,24 @@ declare let a: number, c: string;
     expect(out.output).toEqual(
       buildOutput(
         [
-          "function sum(x, y) {",
-          "    return x + y;",
-          "}",
-          "exports.sum = sum;",
-          "function* xrange(n) {",
-          "    for (let i = 0; i < n; i++) {",
-          "        yield i;",
-          "    }",
-          "}",
-          "exports.xrange = xrange;",
-          "async function sleep(ms) {",
-          "    return new Promise(resolve => {",
-          "        setTimeout(resolve, ms);",
-          "    });",
-          "}",
-          "exports.sleep = sleep;",
+          'function sum(x, y) {',
+          '    return x + y;',
+          '}',
+          'exports.sum = sum;',
+          'function* xrange(n) {',
+          '    for (let i = 0; i < n; i++) {',
+          '        yield i;',
+          '    }',
+          '}',
+          'exports.xrange = xrange;',
+          'async function sleep(ms) {',
+          '    return new Promise(resolve => {',
+          '        setTimeout(resolve, ms);',
+          '    });',
+          '}',
+          'exports.sleep = sleep;',
         ],
-        { exports: ["sleep", "xrange", "sum"] }
+        { exports: ['sleep', 'xrange', 'sum'] }
       )
     );
     expect(out.declOutput).toEqual(
@@ -173,9 +165,9 @@ declare function sleep(ms: number): Promise<never>;
     );
   });
 
-  it("destructuring", () => {
+  it('destructuring', () => {
     const out = conv.convert(
-      "",
+      '',
       `
       let [x, y] = [123, 'hello'];
       let { a, b: c } = { a: 123, b: "hello" };
@@ -186,13 +178,13 @@ declare function sleep(ms: number): Promise<never>;
       buildOutput(
         [
           "let [x, y] = [123, 'hello'];",
-          "exports.x = x;",
-          "exports.y = y;",
+          'exports.x = x;',
+          'exports.y = y;',
           'let { a, b: c } = { a: 123, b: "hello" };',
-          "exports.a = a;",
-          "exports.c = c;",
+          'exports.a = a;',
+          'exports.c = c;',
         ],
-        { exports: ["c", "a", "y", "x"] }
+        { exports: ['c', 'a', 'y', 'x'] }
       )
     );
     expect(out.declOutput).toEqual(`declare let x: number, y: string;
@@ -200,10 +192,10 @@ declare let a: number, c: string;
 `);
   });
 
-  it("optional chaining and nullish coalescing", () => {
+  it('optional chaining and nullish coalescing', () => {
     // Supported since TypeScript 3.7
     const out = conv.convert(
-      "",
+      '',
       `
       let obj: any = null;
       let a = obj?.a?.b;
@@ -214,22 +206,22 @@ declare let a: number, c: string;
     expect(out.output).toEqual(
       buildOutput(
         [
-          "var _a;",
-          "let obj = null;",
-          "exports.obj = obj;",
-          "let a = (_a = obj === null || obj === void 0 ? void 0 : obj.a) === null || _a === void 0 ? void 0 : _a.b;",
-          "exports.a = a;",
-          "let b = a !== null && a !== void 0 ? a : obj;",
-          "exports.b = b;",
+          'var _a;',
+          'let obj = null;',
+          'exports.obj = obj;',
+          'let a = (_a = obj === null || obj === void 0 ? void 0 : obj.a) === null || _a === void 0 ? void 0 : _a.b;',
+          'exports.a = a;',
+          'let b = a !== null && a !== void 0 ? a : obj;',
+          'exports.b = b;',
         ],
-        { exports: ["b", "a", "obj"] }
+        { exports: ['b', 'a', 'obj'] }
       )
     );
   });
 
-  it("side-effect to var", () => {
+  it('side-effect to var', () => {
     const out = conv.convert(
-      "",
+      '',
       `
 let counter = 0;
 function increment() {
@@ -241,14 +233,14 @@ function increment() {
     expect(out.output).toEqual(
       buildOutput(
         [
-          "let counter = 0;",
-          "exports.counter = counter;",
-          "function increment() {",
-          "    exports.counter = counter += 1;",
-          "}",
-          "exports.increment = increment;",
+          'let counter = 0;',
+          'exports.counter = counter;',
+          'function increment() {',
+          '    exports.counter = counter += 1;',
+          '}',
+          'exports.increment = increment;',
         ],
-        { exports: ["counter", "increment"] }
+        { exports: ['counter', 'increment'] }
       )
     );
     expect(out.declOutput).toEqual(`declare let counter: number;
@@ -256,9 +248,9 @@ declare function increment(): void;
 `);
   });
 
-  it("interfaces and classes", () => {
+  it('interfaces and classes', () => {
     const out = conv.convert(
-      "",
+      '',
       `interface Shape {
   color: string;
 }
@@ -282,15 +274,15 @@ class SquareImpl implements Square {
     expect(out.output).toEqual(
       buildOutput(
         [
-          "class SquareImpl {",
-          "    constructor(color, sideLength) {",
-          "        this.color = color;",
-          "        this.sideLength = sideLength;",
-          "    }",
-          "}",
-          "exports.SquareImpl = SquareImpl;",
+          'class SquareImpl {',
+          '    constructor(color, sideLength) {',
+          '        this.color = color;',
+          '        this.sideLength = sideLength;',
+          '    }',
+          '}',
+          'exports.SquareImpl = SquareImpl;',
         ],
-        { exports: ["SquareImpl"] }
+        { exports: ['SquareImpl'] }
       )
     );
     expect(out.declOutput).toEqual(`interface Shape {
@@ -307,16 +299,16 @@ declare class SquareImpl implements Square {
 `);
   });
 
-  it("types", () => {
-    const out = conv.convert("", `type mytype = number | string;`);
+  it('types', () => {
+    const out = conv.convert('', `type mytype = number | string;`);
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(buildOutput([]));
-    expect(out.declOutput).toEqual("declare type mytype = number | string;\n");
+    expect(out.declOutput).toEqual('declare type mytype = number | string;\n');
   });
 
-  it("generics", () => {
+  it('generics', () => {
     const out = conv.convert(
-      "",
+      '',
       `
 function identity<T>(arg: T): T {
   return arg;
@@ -325,24 +317,14 @@ function identity<T>(arg: T): T {
     );
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
-      buildOutput(
-        [
-          "function identity(arg) {",
-          "    return arg;",
-          "}",
-          "exports.identity = identity;",
-        ],
-        { exports: ["identity"] }
-      )
+      buildOutput(['function identity(arg) {', '    return arg;', '}', 'exports.identity = identity;'], { exports: ['identity'] })
     );
-    expect(out.declOutput).toEqual(
-      "declare function identity<T>(arg: T): T;\n"
-    );
+    expect(out.declOutput).toEqual('declare function identity<T>(arg: T): T;\n');
   });
 
-  it("enum", () => {
+  it('enum', () => {
     const out = conv.convert(
-      "",
+      '',
       `
 enum Direction {
   Up = 1,
@@ -355,16 +337,16 @@ enum Direction {
     expect(out.output).toEqual(
       buildOutput(
         [
-          "var Direction;",
-          "exports.Direction = Direction;",
-          "(function (Direction) {",
+          'var Direction;',
+          'exports.Direction = Direction;',
+          '(function (Direction) {',
           '    Direction[Direction["Up"] = 1] = "Up";',
           '    Direction[Direction["Down"] = 2] = "Down";',
           '    Direction[Direction["Left"] = 3] = "Left";',
           '    Direction[Direction["Right"] = 4] = "Right";',
-          "})(Direction || (exports.Direction = Direction = {}));",
+          '})(Direction || (exports.Direction = Direction = {}));',
         ],
-        { exports: ["Direction"] }
+        { exports: ['Direction'] }
       )
     );
     expect(out.declOutput).toEqual(`declare enum Direction {
@@ -376,20 +358,19 @@ enum Direction {
 `);
   });
 
-  it("labeled expressions look object literals", () => {
+  it('labeled expressions look object literals', () => {
     // TODO: Revisit how to handle this ambiguity.
-    let out = conv.convert("", "{x: 10}");
+    let out = conv.convert('', '{x: 10}');
     expect(out.diagnostics).toEqual([]);
-    expect(out.output).toEqual(buildOutput(["{", "    x: 10;", "}"]));
-    expect(out.declOutput).toEqual("");
+    expect(out.output).toEqual(buildOutput(['{', '    x: 10;', '}']));
+    expect(out.declOutput).toEqual('');
 
-    out = conv.convert("", "{x: 3, y: 4}");
+    out = conv.convert('', '{x: 3, y: 4}');
     expect(out.diagnostics).toEqual([
       {
         category: 1,
         code: 2695,
-        messageText:
-          "Left side of comma operator is unused and has no side effects.",
+        messageText: 'Left side of comma operator is unused and has no side effects.',
         start: {
           character: 4,
           line: 0,
@@ -434,9 +415,9 @@ enum Direction {
     ]);
   });
 
-  it("import", () => {
+  it('import', () => {
     const out = conv.convert(
-      "",
+      '',
       `
 import * as os from "os";
 const os2 = os;
@@ -449,13 +430,13 @@ let info: CpuInfo;
       buildOutput(
         [
           'const os = __importStar(require("os"));',
-          "exports.os = os;",
-          "const os2 = os;",
-          "exports.os2 = os2;",
-          "let info;",
-          "exports.info = info;",
+          'exports.os = os;',
+          'const os2 = os;',
+          'exports.os2 = os2;',
+          'let info;',
+          'exports.info = info;',
         ],
-        { importStar: true, exports: ["info", "os2", "os"] }
+        { importStar: true, exports: ['info', 'os2', 'os'] }
       )
     );
     // let info: CpuInfo; in src causes /// reference for some reason.
@@ -468,10 +449,10 @@ declare let info: CpuInfo;
 `);
   });
 
-  it("import default", () => {
+  it('import default', () => {
     // Test esModuleInterop
     const out = conv.convert(
-      "",
+      '',
       `import os from "os";
 let info: os.CpuInfo;
 import * as pathlib from "path";
@@ -482,16 +463,16 @@ import * as pathlib from "path";
       buildOutput(
         [
           'const os_1 = __importDefault(require("os"));',
-          "exports.os = os_1.default;",
-          "let info;",
-          "exports.info = info;",
+          'exports.os = os_1.default;',
+          'let info;',
+          'exports.info = info;',
           'const pathlib = __importStar(require("path"));',
-          "exports.pathlib = pathlib;",
+          'exports.pathlib = pathlib;',
         ],
         {
           importDefault: true,
           importStar: true,
-          exports: ["pathlib", "info", "os"],
+          exports: ['pathlib', 'info', 'os'],
         }
       )
     );
@@ -502,10 +483,10 @@ import * as pathlib from "path";
 `);
   });
 
-  it("indirect import", () => {
+  it('indirect import', () => {
     // UserInfo<string> is imported indirectly.
     const out = conv.convert(
-      "",
+      '',
       `
 import { userInfo } from "os";
 let info = userInfo();
@@ -520,9 +501,9 @@ declare let info: import(\"os\").UserInfo<string>;
     );
   });
 
-  it("dynamic import", async () => {
+  it('dynamic import', async () => {
     const out = conv.convert(
-      "",
+      '',
       `
 const {userInfo} = await import("os");
 let info = userInfo();
@@ -533,11 +514,11 @@ let info = userInfo();
       buildOutput(
         [
           'const { userInfo } = await Promise.resolve().then(() => __importStar(require("os")));',
-          "exports.userInfo = userInfo;",
-          "let info = userInfo();",
-          "exports.info = info;",
+          'exports.userInfo = userInfo;',
+          'let info = userInfo();',
+          'exports.info = info;',
         ],
-        { importStar: true, exports: ["info", "userInfo"] }
+        { importStar: true, exports: ['info', 'userInfo'] }
       )
     );
     expect(out.declOutput).toEqual(
@@ -548,10 +529,10 @@ declare let info: import(\"os\").UserInfo<string>;
     );
   });
 
-  it("interface merge", () => {
+  it('interface merge', () => {
     // Interfaces are not merged in declOutput.
     const out = conv.convert(
-      "",
+      '',
       `
       interface MyInterface {
         abc: number;
@@ -567,16 +548,7 @@ declare let info: import(\"os\").UserInfo<string>;
     );
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
-      buildOutput(
-        [
-          "let obj = {",
-          "    abc: 123,",
-          '    xyz: "hello"',
-          "};",
-          "exports.obj = obj;",
-        ],
-        { exports: ["obj"] }
-      )
+      buildOutput(['let obj = {', '    abc: 123,', '    xyz: "hello"', '};', 'exports.obj = obj;'], { exports: ['obj'] })
     );
     expect(out.declOutput).toEqual(`interface MyInterface {
     abc: number;
@@ -588,9 +560,9 @@ declare let obj: MyInterface;
 `);
   });
 
-  it("decorators", () => {
+  it('decorators', () => {
     const out = conv.convert(
-      "",
+      '',
       `
       function sealed(constructor: Function) {
         Object.seal(constructor);
@@ -602,13 +574,13 @@ declare let obj: MyInterface;
       `
     );
     expect(out.diagnostics).toEqual([]);
-    expect(out.output).toContain("Greeter = __decorate([");
+    expect(out.output).toContain('Greeter = __decorate([');
   });
 });
 
-describe("converter diagnostics", () => {
-  it("syntax error", () => {
-    const out = conv.convert("", `let x + 10;`);
+describe('converter diagnostics', () => {
+  it('syntax error', () => {
+    const out = conv.convert('', `let x + 10;`);
     expect(out.diagnostics).toEqual([
       {
         category: 1,
@@ -628,8 +600,8 @@ describe("converter diagnostics", () => {
     ]);
   });
 
-  it("type error", () => {
-    const out = conv.convert("", `let x: string = 10;`);
+  it('type error', () => {
+    const out = conv.convert('', `let x: string = 10;`);
     expect(out.diagnostics).toEqual([
       {
         category: 1,
@@ -649,9 +621,9 @@ describe("converter diagnostics", () => {
     ]);
   });
 
-  it("disallow browser api", () => {
+  it('disallow browser api', () => {
     // https://github.com/yunabe/tslab/issues/27
-    const out = conv.convert("", `let div = document.createElement('div');`);
+    const out = conv.convert('', `let div = document.createElement('div');`);
     expect(out.diagnostics).toEqual([
       {
         start: { offset: 10, line: 0, character: 10 },
@@ -664,8 +636,8 @@ describe("converter diagnostics", () => {
     ]);
   });
 
-  it("redeclare variable", () => {
-    const out = conv.convert("", `let x = 3; let x = 4;`);
+  it('redeclare variable', () => {
+    const out = conv.convert('', `let x = 3; let x = 4;`);
     expect(out.diagnostics).toEqual([
       {
         category: 1,
@@ -700,9 +672,9 @@ describe("converter diagnostics", () => {
     ]);
   });
 
-  it("wrong implementation", () => {
+  it('wrong implementation', () => {
     const out = conv.convert(
-      "",
+      '',
       `interface Shape {
   color: string;
 }
@@ -714,8 +686,7 @@ class ShapeImpl implements Shape {}
       {
         category: 1,
         code: 2420,
-        messageText:
-          "Class 'ShapeImpl' incorrectly implements interface 'Shape'.",
+        messageText: "Class 'ShapeImpl' incorrectly implements interface 'Shape'.",
         start: {
           character: 6,
           line: 4,
@@ -730,8 +701,7 @@ class ShapeImpl implements Shape {}
       {
         category: 1,
         code: 2741,
-        messageText:
-          "Property 'color' is missing in type 'ShapeImpl' but required in type 'Shape'.",
+        messageText: "Property 'color' is missing in type 'ShapeImpl' but required in type 'Shape'.",
         start: {
           character: 6,
           line: 4,
@@ -746,10 +716,10 @@ class ShapeImpl implements Shape {}
     ]);
   });
 
-  it("overwrite-implicit-types", () => {
+  it('overwrite-implicit-types', () => {
     // This is allowed from TypeScript 3.8 or 3.9.
     const out = conv.convert(
-      "",
+      '',
       `
       async function fn() {
         return 0;
@@ -758,33 +728,17 @@ class ShapeImpl implements Shape {}
       `
     );
     expect(out.diagnostics).toEqual([]);
-    expect(out.declOutput).toEqual(
-      [
-        "declare function fn(): globalThis.Promise<number>;",
-        "declare class Promise {",
-        "}",
-        "",
-      ].join("\n")
-    );
+    expect(out.declOutput).toEqual(['declare function fn(): globalThis.Promise<number>;', 'declare class Promise {', '}', ''].join('\n'));
     expect(out.output).toEqual(
-      buildOutput(
-        [
-          "async function fn() {",
-          "    return 0;",
-          "}",
-          "exports.fn = fn;",
-          "class Promise {",
-          "}",
-          "exports.Promise = Promise;",
-        ],
-        { exports: ["Promise", "fn"] }
-      )
+      buildOutput(['async function fn() {', '    return 0;', '}', 'exports.fn = fn;', 'class Promise {', '}', 'exports.Promise = Promise;'], {
+        exports: ['Promise', 'fn'],
+      })
     );
   });
 
-  it("top-level await", () => {
+  it('top-level await', () => {
     const out = conv.convert(
-      "",
+      '',
       `async function asyncHello() {
         return "Hello, World!";
       }
@@ -794,102 +748,90 @@ class ShapeImpl implements Shape {}
     expect(out.output).toEqual(
       buildOutput(
         [
-          "async function asyncHello() {",
+          'async function asyncHello() {',
           '    return "Hello, World!";',
-          "}",
-          "exports.asyncHello = asyncHello;",
-          "let msg = await asyncHello();",
-          "exports.msg = msg;",
+          '}',
+          'exports.asyncHello = asyncHello;',
+          'let msg = await asyncHello();',
+          'exports.msg = msg;',
         ],
-        { exports: ["msg", "asyncHello"] }
+        { exports: ['msg', 'asyncHello'] }
       )
     );
-    expect(out.declOutput).toEqual(
-      [
-        "declare function asyncHello(): Promise<string>;",
-        "declare let msg: string;",
-        "",
-      ].join("\n")
-    );
+    expect(out.declOutput).toEqual(['declare function asyncHello(): Promise<string>;', 'declare let msg: string;', ''].join('\n'));
     expect(out.hasToplevelAwait).toBe(true);
   });
 
-  it("require is reserved", () => {
+  it('require is reserved', () => {
     // TODO: Reenable checkCollisionWithRequireExportsInGeneratedCode.
-    const out = conv.convert("", "let require = 123;");
+    const out = conv.convert('', 'let require = 123;');
     expect(out.diagnostics).toEqual([]);
   });
 
-  it("lastExpressionVar", () => {
-    let out = conv.convert("", "let x = 3 + 4\n;x * x;");
+  it('lastExpressionVar', () => {
+    let out = conv.convert('', 'let x = 3 + 4\n;x * x;');
     expect(out.diagnostics).toEqual([]);
-    expect(out.lastExpressionVar).toBe("tsLastExpr");
+    expect(out.lastExpressionVar).toBe('tsLastExpr');
     expect(out.output).toEqual(
-      buildOutput(
-        ["let x = 3 + 4;", "exports.x = x;", "exports.tsLastExpr = x * x;"],
-        { exports: ["x", "tsLastExpr"] }
-      )
+      buildOutput(['let x = 3 + 4;', 'exports.x = x;', 'exports.tsLastExpr = x * x;'], { exports: ['x', 'tsLastExpr'] })
     );
 
-    out = conv.convert("", "let x = 3 + 4\n;let y = x * x;");
+    out = conv.convert('', 'let x = 3 + 4\n;let y = x * x;');
     expect(out.diagnostics).toEqual([]);
     expect(out.lastExpressionVar).toBeUndefined();
 
-    out = conv.convert("", "class C {}");
+    out = conv.convert('', 'class C {}');
     expect(out.diagnostics).toEqual([]);
     expect(out.lastExpressionVar).toBeUndefined();
 
-    out = conv.convert(
-      "",
-      "let tsLastExpr = 10; const tsLastExpr0 = 30; tsLastExpr + tsLastExpr0;"
-    );
+    out = conv.convert('', 'let tsLastExpr = 10; const tsLastExpr0 = 30; tsLastExpr + tsLastExpr0;');
     expect(out.diagnostics).toEqual([]);
-    expect(out.lastExpressionVar).toEqual("tsLastExpr1");
+    expect(out.lastExpressionVar).toEqual('tsLastExpr1');
     expect(out.output).toEqual(
       buildOutput(
         [
-          "let tsLastExpr = 10;",
-          "exports.tsLastExpr = tsLastExpr;",
-          "const tsLastExpr0 = 30;",
-          "exports.tsLastExpr0 = tsLastExpr0;",
-          "exports.tsLastExpr1 = tsLastExpr + tsLastExpr0;",
+          'let tsLastExpr = 10;',
+          'exports.tsLastExpr = tsLastExpr;',
+          'const tsLastExpr0 = 30;',
+          'exports.tsLastExpr0 = tsLastExpr0;',
+          'exports.tsLastExpr1 = tsLastExpr + tsLastExpr0;',
         ],
-        { exports: ["tsLastExpr0", "tsLastExpr", "tsLastExpr1"] }
+        { exports: ['tsLastExpr0', 'tsLastExpr', 'tsLastExpr1'] }
       )
     );
   });
 
-  describe("non-top-level await", () => {
+  describe('non-top-level await', () => {
     const tests = [
       {
-        name: "function expression",
-        src: "let f = function() { return await asyncHello(); }",
+        name: 'function expression',
+        src: 'let f = function() { return await asyncHello(); }',
       },
       {
-        name: "arrow function",
-        src: "let f = () => { return await asyncHello(); }",
+        name: 'arrow function',
+        src: 'let f = () => { return await asyncHello(); }',
       },
       {
-        name: "arrow function w/o block",
-        src: "let f = () => await asyncHello()",
+        name: 'arrow function w/o block',
+        src: 'let f = () => await asyncHello()',
       },
       {
-        name: "function declaration",
-        src: "function f() { return await asyncHello(); }",
+        name: 'function declaration',
+        src: 'function f() { return await asyncHello(); }',
       },
       {
-        name: "class declaration",
-        src: "class Cls { f() { return await asyncHello(); } }",
+        name: 'class declaration',
+        src: 'class Cls { f() { return await asyncHello(); } }',
       },
       {
-        name: "namespace",
-        src: "namespace ns { await asyncHello(); }",
+        name: 'namespace',
+        src: 'namespace ns { await asyncHello(); }',
       },
     ];
     for (const tt of tests) {
       it(tt.name, () => {
         const out = conv.convert(
-          "",
+          '',
           `async function asyncHello() {
           return 'Hello, async!';
         }
@@ -903,32 +845,30 @@ class ShapeImpl implements Shape {}
   });
 });
 
-describe("with prev", () => {
-  it("variables", () => {
-    const out0 = conv.convert("", "let x = 123;");
+describe('with prev', () => {
+  it('variables', () => {
+    const out0 = conv.convert('', 'let x = 123;');
     expect(out0.diagnostics).toEqual([]);
-    expect(out0.declOutput).toEqual("declare let x: number;\n");
-    const out1 = conv.convert(out0.declOutput, "let y = x * x;");
+    expect(out0.declOutput).toEqual('declare let x: number;\n');
+    const out1 = conv.convert(out0.declOutput, 'let y = x * x;');
     expect(out1.diagnostics).toEqual([]);
     expect(out1.output).toEqual(
-      buildOutput(["let y = exports.x * exports.x;", "exports.y = y;"], {
-        exports: ["y"],
+      buildOutput(['let y = exports.x * exports.x;', 'exports.y = y;'], {
+        exports: ['y'],
       })
     );
-    expect(out1.declOutput).toEqual(
-      "declare let y: number;\ndeclare let x: number;\n"
-    );
+    expect(out1.declOutput).toEqual('declare let y: number;\ndeclare let x: number;\n');
   });
 
-  it("non variables", () => {
+  it('non variables', () => {
     const out0 = conv.convert(
-      "",
+      '',
       [
         "import * as crypto from 'crypto';",
         "import {createHash} from 'crypto';",
-        "class Greeter { greeting: string; }",
-        "enum Color { Red, Green, Blue}",
-      ].join("\n")
+        'class Greeter { greeting: string; }',
+        'enum Color { Red, Green, Blue}',
+      ].join('\n')
     );
     expect(out0.diagnostics).toEqual([]);
     const out1 = conv.convert(
@@ -936,11 +876,11 @@ describe("with prev", () => {
       [
         'crypto.createHash("sha256").update("Hello TypeScript!");',
         'createHash("sha256");',
-        "let x = new Greeter();",
+        'let x = new Greeter();',
         'x = {greeting: "message"}',
-        "let y = x.greeting;",
-        "let z = Color.Red;",
-      ].join("\n")
+        'let y = x.greeting;',
+        'let z = Color.Red;',
+      ].join('\n')
     );
     expect(out1.diagnostics).toEqual([]);
     expect(out1.output).toEqual(
@@ -948,32 +888,32 @@ describe("with prev", () => {
         [
           'exports.crypto.createHash("sha256").update("Hello TypeScript!");',
           'exports.createHash("sha256");',
-          "let x = new exports.Greeter();",
-          "exports.x = x;",
+          'let x = new exports.Greeter();',
+          'exports.x = x;',
           'exports.x = x = { greeting: "message" };',
-          "let y = x.greeting;",
-          "exports.y = y;",
-          "let z = exports.Color.Red;",
-          "exports.z = z;",
+          'let y = x.greeting;',
+          'exports.y = y;',
+          'let z = exports.Color.Red;',
+          'exports.z = z;',
         ],
-        { exports: ["z", "y", "x"] }
+        { exports: ['z', 'y', 'x'] }
       )
     );
   });
 
-  it("assign to prev", () => {
-    const out = conv.convert("declare let x: number\n", "x = x * x;\n");
+  it('assign to prev', () => {
+    const out = conv.convert('declare let x: number\n', 'x = x * x;\n');
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
-      buildOutput(["exports.tsLastExpr = exports.x = exports.x * exports.x;"], {
-        exports: ["tsLastExpr"],
+      buildOutput(['exports.tsLastExpr = exports.x = exports.x * exports.x;'], {
+        exports: ['tsLastExpr'],
       })
     );
-    expect(out.declOutput).toEqual("declare let x: number;\n");
+    expect(out.declOutput).toEqual('declare let x: number;\n');
   });
 
-  it("assign to prev const", () => {
-    const out = conv.convert("declare const x: number\n", "x = x * x;\n");
+  it('assign to prev const', () => {
+    const out = conv.convert('declare const x: number\n', 'x = x * x;\n');
     expect(out.diagnostics).toEqual([
       {
         category: 1,
@@ -993,39 +933,24 @@ describe("with prev", () => {
     ]);
   });
 
-  it("overwrite-old-variable", () => {
+  it('overwrite-old-variable', () => {
     const out = conv.convert(
-      "declare let x: number, y: string;\ndeclare let z: boolean;\ndeclare const a: number\n",
+      'declare let x: number, y: string;\ndeclare let z: boolean;\ndeclare const a: number\n',
       "let x = true;\nlet z = 'z';"
     );
     expect(out.diagnostics).toEqual([]);
     expect(out.declOutput).toEqual(
-      [
-        "declare let x: boolean;",
-        "declare let z: string;",
-        "declare let y: string;",
-        "declare const a: number;",
-      ].join("\n") + "\n"
+      ['declare let x: boolean;', 'declare let z: string;', 'declare let y: string;', 'declare const a: number;'].join('\n') + '\n'
     );
   });
 
-  it("overwrite prev type alias", () => {
-    const out = conv.convert(
-      "interface itype {x: number;}\ntype atype = itype | number;",
-      "class itype { y: string; }\nlet atype = 123;"
-    );
+  it('overwrite prev type alias', () => {
+    const out = conv.convert('interface itype {x: number;}\ntype atype = itype | number;', 'class itype { y: string; }\nlet atype = 123;');
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
-      buildOutput(
-        [
-          "class itype {",
-          "}",
-          "exports.itype = itype;",
-          "let atype = 123;",
-          "exports.atype = atype;",
-        ],
-        { exports: ["atype", "itype"] }
-      )
+      buildOutput(['class itype {', '}', 'exports.itype = itype;', 'let atype = 123;', 'exports.atype = atype;'], {
+        exports: ['atype', 'itype'],
+      })
     );
     expect(out.declOutput).toEqual(`declare class itype {
     y: string;
@@ -1035,20 +960,15 @@ type atype = itype | number;
 `);
   });
 
-  it("overwrite prev class with value", () => {
-    const out = conv.convert("class A {}\nclass B {}\n", "let A = 10;");
+  it('overwrite prev class with value', () => {
+    const out = conv.convert('class A {}\nclass B {}\n', 'let A = 10;');
     expect(out.diagnostics).toEqual([]);
-    expect(out.output).toEqual(
-      buildOutput(["let A = 10;", "exports.A = A;"], { exports: ["A"] })
-    );
-    expect(out.declOutput).toEqual("declare let A: number;\nclass B {\n}\n");
+    expect(out.output).toEqual(buildOutput(['let A = 10;', 'exports.A = A;'], { exports: ['A'] }));
+    expect(out.declOutput).toEqual('declare let A: number;\nclass B {\n}\n');
   });
 
-  it("overwrite prev class with type", () => {
-    const out = conv.convert(
-      "class A {}\nclass B {}\n",
-      "interface A {x: number}"
-    );
+  it('overwrite prev class with type', () => {
+    const out = conv.convert('class A {}\nclass B {}\n', 'interface A {x: number}');
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(buildOutput([]));
     expect(out.declOutput).toEqual(`interface A {
@@ -1060,61 +980,23 @@ let A: any;
 `);
   });
 
-  it("overwrite prev enum with value", () => {
-    const out = conv.convert(
-      [
-        "declare enum A {",
-        "    K = 1",
-        "}",
-        "declare enum B {",
-        "    L = 2",
-        "}",
-      ].join("\n"),
-      "let A = 10;"
-    );
+  it('overwrite prev enum with value', () => {
+    const out = conv.convert(['declare enum A {', '    K = 1', '}', 'declare enum B {', '    L = 2', '}'].join('\n'), 'let A = 10;');
     expect(out.diagnostics).toEqual([]);
-    expect(out.output).toEqual(
-      buildOutput(["let A = 10;", "exports.A = A;"], { exports: ["A"] })
-    );
-    expect(out.declOutput).toEqual(
-      "declare let A: number;\ndeclare enum B {\n    L = 2\n}\n"
-    );
+    expect(out.output).toEqual(buildOutput(['let A = 10;', 'exports.A = A;'], { exports: ['A'] }));
+    expect(out.declOutput).toEqual('declare let A: number;\ndeclare enum B {\n    L = 2\n}\n');
   });
 
-  it("overwrite prev enum with type", () => {
+  it('overwrite prev enum with type', () => {
     // TODO: Fill this test.
-    const out = conv.convert(
-      [
-        "declare enum A {",
-        "    K = 1",
-        "}",
-        "declare enum B {",
-        "    L = 2",
-        "}",
-      ].join("\n"),
-      "interface A {x: number}"
-    );
+    const out = conv.convert(['declare enum A {', '    K = 1', '}', 'declare enum B {', '    L = 2', '}'].join('\n'), 'interface A {x: number}');
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(buildOutput([]));
-    expect(out.declOutput).toEqual(
-      [
-        "interface A {",
-        "    x: number;",
-        "}",
-        "declare enum B {",
-        "    L = 2",
-        "}",
-        "let A: any;",
-        "",
-      ].join("\n")
-    );
+    expect(out.declOutput).toEqual(['interface A {', '    x: number;', '}', 'declare enum B {', '    L = 2', '}', 'let A: any;', ''].join('\n'));
   });
 
-  it("overwrite imported type", () => {
-    const out = conv.convert(
-      'import { CpuInfo, UserInfo } from "os";',
-      "interface CpuInfo {x: number}"
-    );
+  it('overwrite imported type', () => {
+    const out = conv.convert('import { CpuInfo, UserInfo } from "os";', 'interface CpuInfo {x: number}');
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(buildOutput([]));
     expect(out.declOutput).toEqual(`interface CpuInfo {
@@ -1124,68 +1006,54 @@ import { UserInfo } from "os";
 `);
   });
 
-  it("merge imported type and new value", () => {
-    const out = conv.convert(
-      'import { CpuInfo } from "os";',
-      "let CpuInfo = 10;"
-    );
+  it('merge imported type and new value', () => {
+    const out = conv.convert('import { CpuInfo } from "os";', 'let CpuInfo = 10;');
     expect(out.diagnostics).toEqual([]);
     expect(out.declOutput).toEqual(`declare let CpuInfo: number;
 import { CpuInfo } from "os";
 `);
   });
 
-  it("overwrite imported value", () => {
-    const out = conv.convert('import { cpus } from "os";', "let cpus = 10");
+  it('overwrite imported value', () => {
+    const out = conv.convert('import { cpus } from "os";', 'let cpus = 10');
     expect(out.diagnostics).toEqual([]);
-    expect(out.declOutput).toEqual("declare let cpus: number;\n");
+    expect(out.declOutput).toEqual('declare let cpus: number;\n');
   });
 
-  it("merge imported value and new type", () => {
-    const out = conv.convert(
-      'import { cpus } from "os";',
-      "type cpus = number;"
-    );
+  it('merge imported value and new type', () => {
+    const out = conv.convert('import { cpus } from "os";', 'type cpus = number;');
     expect(out.diagnostics).toEqual([]);
-    expect(out.declOutput).toEqual(
-      'declare type cpus = number;\nimport { cpus } from "os";\n'
-    );
+    expect(out.declOutput).toEqual('declare type cpus = number;\nimport { cpus } from "os";\n');
   });
 
-  it("overwrite imported namespace with value", () => {
-    const out = conv.convert('import * as os from "os";', "let os = 10;");
+  it('overwrite imported namespace with value', () => {
+    const out = conv.convert('import * as os from "os";', 'let os = 10;');
     expect(out.diagnostics).toEqual([]);
-    expect(out.output).toEqual(
-      buildOutput(["let os = 10;", "exports.os = os;"], { exports: ["os"] })
-    );
-    expect(out.declOutput).toEqual("declare let os: number;\n");
+    expect(out.output).toEqual(buildOutput(['let os = 10;', 'exports.os = os;'], { exports: ['os'] }));
+    expect(out.declOutput).toEqual('declare let os: number;\n');
   });
 
-  it("merge imported namespace with new type", () => {
-    const out = conv.convert('import * as os from "os";', "type os = string;");
+  it('merge imported namespace with new type', () => {
+    const out = conv.convert('import * as os from "os";', 'type os = string;');
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(buildOutput([]));
-    expect(out.declOutput).toEqual(
-      'declare type os = string;\nimport * as os from "os";\n'
-    );
+    expect(out.declOutput).toEqual('declare type os = string;\nimport * as os from "os";\n');
   });
 
-  it("overwrite-global", () => {
-    let out = conv.convert("", "let x = process;");
+  it('overwrite-global', () => {
+    let out = conv.convert('', 'let x = process;');
     expect(out.diagnostics).toEqual([]);
     expect(out.declOutput).toEqual(`/// <reference types="node" />
 declare let x: NodeJS.Process;
 `);
-    out = conv.convert("declare let process: number", "let x = process;");
+    out = conv.convert('declare let process: number', 'let x = process;');
     expect(out.diagnostics).toEqual([]);
-    expect(out.declOutput).toEqual(
-      "declare let x: number;\ndeclare let process: number;\n"
-    );
+    expect(out.declOutput).toEqual('declare let x: number;\ndeclare let process: number;\n');
   });
 
-  it("overwrite-global-interface", () => {
+  it('overwrite-global-interface', () => {
     let out = conv.convert(
-      "",
+      '',
       `
 interface Map {
   mymethod(): number;
@@ -1205,23 +1073,23 @@ declare function createMap(): Map;
 declare let m: Map;
 `
     );
-    out = conv.convert(out.declOutput, "let n = createMap();");
+    out = conv.convert(out.declOutput, 'let n = createMap();');
     expect(out.diagnostics).toEqual([]);
     expect(out.declOutput).toEqual(
       [
-        "declare let n: Map;",
-        "interface Map {",
-        "    mymethod(): number;",
-        "}",
-        "declare function createMap(): Map;",
-        "declare let m: Map;",
-        "",
-      ].join("\n")
+        'declare let n: Map;',
+        'interface Map {',
+        '    mymethod(): number;',
+        '}',
+        'declare function createMap(): Map;',
+        'declare let m: Map;',
+        '',
+      ].join('\n')
     );
   });
 
-  it("fixed bug#1: call named imported functions", () => {
-    let out = conv.convert("", 'import {join} from "path";');
+  it('fixed bug#1: call named imported functions', () => {
+    let out = conv.convert('', 'import {join} from "path";');
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
       buildOutput(
@@ -1229,7 +1097,7 @@ declare let m: Map;
           'const path_1 = require("path");',
           'Object.defineProperty(exports, "join", { enumerable: true, get: function () { return path_1.join; } });',
         ],
-        { exports: ["join"] }
+        { exports: ['join'] }
       )
     );
     out = conv.convert(out.declOutput, 'join("a", "b");');
@@ -1237,86 +1105,59 @@ declare let m: Map;
     expect(out.declOutput).toEqual('import { join } from "path";\n');
     expect(out.output).toEqual(
       buildOutput(['exports.tsLastExpr = exports.join("a", "b");'], {
-        exports: ["tsLastExpr"],
+        exports: ['tsLastExpr'],
       })
     );
   });
 
-  it("reproduce bug#32", () => {
+  it('reproduce bug#32', () => {
     // https://github.com/yunabe/tslab/issues/32 is reproducible.
-    let out = conv.convert("", "let x = {}; let b = x.constructor === Object");
+    let out = conv.convert('', 'let x = {}; let b = x.constructor === Object');
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
-      buildOutput(
-        [
-          "let x = {};",
-          "exports.x = x;",
-          "let b = x.constructor === Object;",
-          "exports.b = b;",
-        ],
-        { exports: ["b", "x"] }
-      )
+      buildOutput(['let x = {};', 'exports.x = x;', 'let b = x.constructor === Object;', 'exports.b = b;'], { exports: ['b', 'x'] })
     );
   });
 
-  it("package tslab", () => {
-    const out = conv.convert(
-      "",
-      ['import * as tslab from "tslab";', "let d = tslab.newDisplay();"].join(
-        "\n"
-      )
-    );
+  it('package tslab', () => {
+    const out = conv.convert('', ['import * as tslab from "tslab";', 'let d = tslab.newDisplay();'].join('\n'));
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
-      buildOutput(
-        [
-          'const tslab = __importStar(require("tslab"));',
-          "exports.tslab = tslab;",
-          "let d = tslab.newDisplay();",
-          "exports.d = d;",
-        ],
-        { importStar: true, exports: ["d", "tslab"] }
-      )
+      buildOutput(['const tslab = __importStar(require("tslab"));', 'exports.tslab = tslab;', 'let d = tslab.newDisplay();', 'exports.d = d;'], {
+        importStar: true,
+        exports: ['d', 'tslab'],
+      })
     );
-    expect(out.declOutput).toEqual(
-      'import * as tslab from "tslab";\ndeclare let d: tslab.Display;\n'
-    );
+    expect(out.declOutput).toEqual('import * as tslab from "tslab";\ndeclare let d: tslab.Display;\n');
   });
 });
 
-describe("modules", () => {
-  it("updated", () => {
-    expect(conv.addModule("mylib", `export const abc = "ABC";`)).toEqual([]);
-    let out = conv.convert(
-      "",
-      'import {abc} from "./mylib";\nconst xyz = abc;'
-    );
+describe('modules', () => {
+  it('updated', () => {
+    expect(conv.addModule('mylib', `export const abc = "ABC";`)).toEqual([]);
+    let out = conv.convert('', 'import {abc} from "./mylib";\nconst xyz = abc;');
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(
       buildOutput(
         [
           'const mylib_1 = require("./mylib");',
           'Object.defineProperty(exports, "abc", { enumerable: true, get: function () { return mylib_1.abc; } });',
-          "const xyz = mylib_1.abc;",
-          "exports.xyz = xyz;",
+          'const xyz = mylib_1.abc;',
+          'exports.xyz = xyz;',
         ],
-        { exports: ["xyz", "abc"] }
+        { exports: ['xyz', 'abc'] }
       )
     );
-    expect(out.declOutput).toEqual(
-      'import { abc } from "./mylib";\ndeclare const xyz = "ABC";\n'
-    );
+    expect(out.declOutput).toEqual('import { abc } from "./mylib";\ndeclare const xyz = "ABC";\n');
 
     // update mylib.
-    expect(conv.addModule("mylib", `export const abc = 1234;`)).toEqual([]);
-    out = conv.convert("", 'import {abc} from "./mylib";\nconst xyz = abc;');
+    expect(conv.addModule('mylib', `export const abc = 1234;`)).toEqual([]);
+    out = conv.convert('', 'import {abc} from "./mylib";\nconst xyz = abc;');
     expect(out.diagnostics).toEqual([]);
-    expect(out.declOutput).toEqual(
-      'import { abc } from "./mylib";\ndeclare const xyz = 1234;\n'
-    );
+    expect(out.declOutput).toEqual('import { abc } from "./mylib";\ndeclare const xyz = 1234;\n');
   });
 
-  it("errors", () => {
+  it('errors', () => {
     const want = [
       {
         start: { offset: 13, line: 0, character: 13 },
@@ -1324,22 +1165,20 @@ describe("modules", () => {
         messageText: `Type 'string' is not assignable to type 'number'.`,
         category: 1,
         code: 2322,
-        fileName: "mylib.ts",
+        fileName: 'mylib.ts',
       },
     ];
-    expect(
-      conv.addModule("mylib", `export const abc: number = "ABC";`)
-    ).toEqual(want);
-    const out = conv.convert("", 'import * as mylib from "./mylib";');
+    expect(conv.addModule('mylib', `export const abc: number = "ABC";`)).toEqual(want);
+    const out = conv.convert('', 'import * as mylib from "./mylib";');
     expect(out.diagnostics).toEqual(want);
   });
 
-  it("notExternalModule", () => {
+  it('notExternalModule', () => {
     // Though the content of the module does not contain either `export` or `import`,
     // tslab handles it as a module. Thus, this does not define a global variable `abc`.
     // c.f. https://www.typescriptlang.org/docs/handbook/modules.html#introduction
-    expect(conv.addModule("mylib", `const abc = "ABC";`)).toEqual([]);
-    expect(conv.convert("", "const xyz = abc;").diagnostics).toEqual([
+    expect(conv.addModule('mylib', `const abc = "ABC";`)).toEqual([]);
+    expect(conv.convert('', 'const xyz = abc;').diagnostics).toEqual([
       {
         start: { offset: 12, line: 0, character: 12 },
         end: { offset: 15, line: 0, character: 15 },
@@ -1352,37 +1191,36 @@ describe("modules", () => {
   });
 });
 
-describe("repeated inputs", () => {
-  it("expressions", () => {
+describe('repeated inputs', () => {
+  it('expressions', () => {
     // builder.emit does not emit JS for duplicated inputs when they only include
     // expressions for some reason. This test checks convert does not handle such a case.
     const src = "'x'";
     const want = {
       output: buildOutput(["exports.tsLastExpr = 'x';"], {
-        exports: ["tsLastExpr"],
+        exports: ['tsLastExpr'],
       }),
-      declOutput: "",
+      declOutput: '',
       diagnostics: [],
       hasToplevelAwait: false,
-      lastExpressionVar: "tsLastExpr",
+      lastExpressionVar: 'tsLastExpr',
     };
-    let out = conv.convert("", src);
+    let out = conv.convert('', src);
     expect(out).toEqual(want);
-    out = conv.convert("", src);
+    out = conv.convert('', src);
     expect(out).toEqual(want);
   });
 
-  it("invalid", () => {
+  it('invalid', () => {
     // Check the error from src is generated even when the valid src gets invalid
     // due to the change of prevDecl.
-    const src = "x++";
-    expect(conv.convert("declare let x: number;", src).diagnostics).toEqual([]);
-    expect(conv.convert("declare let x: string;", src).diagnostics).toEqual([
+    const src = 'x++';
+    expect(conv.convert('declare let x: number;', src).diagnostics).toEqual([]);
+    expect(conv.convert('declare let x: string;', src).diagnostics).toEqual([
       {
         start: { offset: 0, line: 0, character: 0 },
         end: { offset: 1, line: 0, character: 1 },
-        messageText:
-          "An arithmetic operand must be of type 'any', 'number', 'bigint' or an enum type.",
+        messageText: "An arithmetic operand must be of type 'any', 'number', 'bigint' or an enum type.",
         category: 1,
         code: 2356,
       },
@@ -1390,69 +1228,48 @@ describe("repeated inputs", () => {
   });
 });
 
-describe("externalFiles", () => {
-  it("sideOutputs", () => {
-    runInTmp("pkg", (dir) => {
-      fs.writeFileSync(
-        pathlib.join(dir, "hello.ts"),
-        'export const message: string = "Hello tslab in hello.ts!";'
-      );
-      const output = conv.convert(
-        "",
-        `import {message} from "./${dir}/hello";`
-      );
+describe('externalFiles', () => {
+  it('sideOutputs', () => {
+    runInTmp('pkg', (dir) => {
+      fs.writeFileSync(pathlib.join(dir, 'hello.ts'), 'export const message: string = "Hello tslab in hello.ts!";');
+      const output = conv.convert('', `import {message} from "./${dir}/hello";`);
       expect(output.diagnostics).toEqual([]);
       expect(output.sideOutputs).toEqual([
         {
           path: normalizeJoin(process.cwd(), `${dir}/hello.js`),
           data: buildOutput(['exports.message = "Hello tslab in hello.ts!";'], {
-            exports: ["message"],
+            exports: ['message'],
           }),
         },
       ]);
     });
   });
 
-  it("dependencies", () => {
-    runInTmp("pkg", (dir) => {
+  it('dependencies', () => {
+    runInTmp('pkg', (dir) => {
       // Confirm b.js is output to sideOutputs though c.js is not.
-      fs.writeFileSync(
-        pathlib.join(dir, "a.ts"),
-        'export const aVal: string = "AAA";'
-      );
-      fs.writeFileSync(
-        pathlib.join(dir, "b.ts"),
-        'export const bVal: string = "BBB";'
-      );
-      fs.writeFileSync(
-        pathlib.join(dir, "c.ts"),
-        'import {aVal} from "./a";\nexport const cVal = aVal + "CCC";'
-      );
-      const output = conv.convert("", `import {cVal} from "./${dir}/c";`);
+      fs.writeFileSync(pathlib.join(dir, 'a.ts'), 'export const aVal: string = "AAA";');
+      fs.writeFileSync(pathlib.join(dir, 'b.ts'), 'export const bVal: string = "BBB";');
+      fs.writeFileSync(pathlib.join(dir, 'c.ts'), 'import {aVal} from "./a";\nexport const cVal = aVal + "CCC";');
+      const output = conv.convert('', `import {cVal} from "./${dir}/c";`);
       expect(output.diagnostics).toEqual([]);
       expect(output.sideOutputs).toEqual([
         {
           path: normalizeJoin(process.cwd(), `${dir}/a.js`),
-          data: buildOutput(['exports.aVal = "AAA";'], { exports: ["aVal"] }),
+          data: buildOutput(['exports.aVal = "AAA";'], { exports: ['aVal'] }),
         },
         {
           path: normalizeJoin(process.cwd(), `${dir}/c.js`),
-          data: buildOutput(
-            ['const a_1 = require("./a");', 'exports.cVal = a_1.aVal + "CCC";'],
-            { exports: ["cVal"] }
-          ),
+          data: buildOutput(['const a_1 = require("./a");', 'exports.cVal = a_1.aVal + "CCC";'], { exports: ['cVal'] }),
         },
       ]);
     });
   });
 
-  it("errors", () => {
-    runInTmp("pkg", (dir) => {
-      fs.writeFileSync(
-        pathlib.join(dir, "a.ts"),
-        'export const aVal: number = "AAA";'
-      );
-      const output = conv.convert("", `import {aVal} from "./${dir}/a";`);
+  it('errors', () => {
+    runInTmp('pkg', (dir) => {
+      fs.writeFileSync(pathlib.join(dir, 'a.ts'), 'export const aVal: number = "AAA";');
+      const output = conv.convert('', `import {aVal} from "./${dir}/a";`);
       expect(output.diagnostics).toEqual([
         {
           start: { offset: 13, line: 0, character: 13 },
@@ -1466,17 +1283,17 @@ describe("externalFiles", () => {
     });
   });
 
-  it("changed", async () => {
-    await runInTmpAsync("pkg", async (dir) => {
+  it('changed', async () => {
+    await runInTmpAsync('pkg', async (dir) => {
       // const srcPath = pathlib.resolve(pathlib.join(dir, "a.ts"));
-      const srcPath = normalizeJoin(process.cwd(), dir, "a.ts");
+      const srcPath = normalizeJoin(process.cwd(), dir, 'a.ts');
       fs.writeFileSync(srcPath, 'export const aVal: string = "ABC";');
-      let output = conv.convert("", `import {aVal} from "./${dir}/a";`);
+      let output = conv.convert('', `import {aVal} from "./${dir}/a";`);
       expect(output.diagnostics).toEqual([]);
       expect(output.sideOutputs).toEqual([
         {
           path: normalizeJoin(process.cwd(), `${dir}/a.js`),
-          data: buildOutput(['exports.aVal = "ABC";'], { exports: ["aVal"] }),
+          data: buildOutput(['exports.aVal = "ABC";'], { exports: ['aVal'] }),
         },
       ]);
 
@@ -1484,276 +1301,218 @@ describe("externalFiles", () => {
       await waitFileEvent(srcPath, ts.FileWatcherEventKind.Changed);
       // yield to TyeScript compiler just for safety.
       await sleep(0);
-      output = conv.convert("", `import {aVal} from "./${dir}/a";`);
+      output = conv.convert('', `import {aVal} from "./${dir}/a";`);
       expect(output.diagnostics).toEqual([]);
       expect(output.sideOutputs).toEqual([
         {
           path: normalizeJoin(process.cwd(), `${dir}/a.js`),
-          data: buildOutput(['exports.aVal = "XYZ";'], { exports: ["aVal"] }),
+          data: buildOutput(['exports.aVal = "XYZ";'], { exports: ['aVal'] }),
         },
       ]);
     });
   });
 });
 
-describe("isCompleteCode", () => {
-  it("force complete", () => {
-    expect(converter.isCompleteCode("function f() {")).toEqual({
+describe('isCompleteCode', () => {
+  it('force complete', () => {
+    expect(converter.isCompleteCode('function f() {')).toEqual({
       completed: false,
-      indent: "  ",
+      indent: '  ',
     });
-    expect(converter.isCompleteCode("function f() {\n")).toEqual({
+    expect(converter.isCompleteCode('function f() {\n')).toEqual({
       completed: false,
-      indent: "",
+      indent: '',
     });
-    expect(converter.isCompleteCode("function f() {\n\n")).toEqual({
+    expect(converter.isCompleteCode('function f() {\n\n')).toEqual({
       completed: true,
     });
-    expect(converter.isCompleteCode("function f() {\n  \n\t")).toEqual({
+    expect(converter.isCompleteCode('function f() {\n  \n\t')).toEqual({
       completed: true,
     });
-    expect(converter.isCompleteCode("function f() {\r\n  \r\n\t")).toEqual({
+    expect(converter.isCompleteCode('function f() {\r\n  \r\n\t')).toEqual({
       completed: true,
     });
-    expect(converter.isCompleteCode("  \n  ")).toEqual({
+    expect(converter.isCompleteCode('  \n  ')).toEqual({
       completed: true,
     });
   });
 
-  it("completed", () => {
-    expect(converter.isCompleteCode("let x = 10")).toEqual({ completed: true });
-    expect(converter.isCompleteCode("function f() {\n}")).toEqual({
+  it('completed', () => {
+    expect(converter.isCompleteCode('let x = 10')).toEqual({ completed: true });
+    expect(converter.isCompleteCode('function f() {\n}')).toEqual({
       completed: true,
     });
-    expect(converter.isCompleteCode("class C {\n}")).toEqual({
+    expect(converter.isCompleteCode('class C {\n}')).toEqual({
       completed: true,
     });
-    expect(converter.isCompleteCode("let x-+10")).toEqual({
+    expect(converter.isCompleteCode('let x-+10')).toEqual({
       completed: true,
     });
-    expect(converter.isCompleteCode("<div></div>")).toEqual({
+    expect(converter.isCompleteCode('<div></div>')).toEqual({
       completed: true,
     });
   });
 
-  it("incompleted", () => {
-    expect(converter.isCompleteCode("function f() {\n  f()")).toEqual({
+  it('incompleted', () => {
+    expect(converter.isCompleteCode('function f() {\n  f()')).toEqual({
       completed: false,
-      indent: "  ",
+      indent: '  ',
     });
-    expect(converter.isCompleteCode("while (true) {\n\tlet x = 10;")).toEqual({
+    expect(converter.isCompleteCode('while (true) {\n\tlet x = 10;')).toEqual({
       completed: false,
-      indent: "\t",
+      indent: '\t',
     });
-    expect(converter.isCompleteCode("fn(x,\n   y")).toEqual({
+    expect(converter.isCompleteCode('fn(x,\n   y')).toEqual({
       completed: false,
-      indent: "   ",
+      indent: '   ',
     });
-    expect(converter.isCompleteCode("let x = y +")).toEqual({
+    expect(converter.isCompleteCode('let x = y +')).toEqual({
       completed: false,
-      indent: "",
+      indent: '',
     });
 
     // increase indnet
-    expect(converter.isCompleteCode("  function f() {")).toEqual({
+    expect(converter.isCompleteCode('  function f() {')).toEqual({
       completed: false,
-      indent: "    ",
+      indent: '    ',
     });
     // decrease indent
-    expect(
-      converter.isCompleteCode("function f() {\n  if (x) {\n    }")
-    ).toEqual({
+    expect(converter.isCompleteCode('function f() {\n  if (x) {\n    }')).toEqual({
       completed: false,
-      indent: "  ",
+      indent: '  ',
     });
     // JSX/TSX
-    expect(converter.isCompleteCode("<div>")).toEqual({
+    expect(converter.isCompleteCode('<div>')).toEqual({
       completed: false,
       // TODO: Autoindent JSX.
-      indent: "",
+      indent: '',
     });
   });
 });
 
-describe("keepNamesInImport", () => {
-  it("keep named import", () => {
-    const src = ts.createSourceFile(
-      "src.ts",
-      'import mydefault, {foo, bar as baz} from "mylib";',
-      ts.ScriptTarget.ES2019
-    );
+describe('keepNamesInImport', () => {
+  it('keep named import', () => {
+    const src = ts.createSourceFile('src.ts', 'import mydefault, {foo, bar as baz} from "mylib";', ts.ScriptTarget.ES2019);
     const stmt = src.statements[0];
     if (!ts.isImportDeclaration(stmt)) {
-      fail("stmt is not isImportDeclaration");
+      fail('stmt is not isImportDeclaration');
       return;
     }
-    const names = new Set(["foo"]);
+    const names = new Set(['foo']);
     converter.keepNamesInImport(stmt, names as Set<ts.__String>);
     let printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
     expect(printer.printFile(src)).toEqual('import { foo } from "mylib";\n');
   });
 
-  it("keep renamed import", () => {
-    const src = ts.createSourceFile(
-      "src.ts",
-      'import mydefault, {foo, bar as baz} from "mylib";',
-      ts.ScriptTarget.ES2019
-    );
+  it('keep renamed import', () => {
+    const src = ts.createSourceFile('src.ts', 'import mydefault, {foo, bar as baz} from "mylib";', ts.ScriptTarget.ES2019);
     const stmt = src.statements[0];
     if (!ts.isImportDeclaration(stmt)) {
-      fail("stmt is not isImportDeclaration");
+      fail('stmt is not isImportDeclaration');
       return;
     }
-    const names = new Set(["baz"]);
+    const names = new Set(['baz']);
     converter.keepNamesInImport(stmt, names as Set<ts.__String>);
     let printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
-    expect(printer.printFile(src)).toEqual(
-      'import { bar as baz } from "mylib";\n'
-    );
+    expect(printer.printFile(src)).toEqual('import { bar as baz } from "mylib";\n');
   });
 
-  it("keep default import", () => {
-    const src = ts.createSourceFile(
-      "src.ts",
-      'import mydefault, {foo, bar as baz} from "mylib";',
-      ts.ScriptTarget.ES2019
-    );
+  it('keep default import', () => {
+    const src = ts.createSourceFile('src.ts', 'import mydefault, {foo, bar as baz} from "mylib";', ts.ScriptTarget.ES2019);
     const stmt = src.statements[0];
     if (!ts.isImportDeclaration(stmt)) {
-      fail("stmt is not isImportDeclaration");
+      fail('stmt is not isImportDeclaration');
       return;
     }
-    const names = new Set(["mydefault"]);
+    const names = new Set(['mydefault']);
     converter.keepNamesInImport(stmt, names as Set<ts.__String>);
     let printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
     expect(printer.printFile(src)).toEqual('import mydefault from "mylib";\n');
   });
 
-  it("keep default and named import", () => {
-    const src = ts.createSourceFile(
-      "src.ts",
-      'import mydefault, {foo, bar as baz} from "mylib";',
-      ts.ScriptTarget.ES2019
-    );
+  it('keep default and named import', () => {
+    const src = ts.createSourceFile('src.ts', 'import mydefault, {foo, bar as baz} from "mylib";', ts.ScriptTarget.ES2019);
     const stmt = src.statements[0];
     if (!ts.isImportDeclaration(stmt)) {
-      fail("stmt is not isImportDeclaration");
+      fail('stmt is not isImportDeclaration');
       return;
     }
-    const names = new Set(["mydefault", "baz"]);
+    const names = new Set(['mydefault', 'baz']);
     converter.keepNamesInImport(stmt, names as Set<ts.__String>);
     let printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
-    expect(printer.printFile(src)).toEqual(
-      'import mydefault, { bar as baz } from "mylib";\n'
-    );
+    expect(printer.printFile(src)).toEqual('import mydefault, { bar as baz } from "mylib";\n');
   });
 
-  it("keep namespace", () => {
-    const src = ts.createSourceFile(
-      "src.ts",
-      'import mydefault, * as ns from "mylib";',
-      ts.ScriptTarget.ES2019
-    );
+  it('keep namespace', () => {
+    const src = ts.createSourceFile('src.ts', 'import mydefault, * as ns from "mylib";', ts.ScriptTarget.ES2019);
     const stmt = src.statements[0];
     if (!ts.isImportDeclaration(stmt)) {
-      fail("stmt is not isImportDeclaration");
+      fail('stmt is not isImportDeclaration');
       return;
     }
-    const names = new Set(["ns"]);
+    const names = new Set(['ns']);
     converter.keepNamesInImport(stmt, names as Set<ts.__String>);
     let printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
     expect(printer.printFile(src)).toEqual('import * as ns from "mylib";\n');
   });
 
-  it("keep default remove namespace", () => {
-    const src = ts.createSourceFile(
-      "src.ts",
-      'import mydefault, * as ns from "mylib";',
-      ts.ScriptTarget.ES2019
-    );
+  it('keep default remove namespace', () => {
+    const src = ts.createSourceFile('src.ts', 'import mydefault, * as ns from "mylib";', ts.ScriptTarget.ES2019);
     const stmt = src.statements[0];
     if (!ts.isImportDeclaration(stmt)) {
-      fail("stmt is not isImportDeclaration");
+      fail('stmt is not isImportDeclaration');
       return;
     }
-    const names = new Set(["mydefault"]);
+    const names = new Set(['mydefault']);
     converter.keepNamesInImport(stmt, names as Set<ts.__String>);
     let printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
     expect(printer.printFile(src)).toEqual('import mydefault from "mylib";\n');
   });
 
-  it("wrong names", () => {
-    const src = ts.createSourceFile(
-      "src.ts",
-      'import mydefault, * as ns from "mylib";',
-      ts.ScriptTarget.ES2019
-    );
+  it('wrong names', () => {
+    const src = ts.createSourceFile('src.ts', 'import mydefault, * as ns from "mylib";', ts.ScriptTarget.ES2019);
     const stmt = src.statements[0];
     if (!ts.isImportDeclaration(stmt)) {
-      fail("stmt is not isImportDeclaration");
+      fail('stmt is not isImportDeclaration');
       return;
     }
-    const names = new Set(["wrong"]);
+    const names = new Set(['wrong']);
     try {
       converter.keepNamesInImport(stmt, names as Set<ts.__String>);
-      fail("keepNamesInImport must fail.");
+      fail('keepNamesInImport must fail.');
     } catch (e) {
-      expect(String(e)).toEqual("Error: no symbol is included in names");
+      expect(String(e)).toEqual('Error: no symbol is included in names');
     }
   });
 });
 
-describe("esModuleToCommonJSModule", () => {
-  it("empty", () => {
-    expect(
-      converter.esModuleToCommonJSModule("", ts.ScriptTarget.ES2019)
-    ).toEqual("");
+describe('esModuleToCommonJSModule', () => {
+  it('empty', () => {
+    expect(converter.esModuleToCommonJSModule('', ts.ScriptTarget.ES2019)).toEqual('');
   });
 
-  it("variables", () => {
-    const src = [
-      "let x = 10;",
-      "const y = 20;",
-      "var z = x + y;",
-      "export {x, y, z}",
-    ].join("\n");
-    const want = buildOutput(
-      [
-        "let x = 10;",
-        "exports.x = x;",
-        "const y = 20;",
-        "exports.y = y;",
-        "var z = x + y;",
-        "exports.z = z;",
-      ],
-      { exports: ["z", "y", "x"] }
-    );
-    expect(
-      converter.esModuleToCommonJSModule(src, ts.ScriptTarget.ES2019)
-    ).toEqual(want);
+  it('variables', () => {
+    const src = ['let x = 10;', 'const y = 20;', 'var z = x + y;', 'export {x, y, z}'].join('\n');
+    const want = buildOutput(['let x = 10;', 'exports.x = x;', 'const y = 20;', 'exports.y = y;', 'var z = x + y;', 'exports.z = z;'], {
+      exports: ['z', 'y', 'x'],
+    });
+    expect(converter.esModuleToCommonJSModule(src, ts.ScriptTarget.ES2019)).toEqual(want);
   });
 
-  it("import", () => {
-    const src = [
-      'import * as os from "os";',
-      'import {a, b} from "vm";',
-      "let c = a() + b;",
-      "export {os, a, b, c}",
-    ].join("\n");
-    expect(
-      converter.esModuleToCommonJSModule(src, ts.ScriptTarget.ES2019)
-    ).toEqual(
+  it('import', () => {
+    const src = ['import * as os from "os";', 'import {a, b} from "vm";', 'let c = a() + b;', 'export {os, a, b, c}'].join('\n');
+    expect(converter.esModuleToCommonJSModule(src, ts.ScriptTarget.ES2019)).toEqual(
       buildOutput(
         [
           'const os = __importStar(require("os"));',
-          "exports.os = os;",
+          'exports.os = os;',
           'const vm_1 = require("vm");',
           'Object.defineProperty(exports, "a", { enumerable: true, get: function () { return vm_1.a; } });',
           'Object.defineProperty(exports, "b", { enumerable: true, get: function () { return vm_1.b; } });',
-          "let c = vm_1.a() + vm_1.b;",
-          "exports.c = c;",
+          'let c = vm_1.a() + vm_1.b;',
+          'exports.c = c;',
         ],
-        { importStar: true, exports: ["c", "b", "a", "os"] }
+        { importStar: true, exports: ['c', 'b', 'a', 'os'] }
       )
     );
   });

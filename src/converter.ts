@@ -1,9 +1,9 @@
-import pathlib from "path";
-import semver from "semver";
-import * as ts from "@tslab/typescript-for-tslab";
-import { isValidModuleName } from "./util";
-import { CodeMetadata } from "./metadata";
-import { normalizeJoin } from "./tspath";
+import pathlib from 'path';
+import semver from 'semver';
+import * as ts from '@tslab/typescript-for-tslab';
+import { isValidModuleName } from './util';
+import { CodeMetadata } from './metadata';
+import { normalizeJoin } from './tspath';
 
 // TODO: Disallow accessing "module" of Node.js.
 
@@ -107,45 +107,38 @@ const cancellationToken: ts.CancellationToken = {
 
 export function createConverter(options?: ConverterOptions): Converter {
   const cwd = ts.sys.getCurrentDirectory();
-  const srcFilename = normalizeJoin(
-    cwd,
-    options?.isJS ? "__tslab__.js" : "__tslab__.ts"
-  );
-  const declFilename = normalizeJoin(cwd, "__prev__.d.ts");
+  const srcFilename = normalizeJoin(cwd, options?.isJS ? '__tslab__.js' : '__tslab__.ts');
+  const declFilename = normalizeJoin(cwd, '__prev__.d.ts');
   const rootFiles = new Set<string>([declFilename, srcFilename]);
-  const outDir = "outDir";
-  const dstFilename = normalizeJoin(outDir, "__tslab__.js");
-  const dstDeclFilename = normalizeJoin(outDir, "__tslab__.d.ts");
+  const outDir = 'outDir';
+  const dstFilename = normalizeJoin(outDir, '__tslab__.js');
+  const dstDeclFilename = normalizeJoin(outDir, '__tslab__.d.ts');
 
   // c.f.
   // https://github.com/microsoft/TypeScript/wiki/Node-Target-Mapping
   // https://github.com/microsoft/TypeScript/issues/22306#issuecomment-412266626
-  const transpileTarget =
-    semver.major(process.version) >= 12
-      ? ts.ScriptTarget.ES2019
-      : ts.ScriptTarget.ES2018;
+  const transpileTarget = semver.major(process.version) >= 12 ? ts.ScriptTarget.ES2019 : ts.ScriptTarget.ES2018;
   // References:
   // https://github.com/microsoft/TypeScript/blob/master/src/lib/es2019.full.d.ts
-  const transpileLib =
-    transpileTarget === ts.ScriptTarget.ES2019 ? ["es2019"] : ["es2018"];
+  const transpileLib = transpileTarget === ts.ScriptTarget.ES2019 ? ['es2019'] : ['es2018'];
   if (options?.isBrowser) {
-    transpileLib.push("dom");
-    transpileLib.push("dom.iterable");
+    transpileLib.push('dom');
+    transpileLib.push('dom.iterable');
   }
   /**
    * A prefix to sources to handle sources as external modules
    * > any file containing a top-level import or export is considered a module.
    * > https://www.typescriptlang.org/docs/handbook/modules.html#introduction
    */
-  const srcPrefix = "export {};" + ts.sys.newLine;
+  const srcPrefix = 'export {};' + ts.sys.newLine;
   /** Used in adjustSrcFileOffset */
   const srcPrefixOffsets = {
     offset: srcPrefix.length,
     line: (srcPrefix.match(/\n/g) || []).length,
-    char: srcPrefix.length - (srcPrefix.lastIndexOf("\n") + 1),
+    char: srcPrefix.length - (srcPrefix.lastIndexOf('\n') + 1),
   };
-  let srcContent: string = "";
-  let declContent: string = "";
+  let srcContent: string = '';
+  let declContent: string = '';
   /** Check if external .ts files are converted. */
   const sideInputsConverted = new Set<string>();
   let builder: ts.BuilderProgram = null;
@@ -157,7 +150,7 @@ export function createConverter(options?: ConverterOptions): Converter {
   };
   sys.setTimeout = (callback: (...args: any[]) => void): any => {
     if (rebuildTimer) {
-      throw new Error("Unexpected pending rebuildTimer");
+      throw new Error('Unexpected pending rebuildTimer');
     }
     rebuildTimer = { callback };
     return rebuildTimer;
@@ -167,7 +160,7 @@ export function createConverter(options?: ConverterOptions): Converter {
       rebuildTimer = null;
       return;
     }
-    throw new Error("clearing unexpected tiemr");
+    throw new Error('clearing unexpected tiemr');
   };
   sys.readFile = function (path, encoding) {
     if (path === srcFilename) {
@@ -189,7 +182,7 @@ export function createConverter(options?: ConverterOptions): Converter {
     // to import `tslab` when `node_modules` does not exist in `cwd`.
     // See forwardTslabPath for details.
     // TODO: Test this behavior.
-    return normalizeJoin(cwd, "node_modules") === path;
+    return normalizeJoin(cwd, 'node_modules') === path;
   };
   sys.fileExists = function (path: string): boolean {
     if (ts.sys.fileExists(forwardTslabPath(cwd, path))) {
@@ -204,16 +197,10 @@ export function createConverter(options?: ConverterOptions): Converter {
     include?: readonly string[],
     depth?: number
   ): string[] {
-    return ts.sys.readDirectory(
-      forwardTslabPath(cwd, path),
-      extensions,
-      exclude,
-      include,
-      depth
-    );
+    return ts.sys.readDirectory(forwardTslabPath(cwd, path), extensions, exclude, include, depth);
   };
   sys.writeFile = function (path, data) {
-    throw new Error("writeFile must not be called");
+    throw new Error('writeFile must not be called');
   };
   let notifyUpdateSrc: ts.FileWatcherCallback = null;
   let notifyUpdateDecls: ts.FileWatcherCallback = null;
@@ -298,7 +285,7 @@ export function createConverter(options?: ConverterOptions): Converter {
   };
   const watch = ts.createWatchProgram(host);
   if (!builder) {
-    throw new Error("builder is not created");
+    throw new Error('builder is not created');
   }
   return {
     close,
@@ -327,15 +314,13 @@ export function createConverter(options?: ConverterOptions): Converter {
     if (keys.size > 0) {
       // Export all local variables.
       // TODO: Disallow "export" in the input.
-      const suffix = "\nexport {" + Array.from(keys).join(", ") + "}";
+      const suffix = '\nexport {' + Array.from(keys).join(', ') + '}';
       updateContent(prevDecl, src + suffix);
       declsFile = builder.getSourceFile(declFilename);
       srcFile = builder.getSourceFile(srcFilename);
     }
     asMutable(srcFile).parent = declsFile;
-    const diag = convertDiagnostics(
-      getPreEmitDiagnosticsWithDependencies(builder, srcFile)
-    );
+    const diag = convertDiagnostics(getPreEmitDiagnosticsWithDependencies(builder, srcFile));
     if (diag.diagnostics.length > 0) {
       return {
         diagnostics: diag.diagnostics,
@@ -364,12 +349,12 @@ export function createConverter(options?: ConverterOptions): Converter {
             declOutput = data;
             return;
           }
-          if (!fileName.endsWith(".js")) {
+          if (!fileName.endsWith('.js')) {
             return;
           }
           const rel = pathlib.relative(outDir, fileName);
-          if (rel.startsWith("..")) {
-            throw new Error("unexpected emit path: " + fileName);
+          if (rel.startsWith('..')) {
+            throw new Error('unexpected emit path: ' + fileName);
           }
           if (!sideOutputs) {
             sideOutputs = [];
@@ -381,24 +366,15 @@ export function createConverter(options?: ConverterOptions): Converter {
         },
         undefined,
         undefined,
-        getCustomTransformers(
-          builder.getProgram().getTypeChecker(),
-          declsFile,
-          keys,
-          (name: string) => {
-            lastExpressionVar = name;
-          }
-        )
+        getCustomTransformers(builder.getProgram().getTypeChecker(), declsFile, keys, (name: string) => {
+          lastExpressionVar = name;
+        })
       );
     }
     if (sideOutputs) {
       sideOutputs.sort((a, b) => a.path.localeCompare(b.path));
     }
-    declOutput += remainingDecls(
-      builder.getProgram().getTypeChecker(),
-      srcFile,
-      declsFile
-    );
+    declOutput += remainingDecls(builder.getProgram().getTypeChecker(), srcFile, declsFile);
     return {
       output: esModuleToCommonJSModule(output, transpileTarget),
       declOutput,
@@ -418,42 +394,29 @@ export function createConverter(options?: ConverterOptions): Converter {
         directoryExists: sys.directoryExists,
       }) || [];
     for (const root of typeRoots) {
-      if (ts.sys.fileExists(normalizeJoin(root, "node", "package.json"))) {
+      if (ts.sys.fileExists(normalizeJoin(root, 'node', 'package.json'))) {
         return typeRoots;
       }
     }
-    typeRoots.push(normalizeJoin(__dirname, "..", "node_modules", "@types"));
+    typeRoots.push(normalizeJoin(__dirname, '..', 'node_modules', '@types'));
     return typeRoots;
   }
 
-  function inspect(
-    prevDecl: string,
-    src: string,
-    position: number
-  ): ts.QuickInfo | undefined {
+  function inspect(prevDecl: string, src: string, position: number): ts.QuickInfo | undefined {
     // c.f.
     // https://github.com/microsoft/vscode/blob/master/extensions/typescript-language-features/src/features/hover.ts
     updateContent(prevDecl, src);
     let declsFile = builder.getSourceFile(declFilename);
     let srcFile = builder.getSourceFile(srcFilename);
     asMutable(srcFile).parent = declsFile;
-    const info = ts.getQuickInfoAtPosition(
-      srcFile,
-      builder.getProgram().getTypeChecker(),
-      cancellationToken,
-      position + srcPrefix.length
-    );
+    const info = ts.getQuickInfoAtPosition(srcFile, builder.getProgram().getTypeChecker(), cancellationToken, position + srcPrefix.length);
     if (info && info.textSpan) {
       info.textSpan.start -= srcPrefix.length;
     }
     return info;
   }
 
-  function complete(
-    prevDecl: string,
-    src: string,
-    position: number
-  ): CompletionInfo {
+  function complete(prevDecl: string, src: string, position: number): CompletionInfo {
     updateContent(prevDecl, src);
     let declsFile = builder.getSourceFile(declFilename);
     let srcFile = builder.getSourceFile(srcFilename);
@@ -483,15 +446,8 @@ export function createConverter(options?: ConverterOptions): Converter {
     if (prev && ts.isIdentifier(prev) && prev.end >= pos) {
       return completionWithId(info, prev, srcFile);
     }
-    const next: ts.Node = prev
-      ? ts.tslab.findNextToken(prev, srcFile, srcFile)
-      : null;
-    if (
-      next &&
-      ts.isIdentifier(next) &&
-      next.getStart(srcFile) <= pos &&
-      pos <= next.end
-    ) {
+    const next: ts.Node = prev ? ts.tslab.findNextToken(prev, srcFile, srcFile) : null;
+    if (next && ts.isIdentifier(next) && next.getStart(srcFile) <= pos && pos <= next.end) {
       return completionWithId(info, next, srcFile);
     }
     let entries = info && info.entries ? info.entries.slice() : [];
@@ -509,11 +465,7 @@ export function createConverter(options?: ConverterOptions): Converter {
   }
 
   // TODO(yunabe): Probably, replace this with optionalReplacementSpan.
-  function completionWithId(
-    info: ts.CompletionInfo | undefined,
-    id: ts.Identifier,
-    srcFile: ts.SourceFile
-  ): CompletionInfo {
+  function completionWithId(info: ts.CompletionInfo | undefined, id: ts.Identifier, srcFile: ts.SourceFile): CompletionInfo {
     let name = id.escapedText.toString();
     let lower = name.toLowerCase();
     let entries = info ? info.entries : [];
@@ -521,18 +473,18 @@ export function createConverter(options?: ConverterOptions): Converter {
       .map((e, index) => {
         const key = (() => {
           if (e.name.startsWith(name)) {
-            return "0";
+            return '0';
           }
           const lname = e.name.toLowerCase();
           if (lname.toLowerCase().startsWith(lower)) {
-            return "1";
+            return '1';
           }
           if (lname.indexOf(lower) >= 0) {
-            return "2";
+            return '2';
           }
-          return "";
+          return '';
         })();
-        if (key === "") {
+        if (key === '') {
           return null;
         }
         return {
@@ -555,11 +507,7 @@ export function createConverter(options?: ConverterOptions): Converter {
     };
   }
 
-  function remainingDecls(
-    checker: ts.TypeChecker,
-    srcSF: ts.SourceFile,
-    declsSF: ts.SourceFile
-  ): string {
+  function remainingDecls(checker: ts.TypeChecker, srcSF: ts.SourceFile, declsSF: ts.SourceFile): string {
     const declLocals = declsSF.locals as ts.SymbolTable;
     const locals = srcSF.locals as ts.SymbolTable;
     let keepMap = new Map<ts.Node, Set<ts.__String>>();
@@ -633,10 +581,7 @@ export function createConverter(options?: ConverterOptions): Converter {
           // Here, keep.value == true and keep.type == false.
           if (aliased.flags & ts.SymbolFlags.Type) {
             // Overwritten with a new type.
-            if (
-              aliased.flags & ts.SymbolFlags.Value &&
-              !valueNames.has(aliased.escapedName)
-            ) {
+            if (aliased.flags & ts.SymbolFlags.Value && !valueNames.has(aliased.escapedName)) {
               anyVars.add(aliased.escapedName);
             }
             return;
@@ -682,9 +627,7 @@ export function createConverter(options?: ConverterOptions): Converter {
           decls.push(decl);
         });
         //TODO(yunabe): Stop using ts.createNodeArray, which is deprecated in TypeScript 4.
-        asMutable(stmt.declarationList).declarations = ts.createNodeArray(
-          decls
-        );
+        asMutable(stmt.declarationList).declarations = ts.createNodeArray(decls);
       }
       if (ts.isImportDeclaration(stmt)) {
         keepNamesInImport(stmt, names);
@@ -701,13 +644,10 @@ export function createConverter(options?: ConverterOptions): Converter {
     anyVars.forEach((name) => {
       anyVarsDecls.push(`let ${name}: any;\n`);
     });
-    return printer.printFile(declsSF) + anyVarsDecls.join("");
+    return printer.printFile(declsSF) + anyVarsDecls.join('');
   }
 
-  function checkKeepDeclType(
-    checker: ts.TypeChecker,
-    symb: ts.Symbol
-  ): { value: boolean; type: boolean } {
+  function checkKeepDeclType(checker: ts.TypeChecker, symb: ts.Symbol): { value: boolean; type: boolean } {
     const ret = { value: true, type: true };
     if (!symb) {
       return ret;
@@ -733,12 +673,12 @@ export function createConverter(options?: ConverterOptions): Converter {
     notifyUpdateSrc(srcFilename, ts.FileWatcherEventKind.Changed);
     notifyUpdateDecls(declFilename, ts.FileWatcherEventKind.Changed);
     if (!rebuildTimer) {
-      throw new Error("rebuildTimer is not set properly");
+      throw new Error('rebuildTimer is not set properly');
     }
     rebuildTimer.callback();
     rebuildTimer = null;
     if (!builder) {
-      throw new Error("builder is not recreated");
+      throw new Error('builder is not recreated');
     }
   }
 
@@ -746,18 +686,12 @@ export function createConverter(options?: ConverterOptions): Converter {
    * Check if `d` is a diagnostic from a top-level await.
    * This is used to allow top-level awaits (#16).
    */
-  function isTopLevelAwaitDiagnostic(
-    srcFile: ts.SourceFile,
-    d: ts.Diagnostic
-  ): boolean {
+  function isTopLevelAwaitDiagnostic(srcFile: ts.SourceFile, d: ts.Diagnostic): boolean {
     if (d.code !== 1308 || srcFile == null) {
       // https://github.com/microsoft/TypeScript/search?q=await_expression_is_only_allowed_within_an_async_function_1308
       return false;
     }
-    const await: ts.Node = ts.tslab.findPrecedingToken(
-      d.start + d.length,
-      srcFile
-    );
+    const await: ts.Node = ts.tslab.findPrecedingToken(d.start + d.length, srcFile);
     if (await.kind !== ts.SyntaxKind.AwaitKeyword) {
       // This must not happen, though.
       return false;
@@ -779,14 +713,8 @@ export function createConverter(options?: ConverterOptions): Converter {
     return true;
   }
 
-  function adjustSrcFileOffset(
-    fileName: string,
-    offset: number
-  ): DiagnosticPos {
-    const lineChar = ts.getLineAndCharacterOfPosition(
-      builder.getSourceFile(fileName),
-      offset
-    );
+  function adjustSrcFileOffset(fileName: string, offset: number): DiagnosticPos {
+    const lineChar = ts.getLineAndCharacterOfPosition(builder.getSourceFile(fileName), offset);
     const pos = {
       offset: offset,
       line: lineChar.line,
@@ -800,9 +728,7 @@ export function createConverter(options?: ConverterOptions): Converter {
     return pos;
   }
 
-  function convertDiagnostics(
-    input: readonly ts.Diagnostic[]
-  ): {
+  function convertDiagnostics(input: readonly ts.Diagnostic[]): {
     diagnostics: Diagnostic[];
     hasToplevelAwait: boolean;
   } {
@@ -813,24 +739,21 @@ export function createConverter(options?: ConverterOptions): Converter {
       if (!d.file) {
         continue;
       }
-      if (
-        d.file.fileName === srcFilename &&
-        isTopLevelAwaitDiagnostic(srcFile, d)
-      ) {
+      if (d.file.fileName === srcFilename && isTopLevelAwaitDiagnostic(srcFile, d)) {
         hasToplevelAwait = true;
         continue;
       }
       let fileName: string;
       if (d.file.fileName !== srcFilename) {
         const rel = pathlib.relative(cwd, d.file.fileName);
-        if (rel.startsWith("..")) {
+        if (rel.startsWith('..')) {
           continue;
         }
         fileName = rel;
       }
       const start = adjustSrcFileOffset(d.file.fileName, d.start);
       const end = adjustSrcFileOffset(d.file.fileName, d.start + d.length);
-      if (typeof d.messageText === "string") {
+      if (typeof d.messageText === 'string') {
         diagnostics.push({
           start,
           end,
@@ -841,13 +764,7 @@ export function createConverter(options?: ConverterOptions): Converter {
         });
         continue;
       }
-      traverseDiagnosticMessageChain(
-        start,
-        end,
-        d.messageText,
-        diagnostics,
-        fileName
-      );
+      traverseDiagnosticMessageChain(start, end, d.messageText, diagnostics, fileName);
     }
     return { diagnostics, hasToplevelAwait };
   }
@@ -890,7 +807,7 @@ export function createConverter(options?: ConverterOptions): Converter {
       afterDeclarations: [afterDeclarations],
     };
     function createLastExprVar() {
-      const prefix = "tsLastExpr";
+      const prefix = 'tsLastExpr';
       if (!locals.has(prefix)) {
         return prefix;
       }
@@ -906,22 +823,13 @@ export function createConverter(options?: ConverterOptions): Converter {
     // Wrap identifiers to previous variables with exports.
     function wrapPrevIdentifier(node: ts.Node) {
       if (!ts.isIdentifier(node)) {
-        return ts.visitEachChild(
-          node,
-          wrapPrevIdentifier,
-          nullTransformationContext
-        );
+        return ts.visitEachChild(node, wrapPrevIdentifier, nullTransformationContext);
       }
-      if (
-        node.parent &&
-        ts.isPropertyAccessExpression(node.parent) &&
-        node.parent.name === node
-      ) {
+      if (node.parent && ts.isPropertyAccessExpression(node.parent) && node.parent.name === node) {
         return node;
       }
       let prev = false;
-      for (const decl of checker.getSymbolAtLocation(node)?.declarations ??
-        []) {
+      for (const decl of checker.getSymbolAtLocation(node)?.declarations ?? []) {
         if (decl.getSourceFile() === declsFile) {
           prev = true;
           break;
@@ -930,16 +838,12 @@ export function createConverter(options?: ConverterOptions): Converter {
       if (!prev) {
         return node;
       }
-      return ts.createPropertyAccess(ts.createIdentifier("exports"), node);
+      return ts.createPropertyAccess(ts.createIdentifier('exports'), node);
     }
     function after(): (node: ts.SourceFile) => ts.SourceFile {
       // Rewrite the output to store the last expression to a variable.
       return (node: ts.SourceFile) => {
-        node = ts.visitEachChild(
-          node,
-          wrapPrevIdentifier,
-          nullTransformationContext
-        );
+        node = ts.visitEachChild(node, wrapPrevIdentifier, nullTransformationContext);
         for (let i = node.statements.length - 1; i >= 0; i--) {
           const stmt = node.statements[i];
           if (ts.isExportDeclaration(stmt)) {
@@ -953,16 +857,7 @@ export function createConverter(options?: ConverterOptions): Converter {
           statements.push(
             ts.createVariableStatement(
               [ts.createModifier(ts.SyntaxKind.ExportKeyword)],
-              ts.createVariableDeclarationList(
-                [
-                  ts.createVariableDeclaration(
-                    lastName,
-                    undefined,
-                    stmt.expression
-                  ),
-                ],
-                ts.NodeFlags.Const
-              )
+              ts.createVariableDeclarationList([ts.createVariableDeclaration(lastName, undefined, stmt.expression)], ts.NodeFlags.Const)
             )
           );
           setLastExprName(lastName);
@@ -991,20 +886,16 @@ export function createConverter(options?: ConverterOptions): Converter {
 
   function getModuleFilePath(name: string, meta?: CodeMetadata): string {
     if (!isValidModuleName(name)) {
-      throw new Error("invalid module name: " + JSON.stringify(name));
+      throw new Error('invalid module name: ' + JSON.stringify(name));
     }
-    let ext = options?.isJS ? ".js" : ".ts";
+    let ext = options?.isJS ? '.js' : '.ts';
     if (meta?.jsx) {
-      ext += "x";
+      ext += 'x';
     }
     return normalizeJoin(cwd, name + ext);
   }
 
-  function addModule(
-    name: string,
-    content: string,
-    meta?: CodeMetadata
-  ): Diagnostic[] {
+  function addModule(name: string, content: string, meta?: CodeMetadata): Diagnostic[] {
     return addModuleWithPath(getModuleFilePath(name, meta), content);
   }
 
@@ -1018,7 +909,7 @@ export function createConverter(options?: ConverterOptions): Converter {
     rootFiles.add(path);
     watch.updateRootFileNames(Array.from(rootFiles));
     if (!rebuildTimer) {
-      throw new Error("rebuildTimer is not set properly");
+      throw new Error('rebuildTimer is not set properly');
     }
     rebuildTimer.callback();
     rebuildTimer = null;
@@ -1034,13 +925,7 @@ export function isCompleteCode(content: string): IsCompleteResult {
     // Force to process src if it ends with two white-space lines.
     return { completed: true };
   }
-  const src = ts.createSourceFile(
-    "tmp.ts",
-    content,
-    ts.ScriptTarget.Latest,
-    undefined,
-    ts.ScriptKind.TSX
-  );
+  const src = ts.createSourceFile('tmp.ts', content, ts.ScriptTarget.Latest, undefined, ts.ScriptKind.TSX);
   const diags: ts.DiagnosticWithLocation[] = (src as any).parseDiagnostics;
   if (!diags) {
     return { completed: true };
@@ -1050,10 +935,10 @@ export function isCompleteCode(content: string): IsCompleteResult {
     if (diag.start !== end || diag.length !== 0) {
       continue;
     }
-    if (typeof diag.messageText !== "string") {
+    if (typeof diag.messageText !== 'string') {
       continue;
     }
-    if (diag.messageText.endsWith(" expected.")) {
+    if (diag.messageText.endsWith(' expected.')) {
       const indent = indentOnEnter(content);
       return { completed: false, indent };
     }
@@ -1070,28 +955,25 @@ function indentOnEnter(src: string): string {
   if (/^((?!.*?\/\*).*\*\/)?\s*[\}\]].*$/.test(line)) {
     // decrease indent
     // TODO: Look into the indent of the previous line.
-    if (current.endsWith("  ")) {
+    if (current.endsWith('  ')) {
       return current.substring(0, current.length - 2);
     }
-    if (current.endsWith("\t") || current.endsWith(" ")) {
+    if (current.endsWith('\t') || current.endsWith(' ')) {
       return current.substring(0, current.length - 1);
     }
     return current;
   }
   if (/^((?!\/\/).)*(\{[^}"'`]*|\([^)"'`]*|\[[^\]"'`]*)$/.test(line)) {
     // increase indent
-    return current + "  ";
+    return current + '  ';
   }
   return current;
 }
 
 /*@internal*/
-export function esModuleToCommonJSModule(
-  js: string,
-  target: ts.ScriptTarget
-): string {
+export function esModuleToCommonJSModule(js: string, target: ts.ScriptTarget): string {
   let out = ts.transpileModule(js, {
-    fileName: "custom.js",
+    fileName: 'custom.js',
     compilerOptions: {
       module: ts.ModuleKind.CommonJS,
       esModuleInterop: true,
@@ -1105,12 +987,9 @@ export function esModuleToCommonJSModule(
 }
 
 /*@internal*/
-export function keepNamesInImport(
-  im: ts.ImportDeclaration,
-  names: Set<ts.__String>
-) {
+export function keepNamesInImport(im: ts.ImportDeclaration, names: Set<ts.__String>) {
   if (!names || !names.size) {
-    throw new Error("names is empty of null");
+    throw new Error('names is empty of null');
   }
   let imc = im.importClause;
   if (imc.name && !names.has(imc.name.escapedText)) {
@@ -1136,7 +1015,7 @@ export function keepNamesInImport(
     }
   }
   if (!imc.name && !imc.namedBindings) {
-    throw new Error("no symbol is included in names");
+    throw new Error('no symbol is included in names');
   }
 }
 
@@ -1149,32 +1028,18 @@ function getCompletionsAtPosition(
   triggerCharacter?: ts.CompletionsTriggerCharacter
 ): ts.CompletionInfo {
   const host: ts.LanguageServiceHost = {} as any;
-  return ts.tslab.getCompletionsAtPosition(
-    host,
-    program,
-    log,
-    sourceFile,
-    position,
-    preferences,
-    triggerCharacter
-  );
+  return ts.tslab.getCompletionsAtPosition(host, program, log, sourceFile, position, preferences, triggerCharacter);
 }
 
 function forwardTslabPath(cwd: string, path: string): string {
-  const rel = pathlib.relative(
-    normalizeJoin(cwd, "node_modules", "tslab"),
-    path
-  );
-  if (rel.startsWith("..")) {
+  const rel = pathlib.relative(normalizeJoin(cwd, 'node_modules', 'tslab'), path);
+  if (rel.startsWith('..')) {
     return path;
   }
   return normalizeJoin(pathlib.dirname(__dirname), rel);
 }
 
-function getPreEmitDiagnosticsWithDependencies(
-  builder: ts.BuilderProgram,
-  sourceFile: ts.SourceFile
-): readonly ts.Diagnostic[] {
+function getPreEmitDiagnosticsWithDependencies(builder: ts.BuilderProgram, sourceFile: ts.SourceFile): readonly ts.Diagnostic[] {
   const files = [sourceFile];
   for (const dep of getAllSrcDependencies(builder, sourceFile)) {
     if (dep !== sourceFile.fileName) {
@@ -1187,14 +1052,6 @@ function getPreEmitDiagnosticsWithDependencies(
 /**
  * Get a list of all .ts and .js file dependencies (including `sourceFile`) of `sourceFile`.
  */
-function getAllSrcDependencies(
-  builder: ts.BuilderProgram,
-  sourceFile: ts.SourceFile
-): string[] {
-  return builder
-    .getAllDependencies(sourceFile)
-    .filter(
-      (dep) =>
-        dep.endsWith(".js") || (dep.endsWith(".ts") && !dep.endsWith(".d.ts"))
-    );
+function getAllSrcDependencies(builder: ts.BuilderProgram, sourceFile: ts.SourceFile): string[] {
+  return builder.getAllDependencies(sourceFile).filter((dep) => dep.endsWith('.js') || (dep.endsWith('.ts') && !dep.endsWith('.d.ts')));
 }

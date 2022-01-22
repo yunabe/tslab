@@ -1,28 +1,28 @@
-import resolve from "@rollup/plugin-node-resolve";
-import commonjs from "@rollup/plugin-commonjs";
-import replace from "@rollup/plugin-replace";
-import * as path from "path";
-import * as rollup from "rollup";
+import resolve from '@rollup/plugin-node-resolve';
+import commonjs from '@rollup/plugin-commonjs';
+import replace from '@rollup/plugin-replace';
+import * as path from 'path';
+import * as rollup from 'rollup';
 
 function createPlugin(files: Map<string, string>): rollup.Plugin {
   function getFile(path: string): string {
     if (files.has(path)) {
       return path;
     }
-    path += ".js";
+    path += '.js';
     if (files.has(path)) {
       return path;
     }
     return null;
   }
   return {
-    name: "tslab-virtual",
+    name: 'tslab-virtual',
     resolveId(source: string, importer: string): string | undefined {
-      if (source.startsWith("\0")) {
+      if (source.startsWith('\0')) {
         // Skip this because source is a fake module by other modules.
         return null;
       }
-      if (!source.startsWith("./") && !source.startsWith("../")) {
+      if (!source.startsWith('./') && !source.startsWith('../')) {
         return getFile(source);
       }
       if (!importer) {
@@ -41,10 +41,7 @@ function createPlugin(files: Map<string, string>): rollup.Plugin {
 // References:
 // https://github.com/rollup/plugins/tree/master/packages/commonjs
 // https://rollupjs.org/guide/en/
-export async function bundle(
-  entry: string,
-  files: Map<string, string>
-): Promise<string> {
+export async function bundle(entry: string, files: Map<string, string>): Promise<string> {
   const bundle = await rollup.rollup({
     input: entry,
     plugins: [
@@ -53,12 +50,12 @@ export async function bundle(
       commonjs(),
       // c.f. https://github.com/webpack/webpack/issues/1720
       replace({
-        "process.env.NODE_ENV": JSON.stringify("production"),
+        'process.env.NODE_ENV': JSON.stringify('production'),
       }),
     ],
   });
   const { output } = await bundle.generate({
-    format: "esm",
+    format: 'esm',
   });
   return output[0].code;
 }

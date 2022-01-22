@@ -3,12 +3,12 @@
  * tslab needs to apply the same normalization to support Windows.
  */
 
-import { join as nativeJoin } from "path";
+import { join as nativeJoin } from 'path';
 
 const backslashRegExp = /\\/g;
 
 export function normalizeSlashes(path: string): string {
-  return path.replace(backslashRegExp, "/");
+  return path.replace(backslashRegExp, '/');
 }
 
 export function normalizeJoin(...paths: string[]): string {

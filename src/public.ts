@@ -1,7 +1,7 @@
-import { randomBytes } from "crypto";
-import * as jupyter from "./jupyter";
-import { getVersion } from "./util";
-import * as ts from "@tslab/typescript-for-tslab";
+import { randomBytes } from 'crypto';
+import * as jupyter from './jupyter';
+import { getVersion } from './util';
+import * as ts from '@tslab/typescript-for-tslab';
 
 /** This is defined to make the docstring of `versions` shorter */
 interface Versions {
@@ -39,7 +39,7 @@ export function newDisplay(): Display {
 }
 
 function newDisplayId(): string {
-  return randomBytes(8).toString("hex");
+  return randomBytes(8).toString('hex');
 }
 
 class DisplayImpl {
@@ -56,38 +56,38 @@ class DisplayImpl {
     this.id = id;
   }
   javascript(s: string): void {
-    this.raw("text/javascript", s);
+    this.raw('text/javascript', s);
   }
   html(s: string): void {
-    this.raw("text/html", s);
+    this.raw('text/html', s);
   }
   markdown(s: string): void {
-    this.raw("text/markdown", s);
+    this.raw('text/markdown', s);
   }
   latex(s: string): void {
-    this.raw("text/latex", s);
+    this.raw('text/latex', s);
   }
   svg(s: string): void {
-    this.raw("image/svg+xml", s);
+    this.raw('image/svg+xml', s);
   }
   png(b: Uint8Array): void {
-    this.raw("image/png", b);
+    this.raw('image/png', b);
   }
   jpeg(b: Uint8Array): void {
-    this.raw("image/jpeg", b);
+    this.raw('image/jpeg', b);
   }
   gif(b: Uint8Array): void {
-    this.raw("image/gif", b);
+    this.raw('image/gif', b);
   }
   pdf(b: Uint8Array): void {
-    this.raw("application/pdf", b);
+    this.raw('application/pdf', b);
   }
   text(s: string): void {
-    this.raw("text/plain", s);
+    this.raw('text/plain', s);
   }
   raw(contentType: string, b: string | Uint8Array): void {
     if (jupyter.lastWriteDisplayData == null) {
-      throw Error("Not ready");
+      throw Error('Not ready');
     }
     // TODO: Add a reference of this spec.
     // TODO: Test this.
@@ -95,7 +95,7 @@ class DisplayImpl {
       if (!(b instanceof Buffer)) {
         b = Buffer.from(b);
       }
-      b = (b as Buffer).toString("base64");
+      b = (b as Buffer).toString('base64');
     }
     const update = this.update;
     if (this.id) {

@@ -11,7 +11,7 @@ let versionCache: string = null;
  */
 export function getVersion(): string {
   if (versionCache == null) {
-    versionCache = require("../package.json").version;
+    versionCache = require('../package.json').version;
   }
   return versionCache;
 }
@@ -68,7 +68,7 @@ export class TaskCanceledError extends Error {
 
   constructor(reason: any) {
     super(reason);
-    this.name = "TaskCanceledError";
+    this.name = 'TaskCanceledError';
     this.reason = reason;
   }
 }
@@ -82,16 +82,16 @@ export function escapeHTML(s: string): string {
   */
   return s.replace(/[&'<>"]/g, (m) => {
     switch (m) {
-      case "&":
-        return "&amp;";
+      case '&':
+        return '&amp;';
       case "'":
-        return "&#39;";
-      case "<":
-        return "&lt;";
-      case ">":
-        return "&gt;";
+        return '&#39;';
+      case '<':
+        return '&lt;';
+      case '>':
+        return '&gt;';
       case '"':
-        return "&#34;";
+        return '&#34;';
     }
     // must not happen
     return m;

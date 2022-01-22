@@ -1,10 +1,10 @@
-import * as ts from "@tslab/typescript-for-tslab";
-import { JupyterHandlerImpl, ExecuteReply } from "./jupyter";
-import { Executor } from "./executor";
-import { TaskCanceledError } from "./util";
-import { sleep } from "./testutil";
+import * as ts from '@tslab/typescript-for-tslab';
+import { JupyterHandlerImpl, ExecuteReply } from './jupyter';
+import { Executor } from './executor';
+import { TaskCanceledError } from './util';
+import { sleep } from './testutil';
 
-describe("JupyterHandlerImpl", () => {
+describe('JupyterHandlerImpl', () => {
   let handler: JupyterHandlerImpl;
   let executor: Executor;
 
@@ -28,73 +28,73 @@ describe("JupyterHandlerImpl", () => {
   });
 
   function writeStream(name: string, text: string): void {
-    if (name === "stderr") {
+    if (name === 'stderr') {
       stderrLog.push(text);
     } else {
       stdoutLog.push(text);
     }
   }
 
-  it("handleKernel", () => {
+  it('handleKernel', () => {
     expect(handler.handleKernel()).toEqual({
-      protocol_version: "5.3",
-      implementation: "tslab",
-      implementation_version: "1.0.0",
+      protocol_version: '5.3',
+      implementation: 'tslab',
+      implementation_version: '1.0.0',
       language_info: {
-        name: "typescript",
-        version: "3.7.2",
-        mimetype: "text/typescript",
-        file_extension: ".ts",
+        name: 'typescript',
+        version: '3.7.2',
+        mimetype: 'text/typescript',
+        file_extension: '.ts',
         codemirror_mode: {
-          mode: "typescript",
-          name: "javascript",
+          mode: 'typescript',
+          name: 'javascript',
           typescript: true,
         },
       },
-      banner: "TypeScript",
+      banner: 'TypeScript',
     });
   });
 
-  it("handleJsKernel", () => {
+  it('handleJsKernel', () => {
     handler = new JupyterHandlerImpl(executor, true);
     expect(handler.handleKernel()).toEqual({
-      protocol_version: "5.3",
-      implementation: "jslab",
-      implementation_version: "1.0.0",
+      protocol_version: '5.3',
+      implementation: 'jslab',
+      implementation_version: '1.0.0',
       language_info: {
-        name: "javascript",
-        version: "",
-        mimetype: "text/javascript",
-        file_extension: ".js",
+        name: 'javascript',
+        version: '',
+        mimetype: 'text/javascript',
+        file_extension: '.js',
       },
-      banner: "JavaScript",
+      banner: 'JavaScript',
     });
   });
 
-  it("handleInspect", () => {
+  it('handleInspect', () => {
     const want: ts.QuickInfo = {
       displayParts: [
         {
-          kind: "keyword",
-          text: "let",
+          kind: 'keyword',
+          text: 'let',
         },
         {
-          kind: "space",
-          text: " ",
+          kind: 'space',
+          text: ' ',
         },
         {
-          kind: "localName",
-          text: "xyz",
+          kind: 'localName',
+          text: 'xyz',
         },
       ],
       documentation: [
         {
-          kind: "text",
-          text: "xys is a great variable",
+          kind: 'text',
+          text: 'xys is a great variable',
         },
       ],
       kind: ts.ScriptElementKind.letElement,
-      kindModifiers: "",
+      kindModifiers: '',
       tags: undefined,
       textSpan: {
         length: 3,
@@ -104,35 +104,35 @@ describe("JupyterHandlerImpl", () => {
     };
     executor.inspect = () => want;
     const reply = handler.handleInspect({
-      code: "",
+      code: '',
       cursor_pos: 0,
       detail_level: 0,
     });
     expect(reply).toEqual({
-      status: "ok",
+      status: 'ok',
       found: true,
-      data: { "text/plain": "let xyz\n\nxys is a great variable" },
+      data: { 'text/plain': 'let xyz\n\nxys is a great variable' },
       metadata: {},
     });
   });
 
-  it("handleExecute", async () => {
+  it('handleExecute', async () => {
     executor.execute = async (src: string) => {
-      if (src === "0") {
+      if (src === '0') {
         return true;
       }
-      if (src === "1") {
+      if (src === '1') {
         return false;
       }
-      if (src === "2") {
+      if (src === '2') {
         throw new TaskCanceledError(null);
       }
-      throw new Error("unexpected src: " + src);
+      throw new Error('unexpected src: ' + src);
     };
     let reply: ExecuteReply;
     reply = await handler.handleExecute(
       {
-        code: "0",
+        code: '0',
         silent: false,
         store_history: false,
         user_expressions: {},
@@ -142,7 +142,7 @@ describe("JupyterHandlerImpl", () => {
     );
     reply = await handler.handleExecute(
       {
-        code: "1",
+        code: '1',
         silent: false,
         store_history: false,
         user_expressions: {},
@@ -150,10 +150,10 @@ describe("JupyterHandlerImpl", () => {
       writeStream,
       null
     );
-    expect(reply).toEqual({ execution_count: 2, status: "error" });
+    expect(reply).toEqual({ execution_count: 2, status: 'error' });
     reply = await handler.handleExecute(
       {
-        code: "2",
+        code: '2',
         silent: false,
         store_history: false,
         user_expressions: {},
@@ -161,13 +161,13 @@ describe("JupyterHandlerImpl", () => {
       writeStream,
       null
     );
-    expect(reply).toEqual({ execution_count: undefined, status: "abort" });
+    expect(reply).toEqual({ execution_count: undefined, status: 'abort' });
     let abortCount = 0;
     while (true) {
       await sleep(10);
       reply = await handler.handleExecute(
         {
-          code: "0",
+          code: '0',
           silent: false,
           store_history: false,
           user_expressions: {},
@@ -175,18 +175,18 @@ describe("JupyterHandlerImpl", () => {
         writeStream,
         null
       );
-      if (reply.status === "abort") {
+      if (reply.status === 'abort') {
         abortCount++;
         continue;
       }
-      expect(reply).toEqual({ execution_count: 3, status: "ok" });
+      expect(reply).toEqual({ execution_count: 3, status: 'ok' });
       break;
     }
     expect(abortCount).toBeGreaterThan(0);
 
     reply = await handler.handleExecute(
       {
-        code: "unknown",
+        code: 'unknown',
         silent: false,
         store_history: false,
         user_expressions: {},
@@ -194,11 +194,9 @@ describe("JupyterHandlerImpl", () => {
       writeStream,
       null
     );
-    expect(reply).toEqual({ execution_count: undefined, status: "error" });
+    expect(reply).toEqual({ execution_count: undefined, status: 'error' });
     // TODO: Figure out why this message is recorded to stdout.
-    expect(stdoutLog.join("")).toContain(
-      "unexpected error: Error: unexpected src: unknown"
-    );
+    expect(stdoutLog.join('')).toContain('unexpected error: Error: unexpected src: unknown');
     expect(stderrLog).toEqual([]);
   });
 });

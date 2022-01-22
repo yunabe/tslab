@@ -3,30 +3,28 @@
  * @file
  */
 
-import vm from "vm";
+import vm from 'vm';
 
-describe("property", () => {
-  it("get-writable", () => {
+describe('property', () => {
+  it('get-writable', () => {
     // Can not set both writable and get.
     let obj: any = {};
     try {
-      Object.defineProperty(obj, "prop", {
+      Object.defineProperty(obj, 'prop', {
         get: () => {
           return 123;
         },
         writable: true,
       });
-      fail("must fail");
+      fail('must fail');
     } catch (e) {
-      expect((e as Error).message).toContain(
-        "Cannot both specify accessors and a value or writable attribute"
-      );
+      expect((e as Error).message).toContain('Cannot both specify accessors and a value or writable attribute');
     }
   });
 });
 
-describe("vm", () => {
-  it("basics", () => {
+describe('vm', () => {
+  it('basics', () => {
     const sandbox = {};
     vm.createContext(sandbox);
     // Top level var is a global variable.
@@ -50,7 +48,7 @@ describe("vm", () => {
     expect(sandbox).toEqual({ x: 49, y: 98 });
   });
 
-  it("async and Promise", async () => {
+  it('async and Promise', async () => {
     // Promise is available if ctx does not contains it.
     let sandbox = {};
     vm.createContext(sandbox);
@@ -70,7 +68,7 @@ describe("vm", () => {
     expect(await p1).toEqual(16);
   });
 
-  it("contexify performance", () => {
+  it('contexify performance', () => {
     // createContext takes less than 10[ms].
     let rep = 100;
     const start = process.hrtime();
@@ -84,36 +82,36 @@ describe("vm", () => {
     expect(diff[0]).toEqual(0);
   });
 
-  it("lexical sandbox scope", () => {
+  it('lexical sandbox scope', () => {
     const ctx0 = { x: 123 };
-    const ctx1 = { x: "abc" };
+    const ctx1 = { x: 'abc' };
     vm.createContext(ctx0);
     vm.createContext(ctx1);
     const fn0 = vm.runInContext(`(function(){return x})`, ctx0);
     const fn1 = vm.runInContext(`(function(){return x})`, ctx1);
     expect(fn0()).toEqual(123);
-    expect(fn1()).toEqual("abc");
+    expect(fn1()).toEqual('abc');
   });
 });
 
-describe("Proxy", () => {
-  it("set", () => {
+describe('Proxy', () => {
+  it('set', () => {
     function objStr(obj: any): string {
       if (obj === undefined) {
-        return "undefined";
+        return 'undefined';
       }
       if (obj === null) {
-        return "null";
+        return 'null';
       }
       switch (obj) {
         case obj0:
-          return "obj0";
+          return 'obj0';
         case obj1:
-          return "obj1";
+          return 'obj1';
         case proxy0:
-          return "proxy0";
+          return 'proxy0';
         default:
-          return "unknown";
+          return 'unknown';
       }
     }
     let messages: string[] = [];
@@ -121,9 +119,7 @@ describe("Proxy", () => {
     let proxy0 = new Proxy(obj0, {
       set: (target, prop, value, receiver) => {
         messages.push(
-          `target = ${objStr(target)}, prop = ${JSON.stringify(
-            prop
-          )}, value = ${JSON.stringify(value)}, receiver = ${objStr(receiver)}`
+          `target = ${objStr(target)}, prop = ${JSON.stringify(prop)}, value = ${JSON.stringify(value)}, receiver = ${objStr(receiver)}`
         );
         return true;
       },
@@ -131,19 +127,17 @@ describe("Proxy", () => {
     let obj1: { [key: string]: any } = {};
     Object.setPrototypeOf(obj1, proxy0);
 
-    obj1.abc = "hello";
+    obj1.abc = 'hello';
 
-    expect(messages).toEqual([
-      'target = obj0, prop = "abc", value = "hello", receiver = obj1',
-    ]);
+    expect(messages).toEqual(['target = obj0, prop = "abc", value = "hello", receiver = obj1']);
   });
 
-  it("breakOnSigint", async () => {
-    if (process.platform === "win32") {
+  it('breakOnSigint', async () => {
+    if (process.platform === 'win32') {
       // process.kill is not properly implemented on Windows.
       return;
     }
-    const { Worker } = await import("worker_threads");
+    const { Worker } = await import('worker_threads');
     new Worker(
       `setTimeout(() =>{
       process.kill(process.pid, "SIGINT");
@@ -155,17 +149,17 @@ describe("Proxy", () => {
     try {
       vm.runInNewContext(`while (true) {}`, undefined, { breakOnSigint: true });
     } catch (e) {
-      expect(e.toString()).toContain("interrupted");
+      expect(e.toString()).toContain('interrupted');
     }
   });
 
-  it("breakOnSigint indirect", async () => {
-    if (process.platform === "win32") {
+  it('breakOnSigint indirect', async () => {
+    if (process.platform === 'win32') {
       // process.kill is not properly implemented on Windows.
       return;
     }
     // Confirm breakOnSigint can exit an infinite loop defined outside of the code.
-    const { Worker } = await import("worker_threads");
+    const { Worker } = await import('worker_threads');
     new Worker(
       `setTimeout(() =>{
       process.kill(process.pid, "SIGINT");
@@ -182,13 +176,13 @@ describe("Proxy", () => {
     try {
       vm.runInNewContext(`loop()`, sandbox, { breakOnSigint: true });
     } catch (e) {
-      expect(e.toString()).toContain("interrupted");
+      expect(e.toString()).toContain('interrupted');
     }
   });
 });
 
-describe("promise", () => {
-  it("async and promise", () => {
+describe('promise', () => {
+  it('async and promise', () => {
     let p = (async function () {})();
     // The result of async is an instance of Promise outside of vm.
     // TODO: Why this is not the case in vm?
@@ -196,7 +190,7 @@ describe("promise", () => {
     expect(p instanceof Promise).toBe(true);
   });
 
-  it("order", async () => {
+  it('order', async () => {
     function range(n: number) {
       let out = [];
       for (let i = 0; i < n; i++) {
@@ -208,10 +202,10 @@ describe("promise", () => {
     let out: number[] = [];
     let p = new Promise((done) => {
       out.push(0);
-      done("abc");
+      done('abc');
     }).then((v) => {
       out.push(2);
-      expect(v).toEqual("abc");
+      expect(v).toEqual('abc');
     });
     out.push(1);
     await p;
@@ -240,11 +234,11 @@ describe("promise", () => {
     p = Promise.resolve({
       then: (done) => {
         out.push(1);
-        done("xyz");
+        done('xyz');
         out.push(2);
       },
     }).then((x) => {
-      expect(x).toEqual("xyz");
+      expect(x).toEqual('xyz');
       out.push(3);
     });
     out.push(0);
@@ -260,11 +254,11 @@ describe("promise", () => {
       let x = await ({
         then: (done) => {
           out.push(2);
-          done("xyz");
+          done('xyz');
           out.push(3);
         },
       } as any);
-      expect(x).toEqual("xyz");
+      expect(x).toEqual('xyz');
       out.push(4);
     })();
     out.push(1);
@@ -274,7 +268,7 @@ describe("promise", () => {
     class CustomPromise<T> extends Promise<T> {
       then(done): any {
         out.push(2);
-        done("xyz");
+        done('xyz');
         out.push(3);
       }
     }
@@ -282,11 +276,11 @@ describe("promise", () => {
     p = (async function () {
       out.push(0);
       let cp = new CustomPromise((done) => {
-        done("abc");
+        done('abc');
       });
       expect(cp).toBeInstanceOf(Promise);
       let x = await (cp as any);
-      expect(x).toEqual("xyz");
+      expect(x).toEqual('xyz');
       out.push(4);
     })();
     out.push(1);

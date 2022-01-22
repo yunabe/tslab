@@ -1,4 +1,4 @@
-import * as converter from "./converter";
+import * as converter from './converter';
 
 let conv: converter.Converter;
 beforeAll(() => {
@@ -10,43 +10,36 @@ afterAll(() => {
   }
 });
 
-function completeWithPrev(
-  prevDecl: string,
-  src: string
-): converter.CompletionInfo {
-  return conv.complete(
-    prevDecl,
-    src.replace("[cur]", ""),
-    src.indexOf("[cur]")
-  );
+function completeWithPrev(prevDecl: string, src: string): converter.CompletionInfo {
+  return conv.complete(prevDecl, src.replace('[cur]', ''), src.indexOf('[cur]'));
 }
 
 function complete(src: string): converter.CompletionInfo {
-  return completeWithPrev("", src);
+  return completeWithPrev('', src);
 }
 
-describe("complete", () => {
-  it("members", () => {
+describe('complete', () => {
+  it('members', () => {
     const src = `let v = { abc: "hello", xyz: 10 }; v.[cur]`;
     const info = complete(src);
     const start = src.indexOf(`[cur]`);
     expect(info).toEqual({
       start,
       end: start,
-      candidates: ["abc", "xyz"],
+      candidates: ['abc', 'xyz'],
       original: {
         isGlobalCompletion: false,
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
         entries: [
-          { name: "abc", kind: "property", kindModifiers: "", sortText: "1" },
-          { name: "xyz", kind: "property", kindModifiers: "", sortText: "1" },
+          { name: 'abc', kind: 'property', kindModifiers: '', sortText: '1' },
+          { name: 'xyz', kind: 'property', kindModifiers: '', sortText: '1' },
         ],
       },
     });
   });
 
-  it("members with prefix", () => {
+  it('members with prefix', () => {
     // The prefix "ab" is ignored by TS compiler. This is an intended behavior:
     // https://github.com/microsoft/TypeScript/issues/32916
     const src = `let v = { abc: "hello", xyz: 10 }; v.ab[cur]`;
@@ -56,21 +49,21 @@ describe("complete", () => {
     expect(info).toEqual({
       start,
       end,
-      candidates: ["abc"],
+      candidates: ['abc'],
       original: {
         isGlobalCompletion: false,
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
         optionalReplacementSpan: { start, length: 2 },
         entries: [
-          { name: "abc", kind: "property", kindModifiers: "", sortText: "1" },
-          { name: "xyz", kind: "property", kindModifiers: "", sortText: "1" },
+          { name: 'abc', kind: 'property', kindModifiers: '', sortText: '1' },
+          { name: 'xyz', kind: 'property', kindModifiers: '', sortText: '1' },
         ],
       },
     });
   });
 
-  it("members with suffix", () => {
+  it('members with suffix', () => {
     // The suffix "ab" is ignored by TS compiler. This is an intended behavior:
     // https://github.com/microsoft/TypeScript/issues/32916
     const src = `let v = { abc: "hello", xyz: 10 }; v.[cur]ab`;
@@ -79,21 +72,21 @@ describe("complete", () => {
     expect(info).toEqual({
       start,
       end: start + 2,
-      candidates: ["abc"],
+      candidates: ['abc'],
       original: {
         isGlobalCompletion: false,
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
         optionalReplacementSpan: { start, length: 2 },
         entries: [
-          { name: "abc", kind: "property", kindModifiers: "", sortText: "1" },
-          { name: "xyz", kind: "property", kindModifiers: "", sortText: "1" },
+          { name: 'abc', kind: 'property', kindModifiers: '', sortText: '1' },
+          { name: 'xyz', kind: 'property', kindModifiers: '', sortText: '1' },
         ],
       },
     });
   });
 
-  it("members with surrounding id", () => {
+  it('members with surrounding id', () => {
     // The suffix "ab" is ignored by TS compiler. This is an intended behavior:
     // https://github.com/microsoft/TypeScript/issues/32916
     const src = `let v = { abc: "hello", xyz: 10 }; v.a[cur]b`;
@@ -102,25 +95,25 @@ describe("complete", () => {
     expect(info).toEqual({
       start: pos - 1,
       end: pos + 1,
-      candidates: ["abc"],
+      candidates: ['abc'],
       original: {
         isGlobalCompletion: false,
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
         optionalReplacementSpan: { start: pos - 1, length: 2 },
         entries: [
-          { name: "abc", kind: "property", kindModifiers: "", sortText: "1" },
-          { name: "xyz", kind: "property", kindModifiers: "", sortText: "1" },
+          { name: 'abc', kind: 'property', kindModifiers: '', sortText: '1' },
+          { name: 'xyz', kind: 'property', kindModifiers: '', sortText: '1' },
         ],
       },
     });
   });
 
-  it("members mismatch", () => {
+  it('members mismatch', () => {
     const src = `let v = { abc: "hello", xyz: 10 }; v.qwerty[cur]`;
     const info = complete(src);
     const end = src.indexOf(`[cur]`);
-    const start = end - "querty".length;
+    const start = end - 'querty'.length;
     expect(info).toEqual({
       start,
       end,
@@ -131,14 +124,14 @@ describe("complete", () => {
         isNewIdentifierLocation: false,
         optionalReplacementSpan: { start: start, length: end - start },
         entries: [
-          { name: "abc", kind: "property", kindModifiers: "", sortText: "1" },
-          { name: "xyz", kind: "property", kindModifiers: "", sortText: "1" },
+          { name: 'abc', kind: 'property', kindModifiers: '', sortText: '1' },
+          { name: 'xyz', kind: 'property', kindModifiers: '', sortText: '1' },
         ],
       },
     });
   });
 
-  it("members of any", () => {
+  it('members of any', () => {
     let src = `let x: any = 10; x.[cur]`;
     let info = complete(src);
     let start = src.indexOf(`[cur]`);
@@ -157,27 +150,27 @@ describe("complete", () => {
     expect(info).toEqual({ start, end, candidates: [], original: undefined });
   });
 
-  it("members in object literal", () => {
+  it('members in object literal', () => {
     const src = `let v: {alpha: string, beta: number} = {[cur]};`;
     const info = complete(src);
     const start = src.indexOf(`[cur]`);
     expect(info).toEqual({
       start,
       end: start,
-      candidates: ["alpha", "beta"],
+      candidates: ['alpha', 'beta'],
       original: {
         isGlobalCompletion: false,
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
         entries: [
-          { name: "alpha", kind: "property", kindModifiers: "", sortText: "1" },
-          { name: "beta", kind: "property", kindModifiers: "", sortText: "1" },
+          { name: 'alpha', kind: 'property', kindModifiers: '', sortText: '1' },
+          { name: 'beta', kind: 'property', kindModifiers: '', sortText: '1' },
         ],
       },
     });
   });
 
-  it("missing members in object literal", () => {
+  it('missing members in object literal', () => {
     // Used members are not suggested.
     const src = `let v: {alpha: string, beta: number} = {alpha: 'hello', [cur]}`;
     const info = complete(src);
@@ -185,19 +178,17 @@ describe("complete", () => {
     expect(info).toEqual({
       start,
       end: start,
-      candidates: ["beta"],
+      candidates: ['beta'],
       original: {
         isGlobalCompletion: false,
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
-        entries: [
-          { name: "beta", kind: "property", kindModifiers: "", sortText: "1" },
-        ],
+        entries: [{ name: 'beta', kind: 'property', kindModifiers: '', sortText: '1' }],
       },
     });
   });
 
-  it("members in object literal with prefix", () => {
+  it('members in object literal with prefix', () => {
     // The prefix "al" is ignored by TS compiler.
     const src = `let v: {alpha: string, beta: number} = {al[cur]}`;
     const info = complete(src);
@@ -206,21 +197,21 @@ describe("complete", () => {
     expect(info).toEqual({
       start,
       end,
-      candidates: ["alpha"],
+      candidates: ['alpha'],
       original: {
         isGlobalCompletion: false,
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
         optionalReplacementSpan: { start, length: end - start },
         entries: [
-          { name: "alpha", kind: "property", kindModifiers: "", sortText: "1" },
-          { name: "beta", kind: "property", kindModifiers: "", sortText: "1" },
+          { name: 'alpha', kind: 'property', kindModifiers: '', sortText: '1' },
+          { name: 'beta', kind: 'property', kindModifiers: '', sortText: '1' },
         ],
       },
     });
   });
 
-  it("members in object literal with suffix", () => {
+  it('members in object literal with suffix', () => {
     // The prefix "al" is ignored by TS compiler.
     const src = `let v: {alpha: string, beta: number} = {[cur]al}`;
     const info = complete(src);
@@ -228,21 +219,21 @@ describe("complete", () => {
     expect(info).toEqual({
       start,
       end: start + 2,
-      candidates: ["alpha"],
+      candidates: ['alpha'],
       original: {
         isGlobalCompletion: false,
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
         optionalReplacementSpan: { start, length: 2 },
         entries: [
-          { name: "alpha", kind: "property", kindModifiers: "", sortText: "1" },
-          { name: "beta", kind: "property", kindModifiers: "", sortText: "1" },
+          { name: 'alpha', kind: 'property', kindModifiers: '', sortText: '1' },
+          { name: 'beta', kind: 'property', kindModifiers: '', sortText: '1' },
         ],
       },
     });
   });
 
-  it("members in object literal with surrounding", () => {
+  it('members in object literal with surrounding', () => {
     // The prefix "al" is ignored by TS compiler.
     const src = `let v: {alpha: string, beta: number} = {a[cur]l}`;
     const info = complete(src);
@@ -250,21 +241,21 @@ describe("complete", () => {
     expect(info).toEqual({
       start: middle - 1,
       end: middle + 1,
-      candidates: ["alpha"],
+      candidates: ['alpha'],
       original: {
         isGlobalCompletion: false,
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
         optionalReplacementSpan: { start: middle - 1, length: 2 },
         entries: [
-          { name: "alpha", kind: "property", kindModifiers: "", sortText: "1" },
-          { name: "beta", kind: "property", kindModifiers: "", sortText: "1" },
+          { name: 'alpha', kind: 'property', kindModifiers: '', sortText: '1' },
+          { name: 'beta', kind: 'property', kindModifiers: '', sortText: '1' },
         ],
       },
     });
   });
 
-  it("imported module members", () => {
+  it('imported module members', () => {
     const src = `import * as vm from "vm"; vm.[cur]`;
     const info = complete(src);
     const start = src.indexOf(`[cur]`);
@@ -272,14 +263,14 @@ describe("complete", () => {
       start,
       end: start,
       candidates: [
-        "compileFunction",
-        "createContext",
-        "isContext",
-        "measureMemory",
-        "runInContext",
-        "runInNewContext",
-        "runInThisContext",
-        "Script",
+        'compileFunction',
+        'createContext',
+        'isContext',
+        'measureMemory',
+        'runInContext',
+        'runInNewContext',
+        'runInThisContext',
+        'Script',
       ],
       original: {
         isGlobalCompletion: false,
@@ -287,59 +278,59 @@ describe("complete", () => {
         isNewIdentifierLocation: false,
         entries: [
           {
-            name: "createContext",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "1",
+            name: 'createContext',
+            kind: 'function',
+            kindModifiers: 'declare',
+            sortText: '1',
           },
           {
-            name: "isContext",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "1",
+            name: 'isContext',
+            kind: 'function',
+            kindModifiers: 'declare',
+            sortText: '1',
           },
           {
-            name: "runInContext",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "1",
+            name: 'runInContext',
+            kind: 'function',
+            kindModifiers: 'declare',
+            sortText: '1',
           },
           {
-            name: "runInNewContext",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "1",
+            name: 'runInNewContext',
+            kind: 'function',
+            kindModifiers: 'declare',
+            sortText: '1',
           },
           {
-            name: "runInThisContext",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "1",
+            name: 'runInThisContext',
+            kind: 'function',
+            kindModifiers: 'declare',
+            sortText: '1',
           },
           {
-            name: "compileFunction",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "1",
+            name: 'compileFunction',
+            kind: 'function',
+            kindModifiers: 'declare',
+            sortText: '1',
           },
           {
-            name: "measureMemory",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "1",
+            name: 'measureMemory',
+            kind: 'function',
+            kindModifiers: 'declare',
+            sortText: '1',
           },
           {
-            name: "Script",
-            kind: "class",
-            kindModifiers: "declare",
-            sortText: "1",
+            name: 'Script',
+            kind: 'class',
+            kindModifiers: 'declare',
+            sortText: '1',
           },
         ],
       },
     });
   });
 
-  it("sort candidates", () => {
+  it('sort candidates', () => {
     const src = `let v = { bxy: true, axy: "hello", cxy: 3.4, dXY: false, xyz: 10, XYZ: 30 }; v.XY[cur]`;
     const info = complete(src);
     const end = src.indexOf(`[cur]`);
@@ -347,35 +338,35 @@ describe("complete", () => {
     expect(info).toEqual({
       start,
       end,
-      candidates: ["XYZ", "xyz", "bxy", "axy", "cxy", "dXY"],
+      candidates: ['XYZ', 'xyz', 'bxy', 'axy', 'cxy', 'dXY'],
       original: {
         isGlobalCompletion: false,
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
         optionalReplacementSpan: { start, length: 2 },
         entries: [
-          { name: "bxy", kind: "property", kindModifiers: "", sortText: "1" },
-          { name: "axy", kind: "property", kindModifiers: "", sortText: "1" },
-          { name: "cxy", kind: "property", kindModifiers: "", sortText: "1" },
-          { name: "dXY", kind: "property", kindModifiers: "", sortText: "1" },
-          { name: "xyz", kind: "property", kindModifiers: "", sortText: "1" },
-          { name: "XYZ", kind: "property", kindModifiers: "", sortText: "1" },
+          { name: 'bxy', kind: 'property', kindModifiers: '', sortText: '1' },
+          { name: 'axy', kind: 'property', kindModifiers: '', sortText: '1' },
+          { name: 'cxy', kind: 'property', kindModifiers: '', sortText: '1' },
+          { name: 'dXY', kind: 'property', kindModifiers: '', sortText: '1' },
+          { name: 'xyz', kind: 'property', kindModifiers: '', sortText: '1' },
+          { name: 'XYZ', kind: 'property', kindModifiers: '', sortText: '1' },
         ],
       },
     });
   });
 
-  it("globals", () => {
+  it('globals', () => {
     const src = `[cur]`;
     const info = complete(src);
     expect(info.original).not.toBeUndefined();
     // Filter entries to keep this test short.
     info.candidates = info.candidates.slice(0, 5);
     info.original.entries = info.original.entries.filter((e) => {
-      if (e.name.startsWith("Array")) {
+      if (e.name.startsWith('Array')) {
         return true;
       }
-      if (e.name === "let") {
+      if (e.name === 'let') {
         return true;
       }
       return false;
@@ -383,31 +374,31 @@ describe("complete", () => {
     expect(info).toEqual({
       start: 0,
       end: 0,
-      candidates: ["__dirname", "__filename", "afterAll", "afterEach", "any"],
+      candidates: ['__dirname', '__filename', 'afterAll', 'afterEach', 'any'],
       original: {
         isGlobalCompletion: true,
         isMemberCompletion: false,
         isNewIdentifierLocation: false,
         entries: [
           {
-            name: "Array",
-            kind: "var",
-            kindModifiers: "declare",
-            sortText: "5",
+            name: 'Array',
+            kind: 'var',
+            kindModifiers: 'declare',
+            sortText: '5',
           },
           {
-            name: "ArrayBuffer",
-            kind: "var",
-            kindModifiers: "declare",
-            sortText: "5",
+            name: 'ArrayBuffer',
+            kind: 'var',
+            kindModifiers: 'declare',
+            sortText: '5',
           },
-          { name: "let", kind: "keyword", kindModifiers: "", sortText: "5" },
+          { name: 'let', kind: 'keyword', kindModifiers: '', sortText: '5' },
         ],
       },
     });
   });
 
-  it("globals with prev", () => {
+  it('globals with prev', () => {
     const src = `let newval = 10; [cur]`;
     const prev = `declare let oldval: number;`;
     const info = completeWithPrev(prev, src);
@@ -416,59 +407,59 @@ describe("complete", () => {
     info.candidates = info.candidates.slice(0, 5);
     info.original.entries = info.original.entries.slice(0, 5);
     // TODO: Prioritize `oldval` and `newval` in entries and show it at the top of candidates.
-    const start = src.indexOf("[cur]");
+    const start = src.indexOf('[cur]');
     expect(info).toEqual({
       start,
       end: start,
-      candidates: ["__dirname", "__filename", "afterAll", "afterEach", "any"],
+      candidates: ['__dirname', '__filename', 'afterAll', 'afterEach', 'any'],
       original: {
         isGlobalCompletion: true,
         isMemberCompletion: false,
         isNewIdentifierLocation: false,
         entries: [
           {
-            name: "oldval",
-            kind: "let",
-            kindModifiers: "declare",
-            sortText: "5",
+            name: 'oldval',
+            kind: 'let',
+            kindModifiers: 'declare',
+            sortText: '5',
           },
           {
-            name: "globalThis",
-            kind: "module",
-            kindModifiers: "",
-            sortText: "5",
+            name: 'globalThis',
+            kind: 'module',
+            kindModifiers: '',
+            sortText: '5',
           },
           {
-            name: "eval",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "5",
+            name: 'eval',
+            kind: 'function',
+            kindModifiers: 'declare',
+            sortText: '5',
           },
           {
-            name: "parseInt",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "5",
+            name: 'parseInt',
+            kind: 'function',
+            kindModifiers: 'declare',
+            sortText: '5',
           },
           {
-            name: "parseFloat",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "5",
+            name: 'parseFloat',
+            kind: 'function',
+            kindModifiers: 'declare',
+            sortText: '5',
           },
         ],
       },
     });
   });
 
-  it("globals with prefix", () => {
+  it('globals with prefix', () => {
     const src = `setT[cur]`;
     const info = complete(src);
     info.original.entries = info.original.entries.slice(0, 5);
     expect(info).toEqual({
       start: 0,
       end: 4,
-      candidates: ["setTimeout"],
+      candidates: ['setTimeout'],
       original: {
         isGlobalCompletion: true,
         isMemberCompletion: false,
@@ -476,48 +467,48 @@ describe("complete", () => {
         optionalReplacementSpan: { start: 0, length: 4 },
         entries: [
           {
-            name: "globalThis",
-            kind: "module",
-            kindModifiers: "",
-            sortText: "5",
+            name: 'globalThis',
+            kind: 'module',
+            kindModifiers: '',
+            sortText: '5',
           },
           {
-            name: "eval",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "5",
+            name: 'eval',
+            kind: 'function',
+            kindModifiers: 'declare',
+            sortText: '5',
           },
           {
-            name: "parseInt",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "5",
+            name: 'parseInt',
+            kind: 'function',
+            kindModifiers: 'declare',
+            sortText: '5',
           },
           {
-            name: "parseFloat",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "5",
+            name: 'parseFloat',
+            kind: 'function',
+            kindModifiers: 'declare',
+            sortText: '5',
           },
           {
-            name: "isNaN",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "5",
+            name: 'isNaN',
+            kind: 'function',
+            kindModifiers: 'declare',
+            sortText: '5',
           },
         ],
       },
     });
   });
 
-  it("globals with suffix", () => {
+  it('globals with suffix', () => {
     const src = `[cur]setT`;
     const info = complete(src);
     info.original.entries = info.original.entries.slice(0, 5);
     expect(info).toEqual({
       start: 0,
       end: 4,
-      candidates: ["setTimeout"],
+      candidates: ['setTimeout'],
       original: {
         isGlobalCompletion: true,
         isMemberCompletion: false,
@@ -525,48 +516,48 @@ describe("complete", () => {
         optionalReplacementSpan: { start: 0, length: 4 },
         entries: [
           {
-            name: "globalThis",
-            kind: "module",
-            kindModifiers: "",
-            sortText: "5",
+            name: 'globalThis',
+            kind: 'module',
+            kindModifiers: '',
+            sortText: '5',
           },
           {
-            name: "eval",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "5",
+            name: 'eval',
+            kind: 'function',
+            kindModifiers: 'declare',
+            sortText: '5',
           },
           {
-            name: "parseInt",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "5",
+            name: 'parseInt',
+            kind: 'function',
+            kindModifiers: 'declare',
+            sortText: '5',
           },
           {
-            name: "parseFloat",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "5",
+            name: 'parseFloat',
+            kind: 'function',
+            kindModifiers: 'declare',
+            sortText: '5',
           },
           {
-            name: "isNaN",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "5",
+            name: 'isNaN',
+            kind: 'function',
+            kindModifiers: 'declare',
+            sortText: '5',
           },
         ],
       },
     });
   });
 
-  it("globals with surrounding", () => {
+  it('globals with surrounding', () => {
     const src = `set[cur]I`;
     const info = complete(src);
     info.original.entries = info.original.entries.slice(0, 5);
     expect(info).toEqual({
       start: 0,
       end: 4,
-      candidates: ["setInterval", "setImmediate"],
+      candidates: ['setInterval', 'setImmediate'],
       original: {
         isGlobalCompletion: true,
         isMemberCompletion: false,
@@ -574,141 +565,134 @@ describe("complete", () => {
         optionalReplacementSpan: { start: 0, length: 4 },
         entries: [
           {
-            name: "globalThis",
-            kind: "module",
-            kindModifiers: "",
-            sortText: "5",
+            name: 'globalThis',
+            kind: 'module',
+            kindModifiers: '',
+            sortText: '5',
           },
           {
-            name: "eval",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "5",
+            name: 'eval',
+            kind: 'function',
+            kindModifiers: 'declare',
+            sortText: '5',
           },
           {
-            name: "parseInt",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "5",
+            name: 'parseInt',
+            kind: 'function',
+            kindModifiers: 'declare',
+            sortText: '5',
           },
           {
-            name: "parseFloat",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "5",
+            name: 'parseFloat',
+            kind: 'function',
+            kindModifiers: 'declare',
+            sortText: '5',
           },
           {
-            name: "isNaN",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "5",
+            name: 'isNaN',
+            kind: 'function',
+            kindModifiers: 'declare',
+            sortText: '5',
           },
         ],
       },
     });
   });
 
-  it("string literal", () => {
+  it('string literal', () => {
     const src = `type version = "cupcake" | "donut" | "eclair" | "froyo"; let v: version = [cur]`;
     const info = complete(src);
     expect(info).not.toBeUndefined();
     // Filter entries to keep this test short.
     info.candidates = info.candidates.slice(0, 6);
     info.original.entries = info.original.entries.filter((e) => {
-      if (e.kind === "string") {
+      if (e.kind === 'string') {
         return true;
       }
-      return e.name.startsWith("Array");
+      return e.name.startsWith('Array');
     });
-    const start = src.indexOf("[cur]");
+    const start = src.indexOf('[cur]');
     // Note that string literals have higher sortText.
     expect(info).toEqual({
       start,
       end: start,
-      candidates: [
-        '"cupcake"',
-        '"donut"',
-        '"eclair"',
-        '"froyo"',
-        "v",
-        "__dirname",
-      ],
+      candidates: ['"cupcake"', '"donut"', '"eclair"', '"froyo"', 'v', '__dirname'],
       original: {
         isGlobalCompletion: true,
         isMemberCompletion: false,
         isNewIdentifierLocation: true,
         entries: [
           {
-            name: "Array",
-            kind: "var",
-            kindModifiers: "declare",
-            sortText: "5",
+            name: 'Array',
+            kind: 'var',
+            kindModifiers: 'declare',
+            sortText: '5',
           },
           {
-            name: "ArrayBuffer",
-            kind: "var",
-            kindModifiers: "declare",
-            sortText: "5",
+            name: 'ArrayBuffer',
+            kind: 'var',
+            kindModifiers: 'declare',
+            sortText: '5',
           },
           {
             name: '"cupcake"',
-            kind: "string",
-            kindModifiers: "",
-            sortText: "1",
+            kind: 'string',
+            kindModifiers: '',
+            sortText: '1',
           },
-          { name: '"donut"', kind: "string", kindModifiers: "", sortText: "1" },
+          { name: '"donut"', kind: 'string', kindModifiers: '', sortText: '1' },
           {
             name: '"eclair"',
-            kind: "string",
-            kindModifiers: "",
-            sortText: "1",
+            kind: 'string',
+            kindModifiers: '',
+            sortText: '1',
           },
-          { name: '"froyo"', kind: "string", kindModifiers: "", sortText: "1" },
+          { name: '"froyo"', kind: 'string', kindModifiers: '', sortText: '1' },
         ],
       },
     });
   });
 
-  it("locals", () => {
+  it('locals', () => {
     const src = `function fn(abc: number, xyz: string) { [cur] }`;
     const info = complete(src);
     // Filter entries to keep this test short.
     info.candidates = info.candidates.slice(0, 5);
     info.original.entries = info.original.entries.slice(0, 5);
-    const start = src.indexOf("[cur]");
+    const start = src.indexOf('[cur]');
     expect(info).toEqual({
       start,
       end: start,
-      candidates: ["abc", "arguments", "fn", "xyz", "__dirname"],
+      candidates: ['abc', 'arguments', 'fn', 'xyz', '__dirname'],
       original: {
         isGlobalCompletion: true,
         isMemberCompletion: false,
         isNewIdentifierLocation: false,
         entries: [
-          { name: "abc", kind: "parameter", kindModifiers: "", sortText: "1" },
-          { name: "xyz", kind: "parameter", kindModifiers: "", sortText: "1" },
+          { name: 'abc', kind: 'parameter', kindModifiers: '', sortText: '1' },
+          { name: 'xyz', kind: 'parameter', kindModifiers: '', sortText: '1' },
           {
-            name: "arguments",
-            kind: "local var",
-            kindModifiers: "",
-            sortText: "1",
+            name: 'arguments',
+            kind: 'local var',
+            kindModifiers: '',
+            sortText: '1',
           },
-          { name: "fn", kind: "function", kindModifiers: "", sortText: "1" },
+          { name: 'fn', kind: 'function', kindModifiers: '', sortText: '1' },
           {
-            name: "globalThis",
-            kind: "module",
-            kindModifiers: "",
-            sortText: "5",
+            name: 'globalThis',
+            kind: 'module',
+            kindModifiers: '',
+            sortText: '5',
           },
         ],
       },
     });
   });
 
-  it("inside string literal", () => {
+  it('inside string literal', () => {
     const src = `let v = "[cur]"`;
     const info = complete(src);
-    const start = src.indexOf("[cur]");
+    const start = src.indexOf('[cur]');
     expect(info).toEqual({
       start,
       end: start,
@@ -723,10 +707,10 @@ describe("complete", () => {
     });
   });
 
-  it("inside unclosed string literal", () => {
+  it('inside unclosed string literal', () => {
     const src = `let v = "[cur]`;
     const info = complete(src);
-    const start = src.indexOf("[cur]");
+    const start = src.indexOf('[cur]');
     expect(info).toEqual({
       start,
       end: start,
@@ -740,11 +724,11 @@ describe("complete", () => {
     });
   });
 
-  it("inside comment", () => {
+  it('inside comment', () => {
     // Be careful! complete can return undefined.
     const src = `/* [cur] */"`;
     const info = complete(src);
-    const start = src.indexOf("[cur]");
+    const start = src.indexOf('[cur]');
     expect(info).toEqual({
       start,
       end: start,
@@ -753,98 +737,98 @@ describe("complete", () => {
     });
   });
 
-  it("docstring attributes", () => {
+  it('docstring attributes', () => {
     const src = `/** [cur]*/ function f(xyz: number, abc: string): void {}`;
     const info = complete(src);
-    const start = src.indexOf("[cur]");
+    const start = src.indexOf('[cur]');
     info.candidates = info.candidates.slice(0, 5);
     info.original.entries = info.original.entries.slice(0, 5);
     expect(info).toEqual({
       start: 4,
       end: 4,
-      candidates: ["@abstract", "@access", "@alias", "@argument", "@async"],
+      candidates: ['@abstract', '@access', '@alias', '@argument', '@async'],
       original: {
         isGlobalCompletion: false,
         isMemberCompletion: false,
         isNewIdentifierLocation: false,
         entries: [
           {
-            name: "@abstract",
-            kind: "keyword",
-            kindModifiers: "",
-            sortText: "1",
+            name: '@abstract',
+            kind: 'keyword',
+            kindModifiers: '',
+            sortText: '1',
           },
           {
-            name: "@access",
-            kind: "keyword",
-            kindModifiers: "",
-            sortText: "1",
+            name: '@access',
+            kind: 'keyword',
+            kindModifiers: '',
+            sortText: '1',
           },
-          { name: "@alias", kind: "keyword", kindModifiers: "", sortText: "1" },
+          { name: '@alias', kind: 'keyword', kindModifiers: '', sortText: '1' },
           {
-            name: "@argument",
-            kind: "keyword",
-            kindModifiers: "",
-            sortText: "1",
+            name: '@argument',
+            kind: 'keyword',
+            kindModifiers: '',
+            sortText: '1',
           },
-          { name: "@async", kind: "keyword", kindModifiers: "", sortText: "1" },
+          { name: '@async', kind: 'keyword', kindModifiers: '', sortText: '1' },
         ],
       },
     });
   });
 
-  it("docstring attributes with prefix", () => {
+  it('docstring attributes with prefix', () => {
     // The prefix "par" is not used. This is an intended behavior:
     // https://github.com/microsoft/TypeScript/issues/32916
     const src = `/** @par[cur] */ function f(xyz: number, abc: string): void {}`;
     const info = complete(src);
-    const end = src.indexOf("[cur]");
+    const end = src.indexOf('[cur]');
     // Reduce # of entries.
     info.original.entries = info.original.entries.slice(0, 5);
     expect(info).toEqual({
       start: end - 3,
       end,
-      candidates: ["param"],
+      candidates: ['param'],
       original: {
         isGlobalCompletion: false,
         isMemberCompletion: false,
         isNewIdentifierLocation: false,
         entries: [
           {
-            name: "abstract",
-            kind: "keyword",
-            kindModifiers: "",
-            sortText: "1",
+            name: 'abstract',
+            kind: 'keyword',
+            kindModifiers: '',
+            sortText: '1',
           },
-          { name: "access", kind: "keyword", kindModifiers: "", sortText: "1" },
-          { name: "alias", kind: "keyword", kindModifiers: "", sortText: "1" },
+          { name: 'access', kind: 'keyword', kindModifiers: '', sortText: '1' },
+          { name: 'alias', kind: 'keyword', kindModifiers: '', sortText: '1' },
           {
-            name: "argument",
-            kind: "keyword",
-            kindModifiers: "",
-            sortText: "1",
+            name: 'argument',
+            kind: 'keyword',
+            kindModifiers: '',
+            sortText: '1',
           },
-          { name: "async", kind: "keyword", kindModifiers: "", sortText: "1" },
+          { name: 'async', kind: 'keyword', kindModifiers: '', sortText: '1' },
         ],
       },
     });
   });
 
-  it("docstring parameter", () => {
+  it('docstring parameter', () => {
     const src = `/** @param [cur]*/ function f(xyz: number, abc: string): void {}`;
     const info = complete(src);
-    const start = src.indexOf("[cur]");
+    const start = src.indexOf('[cur]');
     expect(info).toEqual({
       start,
       end: start,
-      candidates: ["abc", "xyz"],
+      candidates: ['abc', 'xyz'],
       original: {
         isGlobalCompletion: false,
         isMemberCompletion: false,
         isNewIdentifierLocation: false,
         entries: [
-          { name: "xyz", kind: "parameter", kindModifiers: "", sortText: "1" },
-          { name: "abc", kind: "parameter", kindModifiers: "", sortText: "1" },
+          { name: 'xyz', kind: 'parameter', kindModifiers: '', sortText: '1' },
+          { name: 'abc', kind: 'parameter', kindModifiers: '', sortText: '1' },
         ],
       },
     });
