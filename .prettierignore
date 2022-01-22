@@ -20,6 +20,9 @@ deployments
 
 # TS Lab
 notebooks
+python
+docs
+.ipynb_checkpoints
 
 # JS
 node_modules

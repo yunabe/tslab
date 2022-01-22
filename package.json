@@ -21,6 +21,7 @@
     "build": "tsc",
     "prepublishOnly": "rm -rf dist && tsc",
     "jest": "jest --verbose",
+    "lint:fix": "sort-package-json && cross-env prettier --write './**' && cross-env solhint --fix 'contracts/**/*.sol' 'interfaces/**/*.sol'",
     "test": "tsc && jest --verbose --runInBand",
     "clean": "rm -rf dist tmp",
     "format": "prettier --write src"
