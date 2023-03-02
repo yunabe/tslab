@@ -1,6 +1,6 @@
 {
   "name": "tslab",
-  "version": "1.0.15",
+  "version": "1.0.16",
   "description": "Jupyter for JavaScript and TypeScript",
   "main": "dist/public.js",
   "types": "dist/public.d.ts",
@@ -25,7 +25,7 @@
     "commander": "^6.2.0",
     "rollup": "^2.34.2",
     "semver": "^7.3.4",
-    "zeromq": "^6.0.0-beta.11"
+    "zeromq": "^6.0.0-beta.16"
   },
   "scripts": {
     "//": "experimental-vm-modules enables https://nodejs.org/docs/latest-v12.x/api/vm.html#vm_class_vm_sourcetextmodule",
