@@ -383,7 +383,13 @@ describe("complete", () => {
     expect(info).toEqual({
       start: 0,
       end: 0,
-      candidates: ["__dirname", "__filename", "afterAll", "afterEach", "any"],
+      candidates: [
+        "__dirname",
+        "__filename",
+        "AbortController",
+        "AbortSignal",
+        "afterAll",
+      ],
       original: {
         isGlobalCompletion: true,
         isMemberCompletion: false,
@@ -420,7 +426,13 @@ describe("complete", () => {
     expect(info).toEqual({
       start,
       end: start,
-      candidates: ["__dirname", "__filename", "afterAll", "afterEach", "any"],
+      candidates: [
+        "__dirname",
+        "__filename",
+        "AbortController",
+        "AbortSignal",
+        "afterAll",
+      ],
       original: {
         isGlobalCompletion: true,
         isMemberCompletion: false,
