@@ -37,7 +37,7 @@
     "format": "prettier --write src"
   },
   "devDependencies": {
-    "@types/jest": "^26.0.24",
+    "@types/jest": "^28.1.8",
     "@types/semver": "^7.3.13",
     "jest": "^29.4.3",
     "prettier": "^2.8.4",
