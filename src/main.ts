@@ -1,7 +1,7 @@
 import fs from "fs";
 import child_process from "child_process";
 import path from "path";
-import program from "commander";
+import { program } from "commander";
 import { Converter, createConverter } from "./converter";
 import { getVersion } from "./util";
 import { ConverterSet, createExecutor, createRequire } from "./executor";
