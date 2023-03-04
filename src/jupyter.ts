@@ -17,10 +17,8 @@ const utf8Decoder = new TextDecoder();
  * The process-wide global variable to hold the last valid
  * writeDisplayData. This is used from the display public API.
  */
-export let lastWriteDisplayData: (
-  data: DisplayData,
-  update: boolean
-) => void = null;
+export let lastWriteDisplayData: (data: DisplayData, update: boolean) => void =
+  null;
 
 interface ConnectionInfo {
   shell_port: number;

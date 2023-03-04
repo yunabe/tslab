@@ -682,9 +682,8 @@ export function createConverter(options?: ConverterOptions): Converter {
           decls.push(decl);
         });
         //TODO(yunabe): Stop using ts.createNodeArray, which is deprecated in TypeScript 4.
-        asMutable(stmt.declarationList).declarations = ts.createNodeArray(
-          decls
-        );
+        asMutable(stmt.declarationList).declarations =
+          ts.createNodeArray(decls);
       }
       if (ts.isImportDeclaration(stmt)) {
         keepNamesInImport(stmt, names);
@@ -800,9 +799,7 @@ export function createConverter(options?: ConverterOptions): Converter {
     return pos;
   }
 
-  function convertDiagnostics(
-    input: readonly ts.Diagnostic[]
-  ): {
+  function convertDiagnostics(input: readonly ts.Diagnostic[]): {
     diagnostics: Diagnostic[];
     hasToplevelAwait: boolean;
   } {

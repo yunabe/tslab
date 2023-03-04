@@ -217,8 +217,7 @@ describe("inspect", () => {
         },
         {
           name: "param",
-          text:
-            "position The index at which to begin searching the String object. If omitted, search starts at the beginning of the string.",
+          text: "position The index at which to begin searching the String object. If omitted, search starts at the beginning of the string.",
         },
       ],
     });
