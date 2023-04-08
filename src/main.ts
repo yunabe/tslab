@@ -11,19 +11,21 @@ class ConverterSetImpl implements ConverterSet {
   private jsKernel: boolean;
   private _node: Converter;
   private _browser: Converter;
+  private target?: string;
 
-  constructor(jsKernel: boolean) {
+  constructor(jsKernel: boolean, target?: string) {
     this.jsKernel = jsKernel;
+    this.target = target;
   }
   get node(): Converter {
     if (!this._node) {
-      this._node = createConverter({ isJS: this.jsKernel, isBrowser: false });
+      this._node = createConverter({ isJS: this.jsKernel, isBrowser: false, target: this.target });
     }
     return this._node;
   }
   get browser(): Converter {
     if (!this._browser) {
-      this._browser = createConverter({ isJS: this.jsKernel, isBrowser: true });
+      this._browser = createConverter({ isJS: this.jsKernel, isBrowser: true, target: this.target });
     }
     return this._browser;
   }
@@ -83,15 +85,16 @@ export function startKernel({
   enableFindLocal = true,
   jsKernel = false,
   globalVersion = "",
+  target,
 }): void {
   if (enableFindLocal) {
     const local = findLocalStartKernel();
     if (local) {
-      local({ configPath, enableFindLocal: false, jsKernel, globalVersion });
+      local({ configPath, enableFindLocal: false, jsKernel, globalVersion, target });
       return;
     }
   }
-  const convs = new ConverterSetImpl(jsKernel);
+  const convs = new ConverterSetImpl(jsKernel, target);
   convs.node; // Warm the converter for Node.js
   const executor = createExecutor(process.cwd(), convs, {
     log: console.log,
@@ -145,17 +148,8 @@ export function main() {
       "--prefix [prefix]",
       "Kernelspec will be installed in {PREFIX}/share/jupyter/kernels/"
     )
-    .action(function () {
-      if (arguments.length != 1) {
-        console.error(
-          "Unused args:",
-          Array.from(arguments).filter((arg) => {
-            return typeof arg === "string";
-          })
-        );
-        process.exit(1);
-      }
-      let { binary, python, user, sysPrefix, prefix } = arguments[0];
+    .action(function (options) {
+      const { binary, python, user, sysPrefix, prefix } = options;
       const args = [path.join(path.dirname(__dirname), "python", "install.py")];
       args.push(`--tslab=${binary}`);
       if (user) {
@@ -184,18 +178,10 @@ export function main() {
     .description("Start Jupyter kernel. Used from Jupyter internally")
     .option("--config-path <path>", "Path of config file")
     .option("--js", "If set, start JavaScript kernel. Otherwise, TypeScript.")
-    .action(function () {
-      if (arguments.length != 1) {
-        console.error(
-          "Unused args:",
-          Array.from(arguments).filter((arg) => {
-            return typeof arg === "string";
-          })
-        );
-        process.exit(1);
-      }
-      let { configPath, js: jsKernel } = arguments[0];
-      startKernel({ configPath, jsKernel, globalVersion: getVersion() });
+    .option("-t, --target [target]", "If set, target will be used by transpiler.")
+    .action(function (options) {
+      const { configPath, js: jsKernel, target } = options;
+      startKernel({ configPath, jsKernel, globalVersion: getVersion(), target });
     });
 
   program.parse(process.argv);
