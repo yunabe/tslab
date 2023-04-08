@@ -67,7 +67,7 @@ export interface CompletionInfo {
   candidates: string[];
   /**
    * The original completion from TS compiler.
-   * It's exposed for debugging purpuse.
+   * It's exposed for debugging purpose.
    */
   original?: ts.CompletionInfo;
 }
@@ -78,12 +78,14 @@ export interface IsCompleteResult {
 }
 
 export interface ConverterOptions {
-  /** If true, JavaScript mode. TypeSceript mode otherwise */
+  /** If true, JavaScript mode. TypeScript mode otherwise */
   isJS?: boolean;
   /** If true, creates a converter for browser mode. Otherwise, Node.js */
   isBrowser?: boolean;
   /** Only for testing. File changes are forwarded to this handler. */
   _fileWatcher?: ts.FileWatcherCallback;
+  /** If specified target will be used */
+  target?: string;
 }
 
 export interface Converter {
@@ -117,17 +119,17 @@ export function createConverter(options?: ConverterOptions): Converter {
   const dstFilename = normalizeJoin(outDir, "__tslab__.js");
   const dstDeclFilename = normalizeJoin(outDir, "__tslab__.d.ts");
 
+  const transpileTargetOption = ts.ScriptTarget[options?.target];
   // c.f.
   // https://github.com/microsoft/TypeScript/wiki/Node-Target-Mapping
   // https://github.com/microsoft/TypeScript/issues/22306#issuecomment-412266626
-  const transpileTarget =
-    semver.major(process.version) >= 12
+  const transpileTarget = transpileTargetOption ??
+    (semver.major(process.version) >= 12
       ? ts.ScriptTarget.ES2019
-      : ts.ScriptTarget.ES2018;
+      : ts.ScriptTarget.ES2018);
   // References:
   // https://github.com/microsoft/TypeScript/blob/master/src/lib/es2019.full.d.ts
-  const transpileLib =
-    transpileTarget === ts.ScriptTarget.ES2019 ? ["es2019"] : ["es2018"];
+  const transpileLib = [ ts.ScriptTarget[transpileTarget] ];
   if (options?.isBrowser) {
     transpileLib.push("dom");
     transpileLib.push("dom.iterable");
