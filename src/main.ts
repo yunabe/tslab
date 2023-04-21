@@ -145,17 +145,9 @@ export function main() {
       "--prefix [prefix]",
       "Kernelspec will be installed in {PREFIX}/share/jupyter/kernels/"
     )
-    .action(function () {
-      if (arguments.length != 1) {
-        console.error(
-          "Unused args:",
-          Array.from(arguments).filter((arg) => {
-            return typeof arg === "string";
-          })
-        );
-        process.exit(1);
-      }
-      let { binary, python, user, sysPrefix, prefix } = arguments[0];
+    .allowExcessArguments(false)
+    .action((options) => {
+      let { binary, python, user, sysPrefix, prefix } = options;
       const args = [path.join(path.dirname(__dirname), "python", "install.py")];
       args.push(`--tslab=${binary}`);
       if (user) {
@@ -184,17 +176,9 @@ export function main() {
     .description("Start Jupyter kernel. Used from Jupyter internally")
     .option("--config-path <path>", "Path of config file")
     .option("--js", "If set, start JavaScript kernel. Otherwise, TypeScript.")
-    .action(function () {
-      if (arguments.length != 1) {
-        console.error(
-          "Unused args:",
-          Array.from(arguments).filter((arg) => {
-            return typeof arg === "string";
-          })
-        );
-        process.exit(1);
-      }
-      let { configPath, js: jsKernel } = arguments[0];
+    .allowExcessArguments(false)
+    .action((options) => {
+      let { configPath, js: jsKernel } = options;
       startKernel({ configPath, jsKernel, globalVersion: getVersion() });
     });
 
