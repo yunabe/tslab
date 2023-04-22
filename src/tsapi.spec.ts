@@ -49,7 +49,7 @@ describe("transpile", () => {
         'Object.defineProperty(exports, "b", { enumerable: true, get: function () { return os_1.b; } });',
         'var c = require("vm");',
         "exports.c = c;",
-        "var d = os_1.a() + os_1.b;",
+        "var d = (0, os_1.a)() + os_1.b;",
         "exports.d = d;",
         "var e = x(y);",
         "exports.e = e;",

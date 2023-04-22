@@ -5,6 +5,17 @@
 
 import * as ts from "@tslab/typescript-for-tslab";
 
+function tagText(tag: ts.JSDocTagInfo): string {
+  if (!tag.text) {
+    return "";
+  }
+  const out = [];
+  for (const t of tag.text) {
+    out.push(t.text);
+  }
+  return out.join("");
+}
+
 export function printQuickInfo(info: ts.QuickInfo): string {
   let out = [];
   const parts = info.displayParts || [];
@@ -21,10 +32,14 @@ export function printQuickInfo(info: ts.QuickInfo): string {
     out.push(doc.text);
   }
   for (const tag of tags) {
-    let text = tag.text;
-    if (tag.name === "param") {
-      text = "@param " + text;
+    let text = tagText(tag);
+    if (!text) {
+      continue;
     }
+    if (tagText)
+      if (tag.name === "param") {
+        text = "@param " + text;
+      }
     out.push("\n");
     out.push(text);
   }

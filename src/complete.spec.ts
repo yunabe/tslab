@@ -39,8 +39,8 @@ describe("complete", () => {
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
         entries: [
-          { name: "abc", kind: "property", kindModifiers: "", sortText: "1" },
-          { name: "xyz", kind: "property", kindModifiers: "", sortText: "1" },
+          { name: "abc", kind: "property", kindModifiers: "", sortText: "11" },
+          { name: "xyz", kind: "property", kindModifiers: "", sortText: "11" },
         ],
       },
     });
@@ -63,8 +63,8 @@ describe("complete", () => {
         isNewIdentifierLocation: false,
         optionalReplacementSpan: { start, length: 2 },
         entries: [
-          { name: "abc", kind: "property", kindModifiers: "", sortText: "1" },
-          { name: "xyz", kind: "property", kindModifiers: "", sortText: "1" },
+          { name: "abc", kind: "property", kindModifiers: "", sortText: "11" },
+          { name: "xyz", kind: "property", kindModifiers: "", sortText: "11" },
         ],
       },
     });
@@ -86,8 +86,8 @@ describe("complete", () => {
         isNewIdentifierLocation: false,
         optionalReplacementSpan: { start, length: 2 },
         entries: [
-          { name: "abc", kind: "property", kindModifiers: "", sortText: "1" },
-          { name: "xyz", kind: "property", kindModifiers: "", sortText: "1" },
+          { name: "abc", kind: "property", kindModifiers: "", sortText: "11" },
+          { name: "xyz", kind: "property", kindModifiers: "", sortText: "11" },
         ],
       },
     });
@@ -109,8 +109,8 @@ describe("complete", () => {
         isNewIdentifierLocation: false,
         optionalReplacementSpan: { start: pos - 1, length: 2 },
         entries: [
-          { name: "abc", kind: "property", kindModifiers: "", sortText: "1" },
-          { name: "xyz", kind: "property", kindModifiers: "", sortText: "1" },
+          { name: "abc", kind: "property", kindModifiers: "", sortText: "11" },
+          { name: "xyz", kind: "property", kindModifiers: "", sortText: "11" },
         ],
       },
     });
@@ -131,8 +131,8 @@ describe("complete", () => {
         isNewIdentifierLocation: false,
         optionalReplacementSpan: { start: start, length: end - start },
         entries: [
-          { name: "abc", kind: "property", kindModifiers: "", sortText: "1" },
-          { name: "xyz", kind: "property", kindModifiers: "", sortText: "1" },
+          { name: "abc", kind: "property", kindModifiers: "", sortText: "11" },
+          { name: "xyz", kind: "property", kindModifiers: "", sortText: "11" },
         ],
       },
     });
@@ -170,8 +170,13 @@ describe("complete", () => {
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
         entries: [
-          { name: "alpha", kind: "property", kindModifiers: "", sortText: "1" },
-          { name: "beta", kind: "property", kindModifiers: "", sortText: "1" },
+          {
+            name: "alpha",
+            kind: "property",
+            kindModifiers: "",
+            sortText: "11",
+          },
+          { name: "beta", kind: "property", kindModifiers: "", sortText: "11" },
         ],
       },
     });
@@ -191,7 +196,7 @@ describe("complete", () => {
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
         entries: [
-          { name: "beta", kind: "property", kindModifiers: "", sortText: "1" },
+          { name: "beta", kind: "property", kindModifiers: "", sortText: "11" },
         ],
       },
     });
@@ -213,8 +218,13 @@ describe("complete", () => {
         isNewIdentifierLocation: false,
         optionalReplacementSpan: { start, length: end - start },
         entries: [
-          { name: "alpha", kind: "property", kindModifiers: "", sortText: "1" },
-          { name: "beta", kind: "property", kindModifiers: "", sortText: "1" },
+          {
+            name: "alpha",
+            kind: "property",
+            kindModifiers: "",
+            sortText: "11",
+          },
+          { name: "beta", kind: "property", kindModifiers: "", sortText: "11" },
         ],
       },
     });
@@ -235,8 +245,13 @@ describe("complete", () => {
         isNewIdentifierLocation: false,
         optionalReplacementSpan: { start, length: 2 },
         entries: [
-          { name: "alpha", kind: "property", kindModifiers: "", sortText: "1" },
-          { name: "beta", kind: "property", kindModifiers: "", sortText: "1" },
+          {
+            name: "alpha",
+            kind: "property",
+            kindModifiers: "",
+            sortText: "11",
+          },
+          { name: "beta", kind: "property", kindModifiers: "", sortText: "11" },
         ],
       },
     });
@@ -257,8 +272,13 @@ describe("complete", () => {
         isNewIdentifierLocation: false,
         optionalReplacementSpan: { start: middle - 1, length: 2 },
         entries: [
-          { name: "alpha", kind: "property", kindModifiers: "", sortText: "1" },
-          { name: "beta", kind: "property", kindModifiers: "", sortText: "1" },
+          {
+            name: "alpha",
+            kind: "property",
+            kindModifiers: "",
+            sortText: "11",
+          },
+          { name: "beta", kind: "property", kindModifiers: "", sortText: "11" },
         ],
       },
     });
@@ -287,52 +307,52 @@ describe("complete", () => {
         isNewIdentifierLocation: false,
         entries: [
           {
+            name: "compileFunction",
+            kind: "function",
+            kindModifiers: "declare",
+            sortText: "11",
+          },
+          {
             name: "createContext",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "1",
+            sortText: "11",
           },
           {
             name: "isContext",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "1",
-          },
-          {
-            name: "runInContext",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "1",
-          },
-          {
-            name: "runInNewContext",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "1",
-          },
-          {
-            name: "runInThisContext",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "1",
-          },
-          {
-            name: "compileFunction",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "1",
+            sortText: "11",
           },
           {
             name: "measureMemory",
             kind: "function",
             kindModifiers: "declare",
-            sortText: "1",
+            sortText: "11",
+          },
+          {
+            name: "runInContext",
+            kind: "function",
+            kindModifiers: "declare",
+            sortText: "11",
+          },
+          {
+            name: "runInNewContext",
+            kind: "function",
+            kindModifiers: "declare",
+            sortText: "11",
+          },
+          {
+            name: "runInThisContext",
+            kind: "function",
+            kindModifiers: "declare",
+            sortText: "11",
           },
           {
             name: "Script",
             kind: "class",
             kindModifiers: "declare",
-            sortText: "1",
+            sortText: "11",
           },
         ],
       },
@@ -347,19 +367,19 @@ describe("complete", () => {
     expect(info).toEqual({
       start,
       end,
-      candidates: ["XYZ", "xyz", "bxy", "axy", "cxy", "dXY"],
+      candidates: ["XYZ", "xyz", "axy", "bxy", "cxy", "dXY"],
       original: {
         isGlobalCompletion: false,
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
         optionalReplacementSpan: { start, length: 2 },
         entries: [
-          { name: "bxy", kind: "property", kindModifiers: "", sortText: "1" },
-          { name: "axy", kind: "property", kindModifiers: "", sortText: "1" },
-          { name: "cxy", kind: "property", kindModifiers: "", sortText: "1" },
-          { name: "dXY", kind: "property", kindModifiers: "", sortText: "1" },
-          { name: "xyz", kind: "property", kindModifiers: "", sortText: "1" },
-          { name: "XYZ", kind: "property", kindModifiers: "", sortText: "1" },
+          { name: "axy", kind: "property", kindModifiers: "", sortText: "11" },
+          { name: "bxy", kind: "property", kindModifiers: "", sortText: "11" },
+          { name: "cxy", kind: "property", kindModifiers: "", sortText: "11" },
+          { name: "dXY", kind: "property", kindModifiers: "", sortText: "11" },
+          { name: "xyz", kind: "property", kindModifiers: "", sortText: "11" },
+          { name: "XYZ", kind: "property", kindModifiers: "", sortText: "11" },
         ],
       },
     });
@@ -388,7 +408,7 @@ describe("complete", () => {
         "__filename",
         "AbortController",
         "AbortSignal",
-        "afterAll",
+        "abstract",
       ],
       original: {
         isGlobalCompletion: true,
@@ -399,15 +419,15 @@ describe("complete", () => {
             name: "Array",
             kind: "var",
             kindModifiers: "declare",
-            sortText: "5",
+            sortText: "15",
           },
           {
             name: "ArrayBuffer",
             kind: "var",
             kindModifiers: "declare",
-            sortText: "5",
+            sortText: "15",
           },
-          { name: "let", kind: "keyword", kindModifiers: "", sortText: "5" },
+          { name: "let", kind: "keyword", kindModifiers: "", sortText: "15" },
         ],
       },
     });
@@ -431,7 +451,7 @@ describe("complete", () => {
         "__filename",
         "AbortController",
         "AbortSignal",
-        "afterAll",
+        "abstract",
       ],
       original: {
         isGlobalCompletion: true,
@@ -439,34 +459,34 @@ describe("complete", () => {
         isNewIdentifierLocation: false,
         entries: [
           {
-            name: "oldval",
-            kind: "let",
+            name: "__dirname",
+            kind: "var",
             kindModifiers: "declare",
-            sortText: "5",
+            sortText: "15",
           },
           {
-            name: "globalThis",
-            kind: "module",
+            name: "__filename",
+            kind: "var",
+            kindModifiers: "declare",
+            sortText: "15",
+          },
+          {
+            name: "AbortController",
+            kind: "var",
+            kindModifiers: "declare",
+            sortText: "15",
+          },
+          {
+            name: "AbortSignal",
+            kind: "var",
+            kindModifiers: "declare",
+            sortText: "15",
+          },
+          {
+            name: "abstract",
+            kind: "keyword",
             kindModifiers: "",
-            sortText: "5",
-          },
-          {
-            name: "eval",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "5",
-          },
-          {
-            name: "parseInt",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "5",
-          },
-          {
-            name: "parseFloat",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "5",
+            sortText: "15",
           },
         ],
       },
@@ -488,34 +508,34 @@ describe("complete", () => {
         optionalReplacementSpan: { start: 0, length: 4 },
         entries: [
           {
-            name: "globalThis",
-            kind: "module",
+            name: "__dirname",
+            kind: "var",
+            kindModifiers: "declare",
+            sortText: "15",
+          },
+          {
+            name: "__filename",
+            kind: "var",
+            kindModifiers: "declare",
+            sortText: "15",
+          },
+          {
+            name: "AbortController",
+            kind: "var",
+            kindModifiers: "declare",
+            sortText: "15",
+          },
+          {
+            name: "AbortSignal",
+            kind: "var",
+            kindModifiers: "declare",
+            sortText: "15",
+          },
+          {
+            name: "abstract",
+            kind: "keyword",
             kindModifiers: "",
-            sortText: "5",
-          },
-          {
-            name: "eval",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "5",
-          },
-          {
-            name: "parseInt",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "5",
-          },
-          {
-            name: "parseFloat",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "5",
-          },
-          {
-            name: "isNaN",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "5",
+            sortText: "15",
           },
         ],
       },
@@ -537,34 +557,34 @@ describe("complete", () => {
         optionalReplacementSpan: { start: 0, length: 4 },
         entries: [
           {
-            name: "globalThis",
-            kind: "module",
+            name: "__dirname",
+            kind: "var",
+            kindModifiers: "declare",
+            sortText: "15",
+          },
+          {
+            name: "__filename",
+            kind: "var",
+            kindModifiers: "declare",
+            sortText: "15",
+          },
+          {
+            name: "AbortController",
+            kind: "var",
+            kindModifiers: "declare",
+            sortText: "15",
+          },
+          {
+            name: "AbortSignal",
+            kind: "var",
+            kindModifiers: "declare",
+            sortText: "15",
+          },
+          {
+            name: "abstract",
+            kind: "keyword",
             kindModifiers: "",
-            sortText: "5",
-          },
-          {
-            name: "eval",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "5",
-          },
-          {
-            name: "parseInt",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "5",
-          },
-          {
-            name: "parseFloat",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "5",
-          },
-          {
-            name: "isNaN",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "5",
+            sortText: "15",
           },
         ],
       },
@@ -578,7 +598,7 @@ describe("complete", () => {
     expect(info).toEqual({
       start: 0,
       end: 4,
-      candidates: ["setInterval", "setImmediate"],
+      candidates: ["setImmediate", "setInterval"],
       original: {
         isGlobalCompletion: true,
         isMemberCompletion: false,
@@ -586,34 +606,34 @@ describe("complete", () => {
         optionalReplacementSpan: { start: 0, length: 4 },
         entries: [
           {
-            name: "globalThis",
-            kind: "module",
+            name: "__dirname",
+            kind: "var",
+            kindModifiers: "declare",
+            sortText: "15",
+          },
+          {
+            name: "__filename",
+            kind: "var",
+            kindModifiers: "declare",
+            sortText: "15",
+          },
+          {
+            name: "AbortController",
+            kind: "var",
+            kindModifiers: "declare",
+            sortText: "15",
+          },
+          {
+            name: "AbortSignal",
+            kind: "var",
+            kindModifiers: "declare",
+            sortText: "15",
+          },
+          {
+            name: "abstract",
+            kind: "keyword",
             kindModifiers: "",
-            sortText: "5",
-          },
-          {
-            name: "eval",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "5",
-          },
-          {
-            name: "parseInt",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "5",
-          },
-          {
-            name: "parseFloat",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "5",
-          },
-          {
-            name: "isNaN",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "5",
+            sortText: "15",
           },
         ],
       },
@@ -651,31 +671,41 @@ describe("complete", () => {
         isNewIdentifierLocation: true,
         entries: [
           {
+            name: '"cupcake"',
+            kind: "string",
+            kindModifiers: "",
+            sortText: "11",
+          },
+          {
+            name: '"donut"',
+            kind: "string",
+            kindModifiers: "",
+            sortText: "11",
+          },
+          {
+            name: '"eclair"',
+            kind: "string",
+            kindModifiers: "",
+            sortText: "11",
+          },
+          {
+            name: '"froyo"',
+            kind: "string",
+            kindModifiers: "",
+            sortText: "11",
+          },
+          {
             name: "Array",
             kind: "var",
             kindModifiers: "declare",
-            sortText: "5",
+            sortText: "15",
           },
           {
             name: "ArrayBuffer",
             kind: "var",
             kindModifiers: "declare",
-            sortText: "5",
+            sortText: "15",
           },
-          {
-            name: '"cupcake"',
-            kind: "string",
-            kindModifiers: "",
-            sortText: "1",
-          },
-          { name: '"donut"', kind: "string", kindModifiers: "", sortText: "1" },
-          {
-            name: '"eclair"',
-            kind: "string",
-            kindModifiers: "",
-            sortText: "1",
-          },
-          { name: '"froyo"', kind: "string", kindModifiers: "", sortText: "1" },
         ],
       },
     });
@@ -697,20 +727,20 @@ describe("complete", () => {
         isMemberCompletion: false,
         isNewIdentifierLocation: false,
         entries: [
-          { name: "abc", kind: "parameter", kindModifiers: "", sortText: "1" },
-          { name: "xyz", kind: "parameter", kindModifiers: "", sortText: "1" },
+          { name: "abc", kind: "parameter", kindModifiers: "", sortText: "11" },
           {
             name: "arguments",
             kind: "local var",
             kindModifiers: "",
-            sortText: "1",
+            sortText: "11",
           },
-          { name: "fn", kind: "function", kindModifiers: "", sortText: "1" },
+          { name: "fn", kind: "function", kindModifiers: "", sortText: "11" },
+          { name: "xyz", kind: "parameter", kindModifiers: "", sortText: "11" },
           {
-            name: "globalThis",
-            kind: "module",
-            kindModifiers: "",
-            sortText: "5",
+            name: "__dirname",
+            kind: "var",
+            kindModifiers: "declare",
+            sortText: "15",
           },
         ],
       },
@@ -784,22 +814,32 @@ describe("complete", () => {
             name: "@abstract",
             kind: "keyword",
             kindModifiers: "",
-            sortText: "1",
+            sortText: "11",
           },
           {
             name: "@access",
             kind: "keyword",
             kindModifiers: "",
-            sortText: "1",
+            sortText: "11",
           },
-          { name: "@alias", kind: "keyword", kindModifiers: "", sortText: "1" },
+          {
+            name: "@alias",
+            kind: "keyword",
+            kindModifiers: "",
+            sortText: "11",
+          },
           {
             name: "@argument",
             kind: "keyword",
             kindModifiers: "",
-            sortText: "1",
+            sortText: "11",
           },
-          { name: "@async", kind: "keyword", kindModifiers: "", sortText: "1" },
+          {
+            name: "@async",
+            kind: "keyword",
+            kindModifiers: "",
+            sortText: "11",
+          },
         ],
       },
     });
@@ -826,24 +866,29 @@ describe("complete", () => {
             name: "abstract",
             kind: "keyword",
             kindModifiers: "",
-            sortText: "1",
+            sortText: "11",
           },
-          { name: "access", kind: "keyword", kindModifiers: "", sortText: "1" },
-          { name: "alias", kind: "keyword", kindModifiers: "", sortText: "1" },
+          {
+            name: "access",
+            kind: "keyword",
+            kindModifiers: "",
+            sortText: "11",
+          },
+          { name: "alias", kind: "keyword", kindModifiers: "", sortText: "11" },
           {
             name: "argument",
             kind: "keyword",
             kindModifiers: "",
-            sortText: "1",
+            sortText: "11",
           },
-          { name: "async", kind: "keyword", kindModifiers: "", sortText: "1" },
+          { name: "async", kind: "keyword", kindModifiers: "", sortText: "11" },
         ],
       },
     });
   });
 
   it("docstring parameter", () => {
-    const src = `/** @param [cur]*/ function f(xyz: number, abc: string): void {}`;
+    const src = `/** @param [cur] */ function f(xyz: number, abc: string): void {}`;
     const info = complete(src);
     const start = src.indexOf("[cur]");
     expect(info).toEqual({
@@ -855,8 +900,8 @@ describe("complete", () => {
         isMemberCompletion: false,
         isNewIdentifierLocation: false,
         entries: [
-          { name: "xyz", kind: "parameter", kindModifiers: "", sortText: "1" },
-          { name: "abc", kind: "parameter", kindModifiers: "", sortText: "1" },
+          { name: "xyz", kind: "parameter", kindModifiers: "", sortText: "11" },
+          { name: "abc", kind: "parameter", kindModifiers: "", sortText: "11" },
         ],
       },
     });

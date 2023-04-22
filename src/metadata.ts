@@ -46,7 +46,11 @@ export function getCodeMetadata(src: string): CodeMetadata {
     }
     for (const tag of jsDoc.tags as ts.JSDocTag[]) {
       const tagName = tag.tagName.escapedText;
-      if (tagName === "module" && isValidModuleName(tag.comment)) {
+      if (
+        tagName === "module" &&
+        typeof tag.comment == "string" &&
+        isValidModuleName(tag.comment)
+      ) {
         out.module = tag.comment;
       } else if (tagName === "jsx") {
         out.jsx = true;

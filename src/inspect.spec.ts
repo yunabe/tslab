@@ -213,11 +213,22 @@ describe("inspect", () => {
       tags: [
         {
           name: "param",
-          text: "searchString The substring to search for in the string",
+          text: [
+            { text: "searchString", kind: "parameterName" },
+            { text: " ", kind: "space" },
+            { text: "The substring to search for in the string", kind: "text" },
+          ],
         },
         {
           name: "param",
-          text: "position The index at which to begin searching the String object. If omitted, search starts at the beginning of the string.",
+          text: [
+            { text: "position", kind: "parameterName" },
+            { text: " ", kind: "space" },
+            {
+              text: "The index at which to begin searching the String object. If omitted, search starts at the beginning of the string.",
+              kind: "text",
+            },
+          ],
         },
       ],
     });
@@ -265,7 +276,7 @@ describe("inspect", () => {
         { text: " ", kind: "space" },
         { text: "(", kind: "punctuation" },
         { text: "+", kind: "operator" },
-        { text: "2", kind: "numericLiteral" },
+        { text: "3", kind: "numericLiteral" },
         { text: " ", kind: "space" },
         { text: "overloads", kind: "text" },
         { text: ")", kind: "punctuation" },
@@ -275,7 +286,7 @@ describe("inspect", () => {
     expect(printQuickInfo(info)).toEqual(
       [
         "var Map: MapConstructor",
-        "new () => Map<any, any> (+2 overloads)",
+        "new () => Map<any, any> (+3 overloads)",
       ].join("\n")
     );
   });

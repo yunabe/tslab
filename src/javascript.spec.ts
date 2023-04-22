@@ -205,8 +205,8 @@ describe("complete", () => {
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
         entries: [
-          { name: "abc", kind: "property", kindModifiers: "", sortText: "1" },
-          { name: "xyz", kind: "property", kindModifiers: "", sortText: "1" },
+          { name: "abc", kind: "property", kindModifiers: "", sortText: "11" },
+          { name: "xyz", kind: "property", kindModifiers: "", sortText: "11" },
         ],
       },
     });

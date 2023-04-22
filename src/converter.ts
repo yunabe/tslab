@@ -1153,7 +1153,12 @@ function getCompletionsAtPosition(
     sourceFile,
     position,
     preferences,
-    triggerCharacter
+    triggerCharacter,
+    ts.CompletionTriggerKind.Invoked,
+    {
+      isCancellationRequested: () => false,
+      throwIfCancellationRequested: () => void 0,
+    }
   );
 }
 
