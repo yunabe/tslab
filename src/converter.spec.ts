@@ -244,7 +244,7 @@ function increment() {
           "let counter = 0;",
           "exports.counter = counter;",
           "function increment() {",
-          "    exports.counter = counter += 1;",
+          "    (exports.counter = counter += 1);",
           "}",
           "exports.increment = increment;",
         ],
