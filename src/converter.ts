@@ -156,10 +156,21 @@ export function createConverter(options?: ConverterOptions): Converter {
     return cwd;
   };
   sys.setTimeout = (callback: (...args: any[]) => void): any => {
+    // TypeScript compier implements debouncing using a timer.
+    // It clears a timer when a new change is notified before the timer
+    // is fired and it starts rebuilding sources.
+    //
+    // In this converter, it often happens when notifyUpdateSrc and
+    // notifyUpdateDecls are called in sequence.
     if (rebuildTimer) {
       throw new Error("Unexpected pending rebuildTimer");
     }
-    rebuildTimer = { callback };
+    rebuildTimer = {
+      callback: () => {
+        callback();
+        rebuildTimer = null;
+      },
+    };
     return rebuildTimer;
   };
   sys.clearTimeout = (timeoutId: any) => {
@@ -735,7 +746,6 @@ export function createConverter(options?: ConverterOptions): Converter {
       throw new Error("rebuildTimer is not set properly");
     }
     rebuildTimer.callback();
-    rebuildTimer = null;
     if (!builder) {
       throw new Error("builder is not recreated");
     }
@@ -1018,7 +1028,6 @@ export function createConverter(options?: ConverterOptions): Converter {
       throw new Error("rebuildTimer is not set properly");
     }
     rebuildTimer.callback();
-    rebuildTimer = null;
     const file = builder.getSourceFile(path);
 
     const diags = ts.getPreEmitDiagnostics(builder.getProgram(), file);
