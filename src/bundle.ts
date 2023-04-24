@@ -54,6 +54,7 @@ export async function bundle(
       // c.f. https://github.com/webpack/webpack/issues/1720
       replace({
         "process.env.NODE_ENV": JSON.stringify("production"),
+        preventAssignment: true,
       }),
     ],
   });
