@@ -14,11 +14,17 @@ function completeWithPrev(
   prevDecl: string,
   src: string
 ): converter.CompletionInfo {
-  return conv.complete(
+  const ret = conv.complete(
     prevDecl,
     src.replace("[cur]", ""),
     src.indexOf("[cur]")
   );
+  if (ret.original) {
+    // Original candidates can change easily by updating TypeScript version and
+    // they do not convery much information in unit tests.
+    ret.original.entries = [];
+  }
+  return ret;
 }
 
 function complete(src: string): converter.CompletionInfo {
@@ -38,10 +44,7 @@ describe("complete", () => {
         isGlobalCompletion: false,
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
-        entries: [
-          { name: "abc", kind: "property", kindModifiers: "", sortText: "11" },
-          { name: "xyz", kind: "property", kindModifiers: "", sortText: "11" },
-        ],
+        entries: [],
       },
     });
   });
@@ -62,10 +65,7 @@ describe("complete", () => {
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
         optionalReplacementSpan: { start, length: 2 },
-        entries: [
-          { name: "abc", kind: "property", kindModifiers: "", sortText: "11" },
-          { name: "xyz", kind: "property", kindModifiers: "", sortText: "11" },
-        ],
+        entries: [],
       },
     });
   });
@@ -85,10 +85,7 @@ describe("complete", () => {
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
         optionalReplacementSpan: { start, length: 2 },
-        entries: [
-          { name: "abc", kind: "property", kindModifiers: "", sortText: "11" },
-          { name: "xyz", kind: "property", kindModifiers: "", sortText: "11" },
-        ],
+        entries: [],
       },
     });
   });
@@ -108,10 +105,7 @@ describe("complete", () => {
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
         optionalReplacementSpan: { start: pos - 1, length: 2 },
-        entries: [
-          { name: "abc", kind: "property", kindModifiers: "", sortText: "11" },
-          { name: "xyz", kind: "property", kindModifiers: "", sortText: "11" },
-        ],
+        entries: [],
       },
     });
   });
@@ -130,10 +124,7 @@ describe("complete", () => {
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
         optionalReplacementSpan: { start: start, length: end - start },
-        entries: [
-          { name: "abc", kind: "property", kindModifiers: "", sortText: "11" },
-          { name: "xyz", kind: "property", kindModifiers: "", sortText: "11" },
-        ],
+        entries: [],
       },
     });
   });
@@ -169,15 +160,7 @@ describe("complete", () => {
         isGlobalCompletion: false,
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
-        entries: [
-          {
-            name: "alpha",
-            kind: "property",
-            kindModifiers: "",
-            sortText: "11",
-          },
-          { name: "beta", kind: "property", kindModifiers: "", sortText: "11" },
-        ],
+        entries: [],
       },
     });
   });
@@ -195,9 +178,7 @@ describe("complete", () => {
         isGlobalCompletion: false,
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
-        entries: [
-          { name: "beta", kind: "property", kindModifiers: "", sortText: "11" },
-        ],
+        entries: [],
       },
     });
   });
@@ -217,15 +198,7 @@ describe("complete", () => {
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
         optionalReplacementSpan: { start, length: end - start },
-        entries: [
-          {
-            name: "alpha",
-            kind: "property",
-            kindModifiers: "",
-            sortText: "11",
-          },
-          { name: "beta", kind: "property", kindModifiers: "", sortText: "11" },
-        ],
+        entries: [],
       },
     });
   });
@@ -244,15 +217,7 @@ describe("complete", () => {
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
         optionalReplacementSpan: { start, length: 2 },
-        entries: [
-          {
-            name: "alpha",
-            kind: "property",
-            kindModifiers: "",
-            sortText: "11",
-          },
-          { name: "beta", kind: "property", kindModifiers: "", sortText: "11" },
-        ],
+        entries: [],
       },
     });
   });
@@ -271,15 +236,7 @@ describe("complete", () => {
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
         optionalReplacementSpan: { start: middle - 1, length: 2 },
-        entries: [
-          {
-            name: "alpha",
-            kind: "property",
-            kindModifiers: "",
-            sortText: "11",
-          },
-          { name: "beta", kind: "property", kindModifiers: "", sortText: "11" },
-        ],
+        entries: [],
       },
     });
   });
@@ -305,56 +262,7 @@ describe("complete", () => {
         isGlobalCompletion: false,
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
-        entries: [
-          {
-            name: "compileFunction",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "11",
-          },
-          {
-            name: "createContext",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "11",
-          },
-          {
-            name: "isContext",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "11",
-          },
-          {
-            name: "measureMemory",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "11",
-          },
-          {
-            name: "runInContext",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "11",
-          },
-          {
-            name: "runInNewContext",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "11",
-          },
-          {
-            name: "runInThisContext",
-            kind: "function",
-            kindModifiers: "declare",
-            sortText: "11",
-          },
-          {
-            name: "Script",
-            kind: "class",
-            kindModifiers: "declare",
-            sortText: "11",
-          },
-        ],
+        entries: [],
       },
     });
   });
@@ -373,14 +281,7 @@ describe("complete", () => {
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
         optionalReplacementSpan: { start, length: 2 },
-        entries: [
-          { name: "axy", kind: "property", kindModifiers: "", sortText: "11" },
-          { name: "bxy", kind: "property", kindModifiers: "", sortText: "11" },
-          { name: "cxy", kind: "property", kindModifiers: "", sortText: "11" },
-          { name: "dXY", kind: "property", kindModifiers: "", sortText: "11" },
-          { name: "xyz", kind: "property", kindModifiers: "", sortText: "11" },
-          { name: "XYZ", kind: "property", kindModifiers: "", sortText: "11" },
-        ],
+        entries: [],
       },
     });
   });
@@ -391,15 +292,6 @@ describe("complete", () => {
     expect(info.original).not.toBeUndefined();
     // Filter entries to keep this test short.
     info.candidates = info.candidates.slice(0, 5);
-    info.original.entries = info.original.entries.filter((e) => {
-      if (e.name.startsWith("Array")) {
-        return true;
-      }
-      if (e.name === "let") {
-        return true;
-      }
-      return false;
-    });
     expect(info).toEqual({
       start: 0,
       end: 0,
@@ -414,21 +306,7 @@ describe("complete", () => {
         isGlobalCompletion: true,
         isMemberCompletion: false,
         isNewIdentifierLocation: false,
-        entries: [
-          {
-            name: "Array",
-            kind: "var",
-            kindModifiers: "declare",
-            sortText: "15",
-          },
-          {
-            name: "ArrayBuffer",
-            kind: "var",
-            kindModifiers: "declare",
-            sortText: "15",
-          },
-          { name: "let", kind: "keyword", kindModifiers: "", sortText: "15" },
-        ],
+        entries: [],
       },
     });
   });
@@ -457,38 +335,7 @@ describe("complete", () => {
         isGlobalCompletion: true,
         isMemberCompletion: false,
         isNewIdentifierLocation: false,
-        entries: [
-          {
-            name: "__dirname",
-            kind: "var",
-            kindModifiers: "declare",
-            sortText: "15",
-          },
-          {
-            name: "__filename",
-            kind: "var",
-            kindModifiers: "declare",
-            sortText: "15",
-          },
-          {
-            name: "AbortController",
-            kind: "var",
-            kindModifiers: "declare",
-            sortText: "15",
-          },
-          {
-            name: "AbortSignal",
-            kind: "var",
-            kindModifiers: "declare",
-            sortText: "15",
-          },
-          {
-            name: "abstract",
-            kind: "keyword",
-            kindModifiers: "",
-            sortText: "15",
-          },
-        ],
+        entries: [],
       },
     });
   });
@@ -496,7 +343,6 @@ describe("complete", () => {
   it("globals with prefix", () => {
     const src = `setT[cur]`;
     const info = complete(src);
-    info.original.entries = info.original.entries.slice(0, 5);
     expect(info).toEqual({
       start: 0,
       end: 4,
@@ -506,38 +352,7 @@ describe("complete", () => {
         isMemberCompletion: false,
         isNewIdentifierLocation: false,
         optionalReplacementSpan: { start: 0, length: 4 },
-        entries: [
-          {
-            name: "__dirname",
-            kind: "var",
-            kindModifiers: "declare",
-            sortText: "15",
-          },
-          {
-            name: "__filename",
-            kind: "var",
-            kindModifiers: "declare",
-            sortText: "15",
-          },
-          {
-            name: "AbortController",
-            kind: "var",
-            kindModifiers: "declare",
-            sortText: "15",
-          },
-          {
-            name: "AbortSignal",
-            kind: "var",
-            kindModifiers: "declare",
-            sortText: "15",
-          },
-          {
-            name: "abstract",
-            kind: "keyword",
-            kindModifiers: "",
-            sortText: "15",
-          },
-        ],
+        entries: [],
       },
     });
   });
@@ -545,7 +360,6 @@ describe("complete", () => {
   it("globals with suffix", () => {
     const src = `[cur]setT`;
     const info = complete(src);
-    info.original.entries = info.original.entries.slice(0, 5);
     expect(info).toEqual({
       start: 0,
       end: 4,
@@ -555,38 +369,7 @@ describe("complete", () => {
         isMemberCompletion: false,
         isNewIdentifierLocation: false,
         optionalReplacementSpan: { start: 0, length: 4 },
-        entries: [
-          {
-            name: "__dirname",
-            kind: "var",
-            kindModifiers: "declare",
-            sortText: "15",
-          },
-          {
-            name: "__filename",
-            kind: "var",
-            kindModifiers: "declare",
-            sortText: "15",
-          },
-          {
-            name: "AbortController",
-            kind: "var",
-            kindModifiers: "declare",
-            sortText: "15",
-          },
-          {
-            name: "AbortSignal",
-            kind: "var",
-            kindModifiers: "declare",
-            sortText: "15",
-          },
-          {
-            name: "abstract",
-            kind: "keyword",
-            kindModifiers: "",
-            sortText: "15",
-          },
-        ],
+        entries: [],
       },
     });
   });
@@ -604,38 +387,7 @@ describe("complete", () => {
         isMemberCompletion: false,
         isNewIdentifierLocation: false,
         optionalReplacementSpan: { start: 0, length: 4 },
-        entries: [
-          {
-            name: "__dirname",
-            kind: "var",
-            kindModifiers: "declare",
-            sortText: "15",
-          },
-          {
-            name: "__filename",
-            kind: "var",
-            kindModifiers: "declare",
-            sortText: "15",
-          },
-          {
-            name: "AbortController",
-            kind: "var",
-            kindModifiers: "declare",
-            sortText: "15",
-          },
-          {
-            name: "AbortSignal",
-            kind: "var",
-            kindModifiers: "declare",
-            sortText: "15",
-          },
-          {
-            name: "abstract",
-            kind: "keyword",
-            kindModifiers: "",
-            sortText: "15",
-          },
-        ],
+        entries: [],
       },
     });
   });
@@ -646,12 +398,6 @@ describe("complete", () => {
     expect(info).not.toBeUndefined();
     // Filter entries to keep this test short.
     info.candidates = info.candidates.slice(0, 6);
-    info.original.entries = info.original.entries.filter((e) => {
-      if (e.kind === "string") {
-        return true;
-      }
-      return e.name.startsWith("Array");
-    });
     const start = src.indexOf("[cur]");
     // Note that string literals have higher sortText.
     expect(info).toEqual({
@@ -669,44 +415,7 @@ describe("complete", () => {
         isGlobalCompletion: true,
         isMemberCompletion: false,
         isNewIdentifierLocation: true,
-        entries: [
-          {
-            name: '"cupcake"',
-            kind: "string",
-            kindModifiers: "",
-            sortText: "11",
-          },
-          {
-            name: '"donut"',
-            kind: "string",
-            kindModifiers: "",
-            sortText: "11",
-          },
-          {
-            name: '"eclair"',
-            kind: "string",
-            kindModifiers: "",
-            sortText: "11",
-          },
-          {
-            name: '"froyo"',
-            kind: "string",
-            kindModifiers: "",
-            sortText: "11",
-          },
-          {
-            name: "Array",
-            kind: "var",
-            kindModifiers: "declare",
-            sortText: "15",
-          },
-          {
-            name: "ArrayBuffer",
-            kind: "var",
-            kindModifiers: "declare",
-            sortText: "15",
-          },
-        ],
+        entries: [],
       },
     });
   });
@@ -716,7 +425,6 @@ describe("complete", () => {
     const info = complete(src);
     // Filter entries to keep this test short.
     info.candidates = info.candidates.slice(0, 5);
-    info.original.entries = info.original.entries.slice(0, 5);
     const start = src.indexOf("[cur]");
     expect(info).toEqual({
       start,
@@ -726,23 +434,7 @@ describe("complete", () => {
         isGlobalCompletion: true,
         isMemberCompletion: false,
         isNewIdentifierLocation: false,
-        entries: [
-          { name: "abc", kind: "parameter", kindModifiers: "", sortText: "11" },
-          {
-            name: "arguments",
-            kind: "local var",
-            kindModifiers: "",
-            sortText: "11",
-          },
-          { name: "fn", kind: "function", kindModifiers: "", sortText: "11" },
-          { name: "xyz", kind: "parameter", kindModifiers: "", sortText: "11" },
-          {
-            name: "__dirname",
-            kind: "var",
-            kindModifiers: "declare",
-            sortText: "15",
-          },
-        ],
+        entries: [],
       },
     });
   });
@@ -800,7 +492,6 @@ describe("complete", () => {
     const info = complete(src);
     const start = src.indexOf("[cur]");
     info.candidates = info.candidates.slice(0, 5);
-    info.original.entries = info.original.entries.slice(0, 5);
     expect(info).toEqual({
       start: 4,
       end: 4,
@@ -809,38 +500,7 @@ describe("complete", () => {
         isGlobalCompletion: false,
         isMemberCompletion: false,
         isNewIdentifierLocation: false,
-        entries: [
-          {
-            name: "@abstract",
-            kind: "keyword",
-            kindModifiers: "",
-            sortText: "11",
-          },
-          {
-            name: "@access",
-            kind: "keyword",
-            kindModifiers: "",
-            sortText: "11",
-          },
-          {
-            name: "@alias",
-            kind: "keyword",
-            kindModifiers: "",
-            sortText: "11",
-          },
-          {
-            name: "@argument",
-            kind: "keyword",
-            kindModifiers: "",
-            sortText: "11",
-          },
-          {
-            name: "@async",
-            kind: "keyword",
-            kindModifiers: "",
-            sortText: "11",
-          },
-        ],
+        entries: [],
       },
     });
   });
@@ -852,7 +512,6 @@ describe("complete", () => {
     const info = complete(src);
     const end = src.indexOf("[cur]");
     // Reduce # of entries.
-    info.original.entries = info.original.entries.slice(0, 5);
     expect(info).toEqual({
       start: end - 3,
       end,
@@ -861,28 +520,7 @@ describe("complete", () => {
         isGlobalCompletion: false,
         isMemberCompletion: false,
         isNewIdentifierLocation: false,
-        entries: [
-          {
-            name: "abstract",
-            kind: "keyword",
-            kindModifiers: "",
-            sortText: "11",
-          },
-          {
-            name: "access",
-            kind: "keyword",
-            kindModifiers: "",
-            sortText: "11",
-          },
-          { name: "alias", kind: "keyword", kindModifiers: "", sortText: "11" },
-          {
-            name: "argument",
-            kind: "keyword",
-            kindModifiers: "",
-            sortText: "11",
-          },
-          { name: "async", kind: "keyword", kindModifiers: "", sortText: "11" },
-        ],
+        entries: [],
       },
     });
   });
@@ -899,10 +537,7 @@ describe("complete", () => {
         isGlobalCompletion: false,
         isMemberCompletion: false,
         isNewIdentifierLocation: false,
-        entries: [
-          { name: "xyz", kind: "parameter", kindModifiers: "", sortText: "11" },
-          { name: "abc", kind: "parameter", kindModifiers: "", sortText: "11" },
-        ],
+        entries: [],
       },
     });
   });
