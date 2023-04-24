@@ -4,6 +4,7 @@ import * as ts from "@tslab/typescript-for-tslab";
 import { isValidModuleName } from "./util";
 import { CodeMetadata } from "./metadata";
 import { normalizeJoin } from "./tspath";
+import { execPath } from "process";
 
 // TODO: Disallow accessing "module" of Node.js.
 
@@ -735,19 +736,20 @@ export function createConverter(options?: ConverterOptions): Converter {
   }
 
   function updateContent(decls: string, src: string) {
+    const changed = declContent != decls || srcContent != src;
+    const oldBuilder = builder;
     declContent = decls;
     srcContent = src;
-    builder = null;
-    // TODO: Notify updates only when src is really updated,
-    // unless there is another cache layer in watcher API.
     notifyUpdateSrc(srcFilename, ts.FileWatcherEventKind.Changed);
     notifyUpdateDecls(declFilename, ts.FileWatcherEventKind.Changed);
     if (!rebuildTimer) {
       throw new Error("rebuildTimer is not set properly");
     }
     rebuildTimer.callback();
-    if (!builder) {
-      throw new Error("builder is not recreated");
+    if (builder === oldBuilder && changed) {
+      // TypeScript 3.9 checkes if files are updated internally and recreate
+      // builder only when files are updated. TypeScript 3.6 did not.
+      console.warn("builder is not recreated though contents are changed.");
     }
   }
 
@@ -1021,12 +1023,12 @@ export function createConverter(options?: ConverterOptions): Converter {
     if (fileWatchers.has(path)) {
       fileWatchers.get(path)(path, ts.FileWatcherEventKind.Changed);
     }
-    builder = null;
     rootFiles.add(path);
     watch.updateRootFileNames(Array.from(rootFiles));
     if (!rebuildTimer) {
       throw new Error("rebuildTimer is not set properly");
     }
+    // Note: builder is updated iff content is changed.
     rebuildTimer.callback();
     const file = builder.getSourceFile(path);
 

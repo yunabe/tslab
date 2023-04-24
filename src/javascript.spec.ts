@@ -201,6 +201,7 @@ describe("complete", () => {
       end: start,
       candidates: ["abc", "xyz"],
       original: {
+        flags: 0,
         isGlobalCompletion: false,
         isMemberCompletion: true,
         isNewIdentifierLocation: false,

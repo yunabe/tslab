@@ -315,7 +315,7 @@ declare class SquareImpl implements Square {
     const out = conv.convert("", `type mytype = number | string;`);
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(buildOutput([]));
-    expect(out.declOutput).toEqual("declare type mytype = number | string;\n");
+    expect(out.declOutput).toEqual("type mytype = number | string;\n");
   });
 
   it("generics", () => {
@@ -1152,7 +1152,7 @@ import { CpuInfo } from "os";
     );
     expect(out.diagnostics).toEqual([]);
     expect(out.declOutput).toEqual(
-      'declare type cpus = number;\nimport { cpus } from "os";\n'
+      'type cpus = number;\nimport { cpus } from "os";\n'
     );
   });
 
@@ -1170,7 +1170,7 @@ import { CpuInfo } from "os";
     expect(out.diagnostics).toEqual([]);
     expect(out.output).toEqual(buildOutput([]));
     expect(out.declOutput).toEqual(
-      'declare type os = string;\nimport * as os from "os";\n'
+      'type os = string;\nimport * as os from "os";\n'
     );
   });
 
@@ -1312,6 +1312,14 @@ describe("modules", () => {
     );
 
     // update mylib.
+    expect(conv.addModule("mylib", `export const abc = 1234;`)).toEqual([]);
+    out = conv.convert("", 'import {abc} from "./mylib";\nconst xyz = abc;');
+    expect(out.diagnostics).toEqual([]);
+    expect(out.declOutput).toEqual(
+      'import { abc } from "./mylib";\ndeclare const xyz = 1234;\n'
+    );
+
+    // update mylib with no change.
     expect(conv.addModule("mylib", `export const abc = 1234;`)).toEqual([]);
     out = conv.convert("", 'import {abc} from "./mylib";\nconst xyz = abc;');
     expect(out.diagnostics).toEqual([]);

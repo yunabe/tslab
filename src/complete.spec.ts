@@ -41,6 +41,7 @@ describe("complete", () => {
       end: start,
       candidates: ["abc", "xyz"],
       original: {
+        flags: 0,
         isGlobalCompletion: false,
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
@@ -61,6 +62,7 @@ describe("complete", () => {
       end,
       candidates: ["abc"],
       original: {
+        flags: 0,
         isGlobalCompletion: false,
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
@@ -81,6 +83,7 @@ describe("complete", () => {
       end: start + 2,
       candidates: ["abc"],
       original: {
+        flags: 0,
         isGlobalCompletion: false,
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
@@ -101,6 +104,7 @@ describe("complete", () => {
       end: pos + 1,
       candidates: ["abc"],
       original: {
+        flags: 0,
         isGlobalCompletion: false,
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
@@ -120,6 +124,7 @@ describe("complete", () => {
       end,
       candidates: [],
       original: {
+        flags: 0,
         isGlobalCompletion: false,
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
@@ -157,6 +162,7 @@ describe("complete", () => {
       end: start,
       candidates: ["alpha", "beta"],
       original: {
+        flags: 0,
         isGlobalCompletion: false,
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
@@ -175,6 +181,7 @@ describe("complete", () => {
       end: start,
       candidates: ["beta"],
       original: {
+        flags: 0,
         isGlobalCompletion: false,
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
@@ -194,6 +201,7 @@ describe("complete", () => {
       end,
       candidates: ["alpha"],
       original: {
+        flags: 0,
         isGlobalCompletion: false,
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
@@ -213,6 +221,7 @@ describe("complete", () => {
       end: start + 2,
       candidates: ["alpha"],
       original: {
+        flags: 0,
         isGlobalCompletion: false,
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
@@ -232,6 +241,7 @@ describe("complete", () => {
       end: middle + 1,
       candidates: ["alpha"],
       original: {
+        flags: 0,
         isGlobalCompletion: false,
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
@@ -259,6 +269,7 @@ describe("complete", () => {
         "Script",
       ],
       original: {
+        flags: 0,
         isGlobalCompletion: false,
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
@@ -277,6 +288,7 @@ describe("complete", () => {
       end,
       candidates: ["XYZ", "xyz", "axy", "bxy", "cxy", "dXY"],
       original: {
+        flags: 0,
         isGlobalCompletion: false,
         isMemberCompletion: true,
         isNewIdentifierLocation: false,
@@ -303,6 +315,7 @@ describe("complete", () => {
         "abstract",
       ],
       original: {
+        flags: 0,
         isGlobalCompletion: true,
         isMemberCompletion: false,
         isNewIdentifierLocation: false,
@@ -318,7 +331,6 @@ describe("complete", () => {
     expect(info.original).not.toBeUndefined();
     // Filter entries to keep this test short.
     info.candidates = info.candidates.slice(0, 5);
-    info.original.entries = info.original.entries.slice(0, 5);
     // TODO: Prioritize `oldval` and `newval` in entries and show it at the top of candidates.
     const start = src.indexOf("[cur]");
     expect(info).toEqual({
@@ -332,6 +344,7 @@ describe("complete", () => {
         "abstract",
       ],
       original: {
+        flags: 0,
         isGlobalCompletion: true,
         isMemberCompletion: false,
         isNewIdentifierLocation: false,
@@ -348,6 +361,7 @@ describe("complete", () => {
       end: 4,
       candidates: ["setTimeout"],
       original: {
+        flags: 0,
         isGlobalCompletion: true,
         isMemberCompletion: false,
         isNewIdentifierLocation: false,
@@ -365,6 +379,7 @@ describe("complete", () => {
       end: 4,
       candidates: ["setTimeout"],
       original: {
+        flags: 0,
         isGlobalCompletion: true,
         isMemberCompletion: false,
         isNewIdentifierLocation: false,
@@ -377,12 +392,12 @@ describe("complete", () => {
   it("globals with surrounding", () => {
     const src = `set[cur]I`;
     const info = complete(src);
-    info.original.entries = info.original.entries.slice(0, 5);
     expect(info).toEqual({
       start: 0,
       end: 4,
       candidates: ["setImmediate", "setInterval"],
       original: {
+        flags: 0,
         isGlobalCompletion: true,
         isMemberCompletion: false,
         isNewIdentifierLocation: false,
@@ -412,6 +427,7 @@ describe("complete", () => {
         "__dirname",
       ],
       original: {
+        flags: 0,
         isGlobalCompletion: true,
         isMemberCompletion: false,
         isNewIdentifierLocation: true,
@@ -431,6 +447,7 @@ describe("complete", () => {
       end: start,
       candidates: ["abc", "arguments", "fn", "xyz", "__dirname"],
       original: {
+        flags: 0,
         isGlobalCompletion: true,
         isMemberCompletion: false,
         isNewIdentifierLocation: false,

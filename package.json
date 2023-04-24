@@ -20,7 +20,7 @@
     "@rollup/plugin-commonjs": "^13.0.0",
     "@rollup/plugin-node-resolve": "^11.0.0",
     "@rollup/plugin-replace": "^2.3.0",
-    "@tslab/typescript-for-tslab": "4.6.4",
+    "@tslab/typescript-for-tslab": "4.9.4",
     "@types/node": "^14.14.13",
     "commander": "^10.0.0",
     "rollup": "^2.34.2",
