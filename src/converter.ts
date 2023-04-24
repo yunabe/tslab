@@ -693,9 +693,8 @@ export function createConverter(options?: ConverterOptions): Converter {
           }
           decls.push(decl);
         });
-        //TODO(yunabe): Stop using ts.createNodeArray, which is deprecated in TypeScript 4.
         asMutable(stmt.declarationList).declarations =
-          ts.createNodeArray(decls);
+          ts.factory.createNodeArray(decls);
       }
       if (ts.isImportDeclaration(stmt)) {
         keepNamesInImport(stmt, names);
@@ -705,7 +704,7 @@ export function createConverter(options?: ConverterOptions): Converter {
       // - FunctionDeclaration (ditto)
       // - InterfaceDeclaration (ditto)
     });
-    asMutable(declsSF).statements = ts.createNodeArray(statements);
+    asMutable(declsSF).statements = ts.factory.createNodeArray(statements);
     let printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
 
     let anyVarsDecls: string[] = [];
@@ -939,7 +938,10 @@ export function createConverter(options?: ConverterOptions): Converter {
       if (!prev) {
         return node;
       }
-      return ts.createPropertyAccess(ts.createIdentifier("exports"), node);
+      return ts.factory.createPropertyAccessExpression(
+        ts.factory.createIdentifier("exports"),
+        node
+      );
     }
     function after(): (node: ts.SourceFile) => ts.SourceFile {
       // Rewrite the output to store the last expression to a variable.
@@ -960,12 +962,13 @@ export function createConverter(options?: ConverterOptions): Converter {
           const lastName = createLastExprVar();
           let statements = node.statements.slice(0, i);
           statements.push(
-            ts.createVariableStatement(
-              [ts.createModifier(ts.SyntaxKind.ExportKeyword)],
-              ts.createVariableDeclarationList(
+            ts.factory.createVariableStatement(
+              [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+              ts.factory.createVariableDeclarationList(
                 [
-                  ts.createVariableDeclaration(
+                  ts.factory.createVariableDeclaration(
                     lastName,
+                    undefined,
                     undefined,
                     stmt.expression
                   ),
@@ -976,7 +979,7 @@ export function createConverter(options?: ConverterOptions): Converter {
           );
           setLastExprName(lastName);
           statements.push(...node.statements.slice(i + 1));
-          asMutable(node).statements = ts.createNodeArray(statements);
+          asMutable(node).statements = ts.factory.createNodeArray(statements);
           break;
         }
         return node;
@@ -992,7 +995,7 @@ export function createConverter(options?: ConverterOptions): Converter {
           }
           statements.push(stmt);
         }
-        asMutable(node).statements = ts.createNodeArray(statements);
+        asMutable(node).statements = ts.factory.createNodeArray(statements);
         return node;
       };
     }
@@ -1137,7 +1140,8 @@ export function keepNamesInImport(
         }
       });
       if (elms.length) {
-        asMutable(imc.namedBindings).elements = ts.createNodeArray(elms);
+        asMutable(imc.namedBindings).elements =
+          ts.factory.createNodeArray(elms);
       } else {
         delete asMutable(imc).namedBindings;
       }
