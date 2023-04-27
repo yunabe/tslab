@@ -269,7 +269,8 @@ export function createConverter(options?: ConverterOptions): Converter {
     {
       // module is ESNext, not ES2015, to support dynamic import.
       module: ts.ModuleKind.ESNext,
-      moduleResolution: ts.ModuleResolutionKind.NodeJs,
+      // TODO(yunabe): Revisit how to resolve modules in the newer version of NodeJs.
+      moduleResolution: ts.ModuleResolutionKind.Node10,
       esModuleInterop: true,
       target: transpileTarget,
       // We need to wrap entries with lib.*.d.ts before passing `lib` though it's not documented clearly.
@@ -486,7 +487,7 @@ export function createConverter(options?: ConverterOptions): Converter {
       info.optionalReplacementSpan.start -= srcPrefix.length;
     }
 
-    const prev: ts.Node = ts.tslab.findPrecedingToken(pos, srcFile);
+    const prev: ts.Node = ts.findPrecedingToken(pos, srcFile);
     // Note: In contradiction to the docstring, findPrecedingToken may return prev with
     // prev.end > pos (e.g. `members with surrounding` test case).
     //
@@ -496,7 +497,7 @@ export function createConverter(options?: ConverterOptions): Converter {
       return completionWithId(info, prev, srcFile);
     }
     const next: ts.Node = prev
-      ? ts.tslab.findNextToken(prev, srcFile, srcFile)
+      ? ts.findNextToken(prev, srcFile, srcFile)
       : null;
     if (
       next &&
@@ -764,10 +765,7 @@ export function createConverter(options?: ConverterOptions): Converter {
       // https://github.com/microsoft/TypeScript/search?q=await_expression_is_only_allowed_within_an_async_function_1308
       return false;
     }
-    const await: ts.Node = ts.tslab.findPrecedingToken(
-      d.start + d.length,
-      srcFile
-    );
+    const await: ts.Node = ts.findPrecedingToken(d.start + d.length, srcFile);
     if (await.kind !== ts.SyntaxKind.AwaitKeyword) {
       // This must not happen, though.
       return false;
@@ -1161,7 +1159,7 @@ function getCompletionsAtPosition(
   triggerCharacter?: ts.CompletionsTriggerCharacter
 ): ts.CompletionInfo {
   const host: ts.LanguageServiceHost = {} as any;
-  return ts.tslab.getCompletionsAtPosition(
+  return ts.Completions.getCompletionsAtPositionForTslab(
     host,
     program,
     log,

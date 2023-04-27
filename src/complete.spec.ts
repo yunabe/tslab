@@ -464,13 +464,6 @@ describe("complete", () => {
       start,
       end: start,
       candidates: [],
-      original: {
-        isGlobalCompletion: false,
-        isMemberCompletion: false,
-        isNewIdentifierLocation: false,
-        optionalReplacementSpan: { start: start, length: 0 },
-        entries: [],
-      },
     });
   });
 
@@ -482,12 +475,6 @@ describe("complete", () => {
       start,
       end: start,
       candidates: [],
-      original: {
-        isGlobalCompletion: false,
-        isMemberCompletion: false,
-        isNewIdentifierLocation: false,
-        entries: [],
-      },
     });
   });
 
