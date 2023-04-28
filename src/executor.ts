@@ -51,9 +51,7 @@ export interface ConsoleInterface {
  * createRequire creates `require` which resolves modules from `rootDir`.
  */
 export function createRequire(rootDir: string): NodeJS.Require {
-  // createRequire is added in Node v12. createRequireFromPath is deprecated.
-  const create = Module.createRequire || Module.createRequireFromPath;
-  return create(normalizeJoin(rootDir, "src.js"));
+  return Module.createRequire(normalizeJoin(rootDir, "src.js"));
 }
 
 /**

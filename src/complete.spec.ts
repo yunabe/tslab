@@ -263,10 +263,13 @@ describe("complete", () => {
         "createContext",
         "isContext",
         "measureMemory",
+        "Module",
         "runInContext",
         "runInNewContext",
         "runInThisContext",
         "Script",
+        "SourceTextModule",
+        "SyntheticModule",
       ],
       original: {
         flags: 0,

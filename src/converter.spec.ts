@@ -139,7 +139,7 @@ declare let a: number, c: string;
         }
       }
       async function sleep(ms: number) {
-        return new Promise<never>(resolve => {
+        return new Promise<void>(resolve => {
           setTimeout(resolve, ms);
         });
       }
@@ -172,7 +172,7 @@ declare let a: number, c: string;
     expect(out.declOutput).toEqual(
       `declare function sum(x: number, y: number): number;
 declare function xrange(n: number): IterableIterator<number>;
-declare function sleep(ms: number): Promise<never>;
+declare function sleep(ms: number): Promise<void>;
 `
     );
   });
