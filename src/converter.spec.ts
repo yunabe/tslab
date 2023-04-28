@@ -218,12 +218,11 @@ declare let a: number, c: string;
     expect(out.output).toEqual(
       buildOutput(
         [
-          "var _a;",
           "let obj = null;",
           "exports.obj = obj;",
-          "let a = (_a = obj === null || obj === void 0 ? void 0 : obj.a) === null || _a === void 0 ? void 0 : _a.b;",
+          "let a = obj?.a?.b;",
           "exports.a = a;",
-          "let b = a !== null && a !== void 0 ? a : obj;",
+          "let b = a ?? obj;",
           "exports.b = b;",
         ],
         { exports: ["b", "a", "obj"] }
@@ -287,6 +286,8 @@ class SquareImpl implements Square {
       buildOutput(
         [
           "class SquareImpl {",
+          "    color;",
+          "    sideLength;",
           "    constructor(color, sideLength) {",
           "        this.color = color;",
           "        this.sideLength = sideLength;",
@@ -1023,6 +1024,7 @@ describe("with prev", () => {
       buildOutput(
         [
           "class itype {",
+          "    y;",
           "}",
           "exports.itype = itype;",
           "let atype = 123;",

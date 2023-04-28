@@ -106,6 +106,28 @@ const cancellationToken: ts.CancellationToken = {
   throwIfCancellationRequested: (): void => {},
 };
 
+function getTranspileTargets() {
+  // TODO(yunabe): Update this rule when new Node.js rules are released.
+  // References:
+  // https://github.com/microsoft/TypeScript/wiki/Node-Target-Mapping
+  // https://github.com/microsoft/TypeScript/issues/22306#issuecomment-412266626
+  // https://github.com/microsoft/TypeScript/blob/master/src/lib/es2019.full.d.ts
+  const nodeVersion = semver.major(process.version);
+  if (nodeVersion >= 18) {
+    return { target: ts.ScriptTarget.ES2022, lib: ["es2022"] };
+  }
+  if (nodeVersion >= 16) {
+    return { target: ts.ScriptTarget.ES2021, lib: ["es2021"] };
+  }
+  if (nodeVersion >= 14) {
+    return { target: ts.ScriptTarget.ES2020, lib: ["es2020"] };
+  }
+  if (nodeVersion >= 12) {
+    return { target: ts.ScriptTarget.ES2019, lib: ["es2019"] };
+  }
+  return { target: ts.ScriptTarget.ES2018, lib: ["es2018"] };
+}
+
 export function createConverter(options?: ConverterOptions): Converter {
   const cwd = ts.sys.getCurrentDirectory();
   const srcFilename = normalizeJoin(
@@ -118,17 +140,7 @@ export function createConverter(options?: ConverterOptions): Converter {
   const dstFilename = normalizeJoin(outDir, "__tslab__.js");
   const dstDeclFilename = normalizeJoin(outDir, "__tslab__.d.ts");
 
-  // c.f.
-  // https://github.com/microsoft/TypeScript/wiki/Node-Target-Mapping
-  // https://github.com/microsoft/TypeScript/issues/22306#issuecomment-412266626
-  const transpileTarget =
-    semver.major(process.version) >= 12
-      ? ts.ScriptTarget.ES2019
-      : ts.ScriptTarget.ES2018;
-  // References:
-  // https://github.com/microsoft/TypeScript/blob/master/src/lib/es2019.full.d.ts
-  const transpileLib =
-    transpileTarget === ts.ScriptTarget.ES2019 ? ["es2019"] : ["es2018"];
+  const { target: transpileTarget, lib: transpileLib } = getTranspileTargets();
   if (options?.isBrowser) {
     transpileLib.push("dom");
     transpileLib.push("dom.iterable");
