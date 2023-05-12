@@ -1,6 +1,6 @@
 # tslab
 
-[![Build Status](https://travis-ci.org/yunabe/tslab.svg?branch=master)](https://travis-ci.org/yunabe/tslab)
+[![CI](https://github.com/yunabe/tslab/actions/workflows/run_tests.yml/badge.svg)](https://github.com/yunabe/tslab/actions/workflows/run_tests.yml)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/yunabe/tslab-examples/master?filepath=notebooks%2Fgetting_started.ipynb)
 [![npm version](https://badge.fury.io/js/tslab.svg)](https://www.npmjs.com/package/tslab)
 
