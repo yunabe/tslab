@@ -2,7 +2,7 @@ name: Node.js CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, typescript4.6 ]
     tags: [ '*' ]
   pull_request:
     branches: [ main ]
