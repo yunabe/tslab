@@ -395,6 +395,29 @@ describe("execute", () => {
     expect(t0 / t1).toBeGreaterThan(0.5);
   });
 
+  it("overhead", async () => {
+    // Check the incremental execution overhead is
+    // less than 50ms/execution.
+    expect(
+      await ex.execute(`
+      let n = 0;
+    `)
+    ).toBe(true);
+    const start = Date.now();
+    for (let i = 1; i <= 20; ++i) {
+      expect(
+        await ex.execute(`
+        n += ${i};
+      `)
+      ).toBe(true);
+    }
+    const end = Date.now();
+    expect(end - start).toBeLessThan(1000);
+    expect(ex.locals).toEqual({
+      n: 210,
+    });
+  });
+
   it("fixed bug#32", async () => {
     // https://github.com/yunabe/tslab/issues/32 is reproducible.
     expect(await ex.execute(`let b = {}.constructor === Object`)).toBe(true);
