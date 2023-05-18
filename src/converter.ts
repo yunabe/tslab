@@ -164,10 +164,12 @@ export function createConverter(options?: ConverterOptions): Converter {
   let builder: ts.BuilderProgram = null;
 
   const sys = Object.create(ts.sys) as ts.System;
-  let rebuildTimer: RebuildTimer = null;
+  // TODO(yunabe): Instead of enabling this, normalize filenames based on this flag.
+  sys.useCaseSensitiveFileNames = true;
   sys.getCurrentDirectory = function () {
     return cwd;
   };
+  let rebuildTimer: RebuildTimer = null;
   sys.setTimeout = (callback: (...args: any[]) => void): any => {
     // TypeScript compier implements debouncing using a timer.
     // It clears a timer when a new change is notified before the timer
