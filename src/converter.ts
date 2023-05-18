@@ -6,6 +6,12 @@ import { CodeMetadata } from "./metadata";
 import { normalizeJoin } from "./tspath";
 import { execPath } from "process";
 
+// Enable this flag not only in sys instance in createConverter but
+// in the entire process to change the behavior watch with ts.sys.watchFile.
+// This workaround is necessary to fix #82.
+// TODO(yunabe): Instead of enabling this, normalize filenames based on this flag.
+ts.sys.useCaseSensitiveFileNames = true;
+
 // TODO: Disallow accessing "module" of Node.js.
 
 export interface SideOutput {
@@ -164,8 +170,6 @@ export function createConverter(options?: ConverterOptions): Converter {
   let builder: ts.BuilderProgram = null;
 
   const sys = Object.create(ts.sys) as ts.System;
-  // TODO(yunabe): Instead of enabling this, normalize filenames based on this flag.
-  sys.useCaseSensitiveFileNames = true;
   sys.getCurrentDirectory = function () {
     return cwd;
   };
