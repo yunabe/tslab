@@ -32,7 +32,7 @@
     "build": "tsc",
     "prepublishOnly": "rm -rf dist && tsc",
     "jest": "jest --verbose",
-    "test": "tsc && jest --verbose --runInBand",
+    "test": "tsc && jest --verbose --runInBand && npm run clean",
     "clean": "rm -rf dist tmp",
     "format": "prettier --write src"
   },
