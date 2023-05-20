@@ -5,9 +5,10 @@ import pathlib from "path";
 import * as executor from "./executor";
 import { createConverter } from "./converter";
 import {
+  createConverterWithFileWatcher,
+  isTsWatchBroken,
   runInTmpAsync,
   WaitFileEventFunc,
-  createConverterWithFileWatcher,
   sleep,
 } from "./testutil";
 import ts from "@tslab/typescript-for-tslab";
@@ -560,6 +561,10 @@ describe("externalFiles", () => {
   });
 
   it("changed", async () => {
+    if (isTsWatchBroken()) {
+      // Skip this test when ts.watchFile is broken.
+      return;
+    }
     await runInTmpAsync("pkg", async (dir) => {
       const srcPath = normalizeJoin(process.cwd(), dir, "a.ts");
       fs.writeFileSync(srcPath, 'export const aVal = "ABC";');

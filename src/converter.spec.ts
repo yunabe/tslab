@@ -1,11 +1,12 @@
 import * as converter from "./converter";
 import * as ts from "@tslab/typescript-for-tslab";
 import {
+  createConverterWithFileWatcher,
+  isTsWatchBroken,
   runInTmp,
   runInTmpAsync,
   sleep,
   WaitFileEventFunc,
-  createConverterWithFileWatcher,
 } from "./testutil";
 import fs from "fs";
 import pathlib from "path";
@@ -1481,6 +1482,10 @@ describe("externalFiles", () => {
   });
 
   it("changed", async () => {
+    if (isTsWatchBroken()) {
+      // Skip this test when ts.watchFile is broken.
+      return;
+    }
     await runInTmpAsync("pkg", async (dir) => {
       // const srcPath = pathlib.resolve(pathlib.join(dir, "a.ts"));
       const srcPath = normalizeJoin(process.cwd(), dir, "a.ts");

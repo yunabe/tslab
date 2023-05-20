@@ -1,6 +1,6 @@
-import fs from "fs";
 import { randomBytes } from "crypto";
-import path from "path";
+import fs from "fs";
+import os from "os";
 import ts from "@tslab/typescript-for-tslab";
 import * as converter from "./converter";
 import { normalizeJoin } from "./tspath";
@@ -77,4 +77,13 @@ export function createConverterWithFileWatcher(): {
     });
   }
   return { converter: conv, waitFileEvent };
+}
+
+/**
+ * It seems like ts.sys.watchFile is not working on Mac. See
+ * https://github.com/yunabe/typescript-filewatch-mac-bug
+ * @returns True if ts.sys.watchFile is broken in the current environment.
+ */
+export function isTsWatchBroken(): boolean {
+  return os.platform() === "darwin" && process.env.GITHUB_ACTIONS === "true";
 }
