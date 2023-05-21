@@ -42,8 +42,8 @@ npm run jest [-- --watch]
 ## Release
 
 - Increment `"version"` in `package.json`.
-- `npm run test && npm publish`.
-- Set git tag: `git tag -a v1.0.3 -m 'Release version 1.0.3'`
+- `npm test && npm publish`.
+- Set git tag: `git tag -a v1.0.21 -m 'Release version 1.0.21'`
 - `git push --tags`
 
 ## Related repositories
