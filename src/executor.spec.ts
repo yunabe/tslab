@@ -424,6 +424,15 @@ describe("execute", () => {
     expect(await ex.execute(`let b = {}.constructor === Object`)).toBe(true);
     expect(ex.locals.b).toEqual(true);
   });
+
+  it("check bug#42", async () => {
+    // Checks if https://github.com/yunabe/tslab/issues/42 is reproducible in CI.
+    expect(
+      await ex.execute(`let person = new Object(); person['name'] = 'yunabe';`)
+    ).toBe(true);
+    expect(consoleErrorCalls).toEqual([]);
+    expect(ex.locals.person).toEqual({ name: "yunabe" });
+  });
 });
 
 describe("interrupt", () => {
