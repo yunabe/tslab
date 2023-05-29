@@ -87,3 +87,11 @@ export function createConverterWithFileWatcher(): {
 export function isTsWatchBroken(): boolean {
   return os.platform() === "darwin" && process.env.GITHUB_ACTIONS === "true";
 }
+
+/**
+ * Performance tests on Mac eivnronment on GitHub Actions sometimes fail.
+ * @returns
+ */
+export function isPerformanceUnstableEnv(): boolean {
+  return os.platform() === "darwin" && process.env.GITHUB_ACTIONS === "true";
+}

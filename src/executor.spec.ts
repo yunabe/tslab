@@ -6,6 +6,7 @@ import * as executor from "./executor";
 import { createConverter } from "./converter";
 import {
   createConverterWithFileWatcher,
+  isPerformanceUnstableEnv,
   isTsWatchBroken,
   runInTmpAsync,
   WaitFileEventFunc,
@@ -392,8 +393,9 @@ describe("execute", () => {
     end = Date.now();
     let t1 = end - start;
     expect(ex.locals.got).toBe(want);
-    expect(t1 / t0).toBeGreaterThan(0.5);
-    expect(t0 / t1).toBeGreaterThan(0.5);
+    const threshold = isPerformanceUnstableEnv() ? 0.1 : 0.5;
+    expect(t1 / t0).toBeGreaterThan(threshold);
+    expect(t0 / t1).toBeGreaterThan(threshold);
   });
 
   it("overhead", async () => {
