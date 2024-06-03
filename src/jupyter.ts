@@ -332,10 +332,11 @@ interface CommInfoReply {
   comms: {};
 }
 
+/** The zmq identity prefix delimiter */
+const DELIM: Buffer = Buffer.from("<IDS|MSG>");
+
 class ZmqMessage {
-  // identity must not string because jupyter sends non-string identity since 5.3 prototocol.
-  // TODO: Check this is an intentional change in Jupyter.
-  identity: Buffer;
+  identity: Buffer[];
   delim: string;
   hmac: string;
   header: HeaderMessage;
@@ -360,15 +361,32 @@ class ZmqMessage {
 
   static fromRaw(key: string, raw: Buffer[]): ZmqMessage {
     const ret = new ZmqMessage();
-    ret.identity = raw[0];
-    ret.delim = raw[1].toString();
-    ret.hmac = raw[2].toString();
-    ret.header = JSON.parse(raw[3].toString());
-    ret.parent = JSON.parse(raw[4].toString());
-    ret.metadata = JSON.parse(raw[5].toString());
-    ret.content = JSON.parse(raw[6].toString());
-    ret.extra = raw.slice(7);
-    ZmqMessage.verifyHmac(key, ret.hmac, raw.slice(3));
+    ret.identity = [];
+    // read variable-length identity prefix:
+    // [identity, [identity,] DELIM, signature, header, ...]
+    var delimFound = false;
+    for (var buf of raw) {
+      if (buf.equals(DELIM)) {
+        // stop on DELIM
+        delimFound = true;
+        break;
+      } else {
+        ret.identity.push(buf);
+      }
+    }
+    if (!delimFound) {
+      throw new Error(`message missing delimiter`);
+    }
+    // split (identity, delim, hmac, messageParts) on the delimiter
+    ret.hmac = raw[ret.identity.length + 1].toString();
+
+    const messageParts = raw.slice(ret.identity.length + 2);
+    ret.header = JSON.parse(messageParts[0].toString());
+    ret.parent = JSON.parse(messageParts[1].toString());
+    ret.metadata = JSON.parse(messageParts[2].toString());
+    ret.content = JSON.parse(messageParts[3].toString());
+    ret.extra = messageParts.slice(4);
+    ZmqMessage.verifyHmac(key, ret.hmac, messageParts);
     return ret;
   }
 
@@ -377,7 +395,6 @@ class ZmqMessage {
     // https://github.com/ipython/ipykernel/blob/master/ipykernel/kernelbase.py#L222
     // idents must be copied from the parent.
     rep.identity = this.identity;
-    rep.delim = this.delim;
     // Sets an empty string to hmac because it won't be used.
     rep.hmac = "";
     rep.header = {
@@ -399,8 +416,10 @@ class ZmqMessage {
 
   signAndSend(key: string, sock) {
     const heads: (string | Buffer)[] = [];
-    heads.push(this.identity);
-    heads.push(this.delim);
+    for (var identity of this.identity) {
+      heads.push(identity);
+    }
+    heads.push(DELIM);
     const bodies: string[] = [];
     bodies.push(JSON.stringify(this.header));
     bodies.push(JSON.stringify(this.parent));
