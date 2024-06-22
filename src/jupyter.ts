@@ -364,6 +364,13 @@ class ZmqMessage {
     ret.identity = [];
     // read variable-length identity prefix:
     // [identity, [identity,] DELIM, signature, header, ...]
+    //
+    // https://jupyter-client.readthedocs.io/en/latest/messaging.html#the-wire-protocol
+    // <quote>
+    // The front of the message is the ZeroMQ routing prefix,
+    // which can be zero or more socket identities. This is every
+    // piece of the message prior to the delimiter key <IDS|MSG>.
+    // </quote>
     var delimFound = false;
     for (var buf of raw) {
       if (buf.equals(DELIM)) {
